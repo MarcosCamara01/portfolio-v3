@@ -63,8 +63,8 @@ export function ThemeToggle() {
           {preference === null
             ? "System"
             : preference === "dark"
-            ? "Dark"
-            : "Light"}
+              ? "Dark"
+              : "Light"}
         </span>
       )}
 
@@ -74,13 +74,12 @@ export function ThemeToggle() {
       */}
       <button
         aria-label="Toggle theme"
-        className={`inline-flex ${
-          isHovering && !isHoveringOverride
+        className={`inline-flex ${isHovering && !isHoveringOverride
             ? "bg-gray-200 dark:bg-[#313131]"
             : ""
-        } active:bg-gray-300 transition-[background-color] dark:active:bg-[#242424] rounded-sm p-2 
-          bg-gray-200
-          dark:bg-[#313131]
+          } rounded-sm p-2 
+          text-color-primary
+          bg-foreground
           theme-system:!bg-inherit
           [&_.sun-icon]:hidden
           dark:[&_.moon-icon]:hidden
