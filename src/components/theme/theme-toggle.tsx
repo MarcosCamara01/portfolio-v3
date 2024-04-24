@@ -75,7 +75,7 @@ export function ThemeToggle() {
       <button
         aria-label="Toggle theme"
         className={`inline-flex ${isHovering && !isHoveringOverride
-            ? "bg-gray-200 dark:bg-[#313131]"
+            ? "bg-gray-200 dark:bg-foreground"
             : ""
           } rounded-sm p-2 
           text-color-primary

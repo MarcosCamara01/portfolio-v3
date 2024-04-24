@@ -4,17 +4,19 @@
 
 @layer base {
   :root {
+    color-scheme: light;
     --background: #fcfcfc;
     --foreground: #E5E7EB;
 
     --text-primary: #000;
     --text-secondary: #76ABAE;
   }
- 
+
   .dark {
+    color-scheme: dark;
     --background: #222831;
     --foreground: #31363F;
-  
+
     --text-primary: #EEEEEE;
     --text-secondary: #76ABAE;
   }

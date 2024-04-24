@@ -9,12 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mdx-js/loader": "^3.0.1",
+    "@mdx-js/react": "^3.0.1",
+    "@next/mdx": "^14.2.2",
+    "@types/mdx": "^2.0.13",
+    "@upstash/redis": "^1.30.0",
     "@vercel/analytics": "^1.2.2",
+    "comma-number": "^2.1.0",
+    "image-size": "^1.1.1",
     "next": "14.1.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-tweet": "^3.2.1",
+    "react-wrap-balancer": "^1.1.0",
+    "react-youtube": "^10.1.0",
+    "time-ago": "^0.2.1"
   },
   "devDependencies": {
+    "@types/comma-number": "^2.1.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
