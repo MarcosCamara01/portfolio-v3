@@ -18,6 +18,7 @@
     "comma-number": "^2.1.0",
     "image-size": "^1.1.1",
     "next": "14.1.4",
+    "next-themes": "^0.3.0",
     "react": "^18",
     "react-dom": "^18",
     "react-tweet": "^3.2.1",

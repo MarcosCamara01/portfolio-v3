@@ -1,122 +1,44 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
-import { themeEffect } from "./theme-effect";
-import va from "@vercel/analytics";
+
+import { useState } from "react";
+import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  // a `null` preference implies auto
-  const [preference, setPreference] = useState<undefined | null | string>(
-    undefined
-  );
-  const [currentTheme, setCurrentTheme] = useState<null | string>(null);
+  const { theme, setTheme } = useTheme()
   const [isHovering, setIsHovering] = useState(false);
-  const [isHoveringOverride, setIsHoveringOverride] = useState(false);
-
-  const onMediaChange = useCallback(() => {
-    const current = themeEffect();
-    setCurrentTheme(current);
-  }, []);
-
-  useEffect(() => {
-    setPreference(localStorage.getItem("theme"));
-    const current = themeEffect();
-    setCurrentTheme(current);
-
-    const matchMedia = window.matchMedia("(prefers-color-scheme: dark)");
-    matchMedia.addEventListener("change", onMediaChange);
-    return () => matchMedia.removeEventListener("change", onMediaChange);
-  }, [onMediaChange]);
-
-  const onStorageChange = useCallback(
-    (event: StorageEvent) => {
-      if (event.key === "theme") setPreference(event.newValue);
-    },
-    [setPreference]
-  );
-
-  // when the preference changes, whether from this tab or another,
-  // we want to recompute the current theme
-  useEffect(() => {
-    setCurrentTheme(themeEffect());
-  }, [preference]);
-
-  useEffect(() => {
-    window.addEventListener("storage", onStorageChange);
-    return () => window.removeEventListener("storage", onStorageChange);
-  });
 
   return (
     <>
       {isHovering && (
         <span
-          className={`
-            text-[9px]
-            text-gray-400
-            mr-[-5px]
-
-            /* mobile */
-            hidden
-
-            md:inline
-          `}
+          className='text-[9px] text-gray-400 mr-[-5px] hidden md:inline'
         >
-          {preference === null
-            ? "System"
-            : preference === "dark"
-              ? "Dark"
-              : "Light"}
+          {theme}
         </span>
       )}
 
-      {/*
-        the `theme-auto:` plugin is registered in `tailwind.config.js` and
-        works similarly to the `dark:` prefix, which depends on the `theme-effect.ts` behavior
-      */}
       <button
         aria-label="Toggle theme"
-        className={`inline-flex ${isHovering && !isHoveringOverride
-            ? "bg-gray-200 dark:bg-foreground"
-            : ""
-          } rounded-sm p-2 
-          text-color-primary
-          bg-foreground
-          theme-system:!bg-inherit
-          [&_.sun-icon]:hidden
-          dark:[&_.moon-icon]:hidden
-          dark:[&_.sun-icon]:inline
-        }`}
+        className='inline-flex rounded-sm p-2 
+        text-color-primary
+        bg-foreground
+        theme-system:!bg-inherit
+        [&_.sun-icon]:hidden
+        dark:[&_.moon-icon]:hidden
+        dark:[&_.sun-icon]:inline'
         onClick={ev => {
           ev.preventDefault();
-          // prevent the hover state from rendering
-          setIsHoveringOverride(true);
 
-          let newPreference: string | null =
-            currentTheme === "dark" ? "light" : "dark";
-          const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-            .matches
-            ? "dark"
-            : "light";
-
-          // if the user has their current OS theme as a preference (instead of auto)
-          // and they click the toggle, we want to switch to reset the preference
-          if (preference !== null && systemTheme === currentTheme) {
-            newPreference = null;
-            localStorage.removeItem("theme");
-          } else {
-            localStorage.setItem("theme", newPreference);
+          if (theme === 'system') {
+            setTheme('dark')
+          } if (theme === 'light') {
+            setTheme('system')
+          } if (theme === 'dark') {
+            setTheme('light')
           }
-
-          va.track("Theme toggle", {
-            Theme: newPreference === null ? "system" : newPreference,
-          });
-
-          setPreference(newPreference);
         }}
         onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => {
-          setIsHovering(false);
-          setIsHoveringOverride(false);
-        }}
+        onMouseLeave={() => setIsHovering(false)}
       >
         <span className="sun-icon">
           <SunIcon />
