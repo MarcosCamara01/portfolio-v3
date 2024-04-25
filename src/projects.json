@@ -1,0 +1,37 @@
+{
+    "personalProjects": [
+        {
+            "id": "ecommerce-template",
+            "link": "https://ecommerce-template-mpc.vercel.app",
+            "title": "Ecommerce Template",
+            "description": "Ecommerce built with NextJS and TypeScript, uses Stripe as payment processor, MongoDB as database and NextAuth to authenticate users. It has the typical ecommerce functionalities.",
+            "stack": [
+                "TypeScript",
+                "Next.js",
+                "TailwindCSS",
+                "Stripe",
+                "MongoDB",
+                "Vercel KV",
+                "NextAuth",
+                "Server Actions"
+            ],
+            "image": "/images/projects/ecommerce_template.png"
+        },
+        {
+            "id": "chatgpt-clone",
+            "link": "https://chatgpt-clone-six-ochre.vercel.app",
+            "title": "ChatGPT Clone",
+            "description": "Application created with NextJS and TypeScript, it uses Vercel AI SDK to stream the data coming in real time from the OpenAI API, this application also has the functionality to save the data in the MongoDB database by making API requests. The saved chats are displayed at the start of the application so that you can navigate between them.",
+            "stack": [
+                "TypeScript",
+                "Next.js",
+                "TailwindCSS",
+                "Vercel AI SDK",
+                "OpenAI API",
+                "MongoDB",
+                "Server Actions"
+            ],
+            "image": "/images/projects/chatgpt_clone.png"
+        }
+    ]
+}
