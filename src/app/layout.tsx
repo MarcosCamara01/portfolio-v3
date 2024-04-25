@@ -21,7 +21,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={inter.className}
+      className={`${inter.className} scroll-smooth`}
     >
       <body>
         <ThemeProvider

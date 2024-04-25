@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { withHeadingId } from "./utils";
 
 export function H1({ children }: { children: React.ReactNode }) {

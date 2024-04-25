@@ -10,7 +10,6 @@ export type Post = {
   viewsFormatted: string;
 };
 
-// shape of the HSET in redis
 type Views = {
   [key: string]: string;
 };
