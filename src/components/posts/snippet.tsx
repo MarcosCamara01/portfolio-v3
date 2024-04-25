@@ -6,9 +6,7 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => (
       className={`
       p-4
       text-sm
-      bg-gray-800 text-white
-      dark:bg-foreground dark:text-gray-300
-
+      bg-foreground 
       ${
         scroll
           ? "overflow-scroll"
