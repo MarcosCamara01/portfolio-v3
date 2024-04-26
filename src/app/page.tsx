@@ -4,7 +4,7 @@ export const revalidate = 60;
 
 export default function Home() {
   return (
-    <section>
+    <section className='min-h-[calc(100vh-108px)] md:min-h-[calc(100vh-152px)]'>
       <PersonalProjects />
     </section>
   );

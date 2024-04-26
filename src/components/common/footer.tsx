@@ -1,12 +1,13 @@
+import Link from 'next/link';
 import React from 'react'
 
 const Footer = () => (
     <footer className='mt-8 md:mt-16 dark:text-gray-100'>
         <ul className='flex items-center justify-center gap-6'>
-            <li><a href="https://twitter.com/marcoscamara01"><TwitterIcon /></a></li>
-            <li><a href="https://github.com/MarcosCamara01"><GitHubIcon /></a></li>
-            <li><a href="https://www.linkedin.com/in/marcospenelascamara"><LinkedInIcon /></a></li>
-            <li><a href="https://medium.com/@marcoscamara"><MediumIcon /></a></li>
+            <li><Link href="https://twitter.com/marcoscamara01" target='_blank'><TwitterIcon /></Link></li>
+            <li><Link href="https://github.com/MarcosCamara01" target='_blank'><GitHubIcon /></Link></li>
+            <li><Link href="https://www.linkedin.com/in/marcospenelascamara" target='_blank'><LinkedInIcon /></Link></li>
+            <li><Link href="https://medium.com/@marcoscamara" target='_blank'><MediumIcon /></Link></li>
         </ul>
     </footer>
 )
