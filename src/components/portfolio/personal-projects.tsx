@@ -25,7 +25,7 @@ const PersonalProjects = () => {
                         href={project.link}
                         key={project.id}
                         target='_blank'
-                        className='transition-colors hover:bg-foreground border border-foreground p-4 flex-col flex gap-5 rounded'
+                        className='transition-[background-color] hover:bg-foreground border border-foreground p-4 flex-col flex gap-5 rounded'
                         onMouseEnter={() => setHoveredProject(project.id)}
                         onMouseLeave={() => setHoveredProject(null)}
                     >
