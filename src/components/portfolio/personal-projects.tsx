@@ -25,19 +25,21 @@ const PersonalProjects = () => {
                         href={project.link}
                         key={project.id}
                         target='_blank'
-                        className='transition-colors hover:bg-foreground border-2 border-foreground p-4 flex-col-reverse md:flex-row flex gap-3 rounded'
+                        className='transition-colors hover:bg-foreground border border-foreground p-4 flex-col flex gap-5 rounded'
                         onMouseEnter={() => setHoveredProject(project.id)}
                         onMouseLeave={() => setHoveredProject(null)}
                     >
                         <Image
                             src={project.image}
                             alt={`${project.title} Screenshot`}
-                            width={200}
-                            height={100}
-                            className='w-[200px] h-[116px] rounded border-2 border-background'
+                            width={600}
+                            height={300}
+                            className='w-full h-full rounded border-2 border-background'
+                            sizes="(max-width: 640px) 80vw,
+                            33vw"
                         />
 
-                        <div className='flex flex-col gap-4'>
+                        <div className='flex flex-col gap-3'>
                             <h1 className='font-bold text-lg flex items-center gap-2'>
                                 {project.title}
                                 <DiagonalArrowIcon
@@ -46,7 +48,7 @@ const PersonalProjects = () => {
                                         : ""}
                                 />
                             </h1>
-                            <p className='text-sm text-gray-800 dark:text-gray-300 text-balance'>
+                            <p className='text-sm text-gray-800 dark:text-gray-300'>
                                 {project.description}
                             </p>
                             <div className='flex items-center gap-2 flex-wrap'>
