@@ -7,9 +7,10 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => (
       p-4
       text-sm
       bg-foreground 
+      rounded
       ${
         scroll
-          ? "overflow-scroll"
+          ? "overflow-auto"
           : "whitespace-pre-wrap break-all overflow-hidden"
       }
     `}

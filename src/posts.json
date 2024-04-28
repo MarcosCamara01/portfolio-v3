@@ -1,39 +1,9 @@
 {
   "posts": [
     {
-      "id": "this-is-a-",
-      "date": "April 4, 2024",
-      "title": "This is a example 4"
-    },
-    {
-      "id": "this-is--example",
-      "date": "April 5, 2024",
-      "title": "This is a example 5"
-    },
-    {
-      "id": "-is-a-example",
-      "date": "April 6, 2024",
-      "title": "This is a example 6"
-    },
-    {
-      "id": "this--a-example",
-      "date": "April 7, 2024",
-      "title": "This is a example 7" 
-    },
-    {
-      "id": "this--example",
-      "date": "April 8, 2024",
-      "title": "This is a example 8"
-    },
-    {
-      "id": "this-is-aample",
-      "date": "April 1, 2024",
-      "title": "This is a example 1"
-    },
-    {
-      "id": "this-is-a-exampl",
-      "date": "April 3, 2024",
-      "title": "This is a example 3"
+      "id": "get-the-best-performance-on-nextjs-app",
+      "date": "March 10, 2024",
+      "title": "Get the Best Performance on Your Next.js App"
     },
     {
       "id": "this-is-a-example",

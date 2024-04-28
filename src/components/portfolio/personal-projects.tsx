@@ -4,6 +4,7 @@ import Image from 'next/image'
 import React, { useState } from 'react'
 import projectsData from "@/projects.json";
 import Link from 'next/link';
+import { Skeleton } from '../ui/skeleton';
 
 interface Project {
     id: string;
@@ -16,6 +17,7 @@ interface Project {
 
 const PersonalProjects = () => {
     const [hoveredProject, setHoveredProject] = useState<string | null>(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
         <div className='flex flex-col gap-5'>
@@ -29,15 +31,22 @@ const PersonalProjects = () => {
                         onMouseEnter={() => setHoveredProject(project.id)}
                         onMouseLeave={() => setHoveredProject(null)}
                     >
-                        <Image
-                            src={project.image}
-                            alt={`${project.title} Screenshot`}
-                            width={600}
-                            height={300}
-                            className='w-full h-full rounded border-2 border-background'
-                            sizes="(max-width: 640px) 80vw,
-                            33vw"
-                        />
+                        <div className='rounded relative aspect-[196/111] overflow-hidden'>
+                            <Image
+                                src={project.image}
+                                alt={`${project.title} Screenshot`}
+                                width={600}
+                                height={300}
+                                className='w-full h-full border border-background'
+                                onLoad={() => setImageLoaded(true)}
+                                sizes="(max-width: 640px) 80vw,
+                                40vw"
+                            />
+
+                            <div className={!imageLoaded ? 'absolute top-0 right-0 w-full aspect-[196/111] bg-background' : 'hidden'}>
+                                <Skeleton className="w-full aspect-[196/111] rounded-b-none" />
+                            </div>
+                        </div>
 
                         <div className='flex flex-col gap-3'>
                             <h1 className='font-bold text-lg flex items-center gap-2'>

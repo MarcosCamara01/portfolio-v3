@@ -3,6 +3,8 @@ import { join } from "path";
 import { readFile } from "fs/promises";
 import { Caption } from "./caption";
 import NextImage from "next/image";
+import fs from "node:fs/promises";
+import { getPlaiceholder } from "plaiceholder";
 
 export async function Image({
   src,
@@ -68,6 +70,10 @@ export async function Image({
 
     const factor = dividedBy / 100;
 
+    const buffer = await fs.readFile(`./public${src}`);
+
+    const { base64 } = await getPlaiceholder(buffer);
+
     return (
       <span className="my-5 flex flex-col items-center">
         <NextImage
@@ -75,6 +81,9 @@ export async function Image({
           height={height * factor}
           alt={alt ?? ""}
           src={src}
+          className="rounded"
+          placeholder='blur'
+          blurDataURL={base64}
         />
 
         {alt && <Caption>{alt}</Caption>}
