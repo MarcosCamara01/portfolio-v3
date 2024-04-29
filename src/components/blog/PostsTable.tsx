@@ -45,14 +45,29 @@ export function PostsTable({ posts: initialPosts }: any) {
                 <TableHeader>
                     <TableRow className="border-foreground hover:bg-transparent">
                         <TableHead className="w-[56px] text-xs">
-                            <button className="w-full h-full text-left" onClick={sortDate}>
+                            <button className={`w-12 h-9 text-left  ${sort[0] === "date" && sort[1] !== "desc"
+                                ? "text-gray-700 dark:text-color-primary"
+                                : ""
+                                }`} onClick={sortDate}>
                                 date
+                                {sort[0] === "date" && sort[1] === "asc" && "↑"}
                             </button>
                         </TableHead>
                         <TableHead className="text-xs">title</TableHead>
                         <TableHead className="w-[56px] text-xs text-right">
-                            <button className="w-full h-full text-right" onClick={sortViews}>
+                            <button
+                                className={`
+                                    h-9
+                                    pl-4
+                                    text-right
+                                    ${sort[0] === "views"
+                                        ? "text-gray-700 dark:text-color-primary"
+                                        : ""
+                                    }`}
+                                onClick={sortViews}
+                            >
                                 views
+                                {sort[0] === "views" ? (sort[1] === "asc" ? "↑" : "↓") : ""}
                             </button>
                         </TableHead>
                     </TableRow>
