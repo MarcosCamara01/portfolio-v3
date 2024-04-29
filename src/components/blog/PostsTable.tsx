@@ -66,8 +66,8 @@ export function PostsTable({ posts: initialPosts }: any) {
                                     }`}
                                 onClick={sortViews}
                             >
-                                views
                                 {sort[0] === "views" ? (sort[1] === "asc" ? "↑" : "↓") : ""}
+                                views
                             </button>
                         </TableHead>
                     </TableRow>
