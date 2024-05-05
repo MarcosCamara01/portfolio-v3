@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const post = postsData.posts.find(post => post.id === id);
+  const post = postsData.posts.find((post) => post.id === id);
 
   if (post == null) {
     return NextResponse.json(

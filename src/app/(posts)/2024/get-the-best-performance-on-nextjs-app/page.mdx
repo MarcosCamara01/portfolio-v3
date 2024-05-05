@@ -1,12 +1,14 @@
 export const metadata = {
   title: "Get the Best Performance on Your Next.js App",
-  description: "Some tips on how to make your Next.js application have a better performance and a better UX",
+  description:
+    "Some tips on how to make your Next.js application have a better performance and a better UX",
   openGraph: {
     title: "Get the Best Performance on Your Next.js App",
-    description: "Some tips on how to make your Next.js application have a better performance and a better UX",
-    images: [{ url: '/og/F8TUX3gHu4566g.webp' }],
-  }
-}
+    description:
+      "Some tips on how to make your Next.js application have a better performance and a better UX",
+    images: [{ url: "/og/F8TUX3gHu4566g.webp" }],
+  },
+};
 
 Do you want to get 100 percent performance on your website with Next.js? Here is a collection of tricks to get it.
 
@@ -41,11 +43,11 @@ An example of dynamic component import with JavaScript code:
 
 ```
 import dynamic from 'next/dynamic'
- 
+
 const DynamicHeader = dynamic(() => import('../components/header'), {
   loading: () => <p>Loading...</p>,
 })
- 
+
 export default function Home() {
   return <DynamicHeader />
 }
@@ -55,12 +57,12 @@ Example with an external library:
 
 ```
 import { useState } from 'react'
- 
+
 const names = ['Tim', 'Joe', 'Bel', 'Lee']
- 
+
 export default function Page() {
   const [results, setResults] = useState()
- 
+
   return (
     <div>
       <input
@@ -71,7 +73,7 @@ export default function Page() {
           // Dynamically load fuse.js
           const Fuse = (await import('fuse.js')).default
           const fuse = new Fuse(names)
- 
+
           setResults(fuse.search(value))
         }}
       />
@@ -95,14 +97,14 @@ An example of the use of the `<Image />` component:
 ```
 import Image from 'next/image'
 import profilePic from '../public/me.png'
- 
+
 export default function Page() {
   return (
     <Image
       src={profilePic}
       alt="Picture of the author"
-      width={500} 
-      height={500} 
+      width={500}
+      height={500}
     />
   )
 }
@@ -141,10 +143,10 @@ An example of the use of Google fonts using `next/font`:
 
 ```
 import { Inter } from 'next/font/google'
- 
+
 // If loading a variable font, you don't need to specify the font weight
 const inter = Inter({ subsets: ['latin'] })
- 
+
 export default function MyApp({ Component, pageProps }) {
   return (
     <main className={inter.className}>
@@ -160,7 +162,7 @@ To load a third-party script for all routes, import `next/script` and include th
 
 ```
 import Script from 'next/script'
- 
+
 export default function MyApp({ Component, pageProps }) {
   return (
     <>

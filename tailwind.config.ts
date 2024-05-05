@@ -1,4 +1,5 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
+const plugin = require("tailwindcss/plugin");
 
 const config = {
   darkMode: ["class"],
@@ -6,7 +7,7 @@ const config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-	],
+  ],
   prefix: "",
   theme: {
     container: {
@@ -21,8 +22,8 @@ const config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
+        background: "var(--background)",
+        foreground: "var(--foreground)",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -53,8 +54,8 @@ const config = {
         },
         color: {
           primary: "var(--text-primary)",
-          secondary: "var(--text-secondary)"
-        }
+          secondary: "var(--text-secondary)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -77,7 +78,14 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(function ({ addVariant }: any) {
+      // this class is applied to `html` by `app/theme-efect.ts`, similar
+      // to how `dark:` gets enabled
+      addVariant("theme-system", ".theme-system &");
+    }),
+  ],
+} satisfies Config;
 
-export default config
+export default config;

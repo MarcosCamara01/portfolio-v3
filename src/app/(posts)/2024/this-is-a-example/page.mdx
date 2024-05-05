@@ -1,12 +1,14 @@
 export const metadata = {
   title: "This is a example",
-  description: "7 actionable principles for websites that want to make use of JavaScript to control their UI and deliver the best performance",
+  description:
+    "7 actionable principles for websites that want to make use of JavaScript to control their UI and deliver the best performance",
   openGraph: {
     title: "This is a example",
-    description: "7 actionable principles for websites that want to make use of JavaScript to control their UI and deliver the best performance",
-    images: [{ url: '/og/accel-dx22.png' }],
-  }
-}
+    description:
+      "7 actionable principles for websites that want to make use of JavaScript to control their UI and deliver the best performance",
+    images: [{ url: "/og/accel-dx22.png" }],
+  },
+};
 
 Part of an article by Guillermo Rauch [(@rauchg)](https://twitter.com/rauchg)
 
@@ -37,7 +39,10 @@ What follows is my attempt to answer these. My approach is to examine the usage 
 
 ## 1. Pre rendered pages are not optional [#pre-rendered-pages-are-not-optional]
 
-<Callout emoji="⚡️" text="Pre-rendering is not (just) about SEO, it’s about performance. Consider the additional roundtrips to get scripts, styles, and subsequent API requests. In the future, consider HTTP 2.0 “pushing” of resources." />
+<Callout
+  emoji="⚡️"
+  text="Pre-rendering is not (just) about SEO, it’s about performance. Consider the additional roundtrips to get scripts, styles, and subsequent API requests. In the future, consider HTTP 2.0 “pushing” of resources."
+/>
 
 _Note: this title used to be "server-rendered". However, "pre-rendered" also encapsulates [static site generation](/2020/2019-in-review#static-is-the-new-dynamic), so it was edited accordingly._
 

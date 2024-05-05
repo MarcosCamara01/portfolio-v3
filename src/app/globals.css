@@ -5,10 +5,10 @@
 @layer base {
   :root {
     --background: #fcfcfc;
-    --foreground: #E5E7EB;
+    --foreground: #e5e7eb;
 
-    --text-primary: #1F2937;
-    --text-secondary: #76ABAE;
+    --text-primary: #1f2937;
+    --text-secondary: #76abae;
 
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
@@ -40,9 +40,9 @@
 
   .dark {
     --background: #222831;
-    --foreground: #31363F;
+    --foreground: #31363f;
 
-    --text-primary: #F3F4F6;
+    --text-primary: #f3f4f6;
     --text-secondary: #437274;
 
     --card: 224 71.4% 4.1%;

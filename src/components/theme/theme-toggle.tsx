@@ -4,37 +4,37 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
   const [isHovering, setIsHovering] = useState(false);
 
   return (
     <>
       {isHovering && (
-        <span
-          className='text-[9px] text-gray-400 mr-[-5px] hidden md:inline'
-        >
+        <span className="text-[9px] text-gray-400 mr-[-5px] hidden md:inline">
           {theme}
         </span>
       )}
 
       <button
         aria-label="Toggle theme"
-        className='inline-flex rounded-sm p-2 
+        className="inline-flex rounded-sm p-2 
         text-color-primary
         bg-foreground
         theme-system:!bg-inherit
         [&_.sun-icon]:hidden
         dark:[&_.moon-icon]:hidden
-        dark:[&_.sun-icon]:inline'
-        onClick={ev => {
+        dark:[&_.sun-icon]:inline"
+        onClick={(ev) => {
           ev.preventDefault();
 
-          if (theme === 'system') {
-            setTheme('dark')
-          } if (theme === 'light') {
-            setTheme('system')
-          } if (theme === 'dark') {
-            setTheme('light')
+          if (theme === "system") {
+            setTheme("dark");
+          }
+          if (theme === "light") {
+            setTheme("system");
+          }
+          if (theme === "dark") {
+            setTheme("light");
           }
         }}
         onMouseEnter={() => setIsHovering(true)}
