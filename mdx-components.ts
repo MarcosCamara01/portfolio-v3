@@ -8,7 +8,7 @@ import { UL as ul } from "@/components/posts/ul";
 import { LI as li } from "@/components/posts/li";
 import { HR as hr } from "@/components/posts/hr";
 import { Code as code } from "@/components/posts/code";
-import { Tweet } from "@/components/posts/tweet";
+import { AllTweet } from "@/components/posts/tweet";
 import { Image } from "@/components/posts/image";
 import { Figure } from "@/components/posts/figure";
 import { Snippet } from "@/components/posts/snippet";
@@ -36,7 +36,7 @@ export function useMDXComponents(components: {
     pre: Snippet,
     img: Image,
     blockquote,
-    Tweet,
+    AllTweet,
     Image,
     Figure,
     Snippet,
