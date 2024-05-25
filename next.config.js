@@ -1,13 +1,7 @@
-import nextMdx from "@next/mdx";
+const withMDX = require("@next/mdx")();
 
-/** @type {import('next').NextConfig} */
-
-const withMDX = nextMdx({
-  extension: /\.mdx?$/,
-});
-
-const nextConfig = withMDX({
-  pageExtensions: ["js", "jsx", "ts", "tsx", "md", "mdx"],
+module.exports = withMDX({
+  pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   experimental: {
     mdxRs: true,
   },
@@ -54,6 +48,18 @@ const nextConfig = withMDX({
       },
     ];
   },
+  redirects() {
+    return [
+      {
+        source: "/essays/:nested*",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/slackin/:nested*",
+        destination: "https://github.com/rauchg/slackin",
+        permanent: true,
+      },
+    ];
+  },
 });
-
-export default nextConfig;
