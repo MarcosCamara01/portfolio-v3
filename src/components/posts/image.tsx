@@ -19,14 +19,16 @@ export async function Image({
 }) {
   const isDataImage = src.startsWith("data:");
   if (isDataImage) {
-    return <img src={src} alt={originalAlt ?? ""} />;
+    return (
+      <NextImage src={src} width={600} height={600} alt={originalAlt ?? ""} />
+    );
   } else {
     if (width === null || height === null) {
       let imageBuffer: Buffer | null = null;
 
       if (src.startsWith("http")) {
         imageBuffer = Buffer.from(
-          await fetch(src).then(res => res.arrayBuffer())
+          await fetch(src).then((res) => res.arrayBuffer())
         );
       } else {
         if (
@@ -35,12 +37,12 @@ export async function Image({
           process.env.NODE_ENV === "production"
         ) {
           imageBuffer = Buffer.from(
-            await fetch("https://" + process.env.VERCEL_URL + src).then(res =>
+            await fetch("https://" + process.env.VERCEL_URL + src).then((res) =>
               res.arrayBuffer()
             )
           );
         } else {
-          const imagePath = join(process.cwd(), 'public', src);
+          const imagePath = join(process.cwd(), "public", src);
           imageBuffer = await readFile(imagePath);
         }
       }
@@ -82,7 +84,7 @@ export async function Image({
           alt={alt ?? ""}
           src={src}
           className="rounded"
-          placeholder='blur'
+          placeholder="blur"
           blurDataURL={base64}
         />
 
