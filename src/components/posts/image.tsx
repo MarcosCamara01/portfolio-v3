@@ -19,9 +19,8 @@ export async function Image({
 }) {
   const isDataImage = src.startsWith("data:");
   if (isDataImage) {
-    return (
-      <NextImage src={src} width={600} height={600} alt={originalAlt ?? ""} />
-    );
+    /* eslint-disable @next/next/no-img-element */
+    return <img src={src} alt={originalAlt ?? ""} />;
   } else {
     if (width === null || height === null) {
       let imageBuffer: Buffer | null = null;
