@@ -15,7 +15,7 @@ export function Header({ posts }: { posts: Post[] }) {
     (post) => post.id === segments[segments.length - 1]
   );
   const { data: post, mutate } = useSWR(
-    `/api/view?id=${initialPost?.id ?? ""}`,
+    `${process.env.VERCEL_URL}/api/view?id=${initialPost?.id ?? ""}`,
     fetcher,
     {
       fallbackData: initialPost,
