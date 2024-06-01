@@ -20,7 +20,8 @@ export async function Image({
   const isDataImage = src.startsWith("data:");
   if (isDataImage) {
     /* eslint-disable @next/next/no-img-element */
-    return <img src={src} alt={originalAlt ?? ""} />;
+    return "isDataImage";
+    // return <img src={src} alt={originalAlt ?? ""} />;
   } else {
     if (width === null || height === null) {
       let imageBuffer: Buffer | null = null;
@@ -77,7 +78,7 @@ export async function Image({
 
     return (
       <span className="my-5 flex flex-col items-center">
-        <NextImage
+        {/* <NextImage
           width={width * factor}
           height={height * factor}
           alt={alt ?? ""}
@@ -85,7 +86,7 @@ export async function Image({
           className="rounded"
           placeholder="blur"
           blurDataURL={base64}
-        />
+        /> */}
 
         {alt && <Caption>{alt}</Caption>}
       </span>
