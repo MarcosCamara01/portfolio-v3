@@ -1,4 +1,10 @@
-const withMDX = require("@next/mdx")();
+const withMDX = require("@next/mdx")({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+  },
+});
 
 /** @type {import('next').NextConfig} */
 module.exports = withMDX({
@@ -32,32 +38,5 @@ module.exports = withMDX({
         pathname: "/**",
       },
     ],
-  },
-  headers() {
-    return [
-      {
-        source: "/images/rauchg-3d4cecf.jpg",
-        headers: [
-          {
-            key: "cache-control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-    ];
-  },
-  redirects() {
-    return [
-      {
-        source: "/essays/:nested*",
-        destination: "/",
-        permanent: true,
-      },
-      {
-        source: "/slackin/:nested*",
-        destination: "https://github.com/rauchg/slackin",
-        permanent: true,
-      },
-    ];
   },
 });
