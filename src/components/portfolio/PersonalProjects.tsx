@@ -38,14 +38,13 @@ const PersonalProjects = () => {
               height={300}
               className="w-full h-full border border-background"
               onLoad={() => setImageLoaded(true)}
-              sizes="(max-width: 640px) 80vw,
-                                40vw"
+              sizes="(max-width: 640px) 80vw, 40vw"
             />
 
             <div
               className={
                 !imageLoaded
-                  ? "absolute top-0 right-0 w-full aspect-[196/111] bg-background"
+                  ? "absolute inset-0 w-full aspect-[196/111] bg-background"
                   : "hidden"
               }
             >

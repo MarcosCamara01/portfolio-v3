@@ -1,5 +1,5 @@
 import Contact from "@/components/portfolio/contact";
-import PersonalProjects from "@/components/portfolio/personal-projects";
+import PersonalProjects from "@/components/portfolio/PersonalProjects";
 
 export const revalidate = 60;
 
