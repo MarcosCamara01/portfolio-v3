@@ -35,16 +35,18 @@ export async function Image({
             process.env.NODE_ENV === "production"
           ) {
             imageBuffer = Buffer.from(
-              await fetch(`${process.env.VERCEL_URL}${src}`).then((res) =>
+              await fetch(process.env.VERCEL_URL + src).then((res) =>
                 res.arrayBuffer()
               )
             );
           } else {
-            const imagePath = join(process.cwd(), "public", src);
-            imageBuffer = await readFile(imagePath);
+            imageBuffer = await readFile(
+              new URL(
+                join(import.meta.url, "..", "..", "..", "..", "public", src)
+              ).pathname
+            );
           }
         }
-
         const computedSize = sizeOf(imageBuffer);
         if (
           computedSize.width === undefined ||
@@ -59,7 +61,7 @@ export async function Image({
       let alt: string | null = null;
       let dividedBy = 100;
 
-      if (typeof originalAlt === "string") {
+      if ("string" === typeof originalAlt) {
         const match = originalAlt.match(/(.*) (\[(\d+)%\])?$/);
         if (match != null) {
           alt = match[1];
@@ -78,8 +80,8 @@ export async function Image({
             height={height * factor}
             alt={alt ?? ""}
             src={src}
-            className="rounded"
           />
+
           {alt && <Caption>{alt}</Caption>}
         </span>
       );
