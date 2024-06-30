@@ -35,8 +35,8 @@ export async function Image({
             process.env.NODE_ENV === "production"
           ) {
             imageBuffer = Buffer.from(
-              await fetch(process.env.VERCEL_URL + src).then((res) =>
-                res.arrayBuffer()
+              await fetch("https://" + process.env.VERCEL_URL + src).then(
+                (res) => res.arrayBuffer()
               )
             );
           } else {
@@ -76,11 +76,7 @@ export async function Image({
             width={width * factor}
             height={height * factor}
             alt={alt ?? ""}
-            src={
-              process.env.NODE_ENV === "production"
-                ? process.env.VERCEL_URL + src
-                : src
-            }
+            src={src}
           />
 
           {alt && <Caption>{alt}</Caption>}
