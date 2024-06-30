@@ -40,11 +40,8 @@ export async function Image({
               )
             );
           } else {
-            imageBuffer = await readFile(
-              new URL(
-                join(import.meta.url, "..", "..", "..", "..", "public", src)
-              ).pathname
-            );
+            const imagePath = join(process.cwd(), "public", src);
+            imageBuffer = await readFile(imagePath);
           }
         }
         const computedSize = sizeOf(imageBuffer);
@@ -79,7 +76,11 @@ export async function Image({
             width={width * factor}
             height={height * factor}
             alt={alt ?? ""}
-            src={src}
+            src={
+              process.env.NODE_ENV === "production"
+                ? process.env.VERCEL_URL + src
+                : src
+            }
           />
 
           {alt && <Caption>{alt}</Caption>}
