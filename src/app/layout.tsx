@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import Header from '@/components/common/header';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import Footer from '@/components/common/footer';
+import { Analytics } from '@vercel/analytics/react';
 
 import './globals.css';
 
@@ -47,6 +48,7 @@ export default function RootLayout({
 
           <Footer />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
