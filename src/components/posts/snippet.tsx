@@ -1,26 +1,24 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Caption } from "./caption";
-import { HiOutlineClipboard, HiOutlineCheck } from "react-icons/hi2";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from 'react';
+import { Caption } from './caption';
+import { HiOutlineClipboard, HiOutlineCheck } from 'react-icons/hi2';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Snippet = ({ children, scroll = true, caption = null }: any) => {
   const [isHovering, setIsHovering] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   const extractTextFromReactElement = (element: any): string => {
-    if (!element) return "";
+    if (!element) return '';
 
-    if (typeof element === "string") return element;
+    if (typeof element === 'string') return element;
 
     if (element.props?.children) {
-      return typeof element.props.children === "string"
-        ? element.props.children
-        : "";
+      return typeof element.props.children === 'string' ? element.props.children : '';
     }
 
-    return "";
+    return '';
   };
 
   const handleCopy = async () => {
@@ -30,7 +28,7 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      console.error("Error al copiar el texto:", err);
+      console.error('Error al copiar el texto:', err);
     }
   };
 
@@ -46,11 +44,7 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => {
         text-sm
         bg-foreground 
         rounded
-        ${
-          scroll
-            ? "overflow-auto"
-            : "whitespace-pre-wrap break-all overflow-hidden"
-        }
+        ${scroll ? 'overflow-auto' : 'whitespace-pre-wrap break-all overflow-hidden'}
       `}
       >
         <code>{children}</code>
@@ -64,7 +58,7 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => {
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             aria-label="Copiar código"
             className={`
               absolute top-2 right-2 

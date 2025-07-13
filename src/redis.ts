@@ -1,11 +1,11 @@
-import { Redis } from "@upstash/redis";
+import { Redis } from '@upstash/redis';
 
 type MinimalRedis = {
   hgetall: (key: string) => Promise<Record<string, string> | null>;
   hincrby: (key: string, field: string, increment: number) => Promise<number>;
   hget: (key: string, field: string) => Promise<string | null>;
   get: <T>(key: string) => Promise<T | null>;
-  set: (key: string, value: any) => Promise<"OK">;
+  set: (key: string, value: any) => Promise<'OK'>;
 };
 
 const mockRedis: MinimalRedis = {
@@ -13,7 +13,7 @@ const mockRedis: MinimalRedis = {
   hincrby: async () => 0,
   hget: async () => null,
   get: async () => null,
-  set: async () => "OK",
+  set: async () => 'OK',
 };
 
 let redis: MinimalRedis;
@@ -22,11 +22,9 @@ try {
   if (
     !process.env.UPSTASH_REDIS_REST_TOKEN ||
     !process.env.UPSTASH_REDIS_REST_URL ||
-    process.env.NODE_ENV === "development"
+    process.env.NODE_ENV === 'development'
   ) {
-    console.warn(
-      "Warning: Redis credentials not found or in development mode. Using mock Redis."
-    );
+    console.warn('Warning: Redis credentials not found or in development mode. Using mock Redis.');
     redis = mockRedis;
   } else {
     redis = new Redis({
@@ -35,7 +33,7 @@ try {
     }) as MinimalRedis;
   }
 } catch (error) {
-  console.error("Error initializing Redis:", error);
+  console.error('Error initializing Redis:', error);
   redis = mockRedis;
 }
 

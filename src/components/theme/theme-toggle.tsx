@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTheme } from "next-themes";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from 'react';
+import { useTheme } from 'next-themes';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -26,7 +26,7 @@ export function ThemeToggle() {
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         aria-label="Toggle theme"
         className="inline-flex rounded-sm p-2 
         text-color-primary
@@ -35,21 +35,21 @@ export function ThemeToggle() {
         onClick={(ev) => {
           ev.preventDefault();
 
-          if (theme === "system") {
-            setTheme("dark");
+          if (theme === 'system') {
+            setTheme('dark');
           }
-          if (theme === "light") {
-            setTheme("system");
+          if (theme === 'light') {
+            setTheme('system');
           }
-          if (theme === "dark") {
-            setTheme("light");
+          if (theme === 'dark') {
+            setTheme('light');
           }
         }}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
         <AnimatePresence mode="wait">
-          {theme === "dark" ? (
+          {theme === 'dark' ? (
             <motion.span
               key="sun"
               initial={{ opacity: 0, rotate: -180, scale: 0.5 }}

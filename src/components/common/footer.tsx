@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 const Footer = () => (
   <footer className="p-6 pt-3 pb-6 flex items-center justify-center mt-3 dark:text-gray-400 text-gray-500 font-mono">
@@ -64,7 +64,7 @@ const GitHubIcon = () => (
     strokeLinejoin="round"
     viewBox="0 0 16 16"
     width="24"
-    style={{ color: "currentColor" }}
+    style={{ color: 'currentColor' }}
   >
     <g clipPath="url(#clip0_872_3147)">
       <path
@@ -89,7 +89,7 @@ const LinkedInIcon = () => (
     strokeLinejoin="round"
     viewBox="0 0 16 16"
     width="24"
-    style={{ color: "currentColor" }}
+    style={{ color: 'currentColor' }}
   >
     <path
       id="Subtract"

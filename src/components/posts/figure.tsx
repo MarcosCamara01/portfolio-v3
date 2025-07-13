@@ -1,4 +1,4 @@
-export function Figure({ wide = false, children }: {wide: boolean, children: React.ReactNode }) {
+export function Figure({ wide = false, children }: { wide: boolean; children: React.ReactNode }) {
   return (
     <div
       className={`
@@ -19,7 +19,7 @@ export function Figure({ wide = false, children }: {wide: boolean, children: Rea
       before:absolute
       before:z-[-1]
     `
-        : ""
+        : ''
     }
   `}
     >

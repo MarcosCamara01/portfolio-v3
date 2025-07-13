@@ -1,6 +1,6 @@
-import Image from "next/image";
-import { P } from "../posts/p";
-import { FiUser } from "react-icons/fi";
+import Image from 'next/image';
+import { P } from '../posts/p';
+import { FiUser } from 'react-icons/fi';
 
 export const About = () => {
   return (
@@ -30,31 +30,27 @@ export const About = () => {
             </div>
           </div>
           <P>
-            I&apos;m <b>Marcos Penelas Cámara</b>, a Full Stack Developer based
-            in San Sebastián, Spain. I have extensive experience with{" "}
-            <b>React, Next.js, Node.js, and Python</b>. My professional journey
-            started with a year working as a freelancer, where I delivered
-            end-to-end solutions for a variety of clients and gained a broad
-            perspective on software development.
+            I&apos;m <b>Marcos Penelas Cámara</b>, a Full Stack Developer based in San Sebastián,
+            Spain. I have extensive experience with <b>React, Next.js, Node.js, and Python</b>. My
+            professional journey started with a year working as a freelancer, where I delivered
+            end-to-end solutions for a variety of clients and gained a broad perspective on software
+            development.
           </P>
         </div>
         <P>
-          Since May 2024, I have been part of a team at a legal tech startup,
-          where we design and build a product focused on optimizing legal
-          practice. Our team oversees the entire development process, leveraging
-          the latest technologies to address the unique challenges and needs of
-          the legal sector.
+          Since May 2024, I have been part of a team at a legal tech startup, where we design and
+          build a product focused on optimizing legal practice. Our team oversees the entire
+          development process, leveraging the latest technologies to address the unique challenges
+          and needs of the legal sector.
         </P>
         <P>
-          I have also worked on personal projects that have received over{" "}
-          <b>150 stars on GitHub</b>, and I have published several articles on
-          Medium with more than <b>10,000 reads</b>.
+          I have also worked on personal projects that have received over <b>150 stars on GitHub</b>
+          , and I have published several articles on Medium with more than <b>10,000 reads</b>.
         </P>
         <P>
-          I am currently studying Software Engineering and Artificial
-          Intelligence. My goal is to connect these rapidly evolving fields with
-          my current expertise in software development to create innovative
-          solutions for the future.
+          I am currently studying Software Engineering and Artificial Intelligence. My goal is to
+          connect these rapidly evolving fields with my current expertise in software development to
+          create innovative solutions for the future.
         </P>
       </div>
     </section>

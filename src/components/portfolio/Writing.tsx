@@ -1,8 +1,8 @@
-import { A } from "../posts/a";
-import { P } from "../posts/p";
-import { FiEdit3 } from "react-icons/fi";
-import { UL } from "../posts/ul";
-import { Li } from "../posts/li";
+import { A } from '../posts/a';
+import { P } from '../posts/p';
+import { FiEdit3 } from 'react-icons/fi';
+import { UL } from '../posts/ul';
+import { Li } from '../posts/li';
 
 export const Writing = () => {
   return (
@@ -18,8 +18,8 @@ export const Writing = () => {
       </div>
       <div className="space-y-4">
         <P>
-          I occasionally write about software development, performance
-          optimization, and developer experience. Some of my recent articles:
+          I occasionally write about software development, performance optimization, and developer
+          experience. Some of my recent articles:
         </P>
         <UL>
           <Li>

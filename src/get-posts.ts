@@ -1,6 +1,6 @@
-import postsData from "./posts.json";
-import redis from "./redis";
-import commaNumber from "comma-number";
+import postsData from './posts.json';
+import redis from './redis';
+import commaNumber from 'comma-number';
 
 export type Post = {
   id: string;
@@ -18,9 +18,9 @@ export const getPosts = async () => {
   let allViews: null | Views = null;
 
   try {
-    allViews = await redis.hgetall("views");
+    allViews = await redis.hgetall('views');
   } catch (error) {
-    console.error("Error fetching views from Redis:", error);
+    console.error('Error fetching views from Redis:', error);
   }
 
   const posts = postsData.posts.map((post): Post => {

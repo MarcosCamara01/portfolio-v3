@@ -1,13 +1,13 @@
-import { FiFolder, FiGithub } from "react-icons/fi";
-import { FaCodeFork, FaStar } from "react-icons/fa6";
+import { FiFolder, FiGithub } from 'react-icons/fi';
+import { FaCodeFork, FaStar } from 'react-icons/fa6';
 
-const GITHUB_REPO = "MarcosCamara01/ecommerce-template";
+const GITHUB_REPO = 'MarcosCamara01/ecommerce-template';
 const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
 
 async function getGitHubStats() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
     headers: {
-      Accept: "application/vnd.github.v3+json",
+      Accept: 'application/vnd.github.v3+json',
     },
     next: {
       revalidate: 3600,
@@ -35,9 +35,7 @@ export async function FeaturedProject() {
           <div className="w-8 h-8 bg-foreground rounded flex items-center justify-center">
             <FiFolder className="w-4 h-4 text-color-secondary" />
           </div>
-          <h2 className="text-xl font-medium text-color-primary">
-            Featured Project
-          </h2>
+          <h2 className="text-xl font-medium text-color-primary">Featured Project</h2>
         </div>
         <div className="flex-1 h-px bg-border" />
       </div>
@@ -56,10 +54,9 @@ export async function FeaturedProject() {
               <FiGithub className="w-4 h-4 text-color-secondary" />
             </div>
             <p className="text-sm text-muted-foreground">
-              A modern, full-featured e-commerce template built with Next.js 14,
-              Server Components, and best practices. Features include
-              authentication, product management, shopping cart, and admin
-              dashboard.
+              A modern, full-featured e-commerce template built with Next.js 14, Server Components,
+              and best practices. Features include authentication, product management, shopping
+              cart, and admin dashboard.
             </p>
           </div>
         </div>

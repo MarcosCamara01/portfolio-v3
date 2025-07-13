@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import YT from "react-youtube";
+import YT from 'react-youtube';
 
 export function YouTube(props: any) {
   const opts = {
-    height: "350",
-    width: "624",
+    height: '350',
+    width: '624',
   };
 
   return (

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Table,
@@ -7,34 +7,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { Suspense } from "react";
-import useSWR from "swr";
+} from '@/components/ui/table';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import useSWR from 'swr';
 
-type SortSetting = ["date" | "views", "desc" | "asc"];
+type SortSetting = ['date' | 'views', 'desc' | 'asc'];
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function PostsTable({ posts: initialPosts }: any) {
-  const [sort, setSort] = useState<SortSetting>(["date", "desc"]);
-  const { data: posts } = useSWR("/api/posts", fetcher, {
+  const [sort, setSort] = useState<SortSetting>(['date', 'desc']);
+  const { data: posts } = useSWR('/api/posts', fetcher, {
     fallbackData: initialPosts,
     refreshInterval: 5000,
   });
 
   function sortDate() {
-    setSort((sort) => [
-      "date",
-      sort[0] !== "date" || sort[1] === "asc" ? "desc" : "asc",
-    ]);
+    setSort((sort) => ['date', sort[0] !== 'date' || sort[1] === 'asc' ? 'desc' : 'asc']);
   }
 
   function sortViews() {
     setSort((sort) => [
-      sort[0] === "views" && sort[1] === "asc" ? "date" : "views",
-      sort[0] !== "views" ? "desc" : sort[1] === "asc" ? "desc" : "asc",
+      sort[0] === 'views' && sort[1] === 'asc' ? 'date' : 'views',
+      sort[0] !== 'views' ? 'desc' : sort[1] === 'asc' ? 'desc' : 'asc',
     ]);
   }
 
@@ -46,14 +43,14 @@ export function PostsTable({ posts: initialPosts }: any) {
             <TableHead className="w-[56px] text-xs">
               <button
                 className={`w-12 h-9 text-left  ${
-                  sort[0] === "date" && sort[1] !== "desc"
-                    ? "text-gray-700 dark:text-color-primary"
-                    : ""
+                  sort[0] === 'date' && sort[1] !== 'desc'
+                    ? 'text-gray-700 dark:text-color-primary'
+                    : ''
                 }`}
                 onClick={sortDate}
               >
                 date
-                {sort[0] === "date" && sort[1] === "asc" && "↑"}
+                {sort[0] === 'date' && sort[1] === 'asc' && '↑'}
               </button>
             </TableHead>
             <TableHead className="text-xs">title</TableHead>
@@ -63,14 +60,10 @@ export function PostsTable({ posts: initialPosts }: any) {
                         h-9
                         pl-4
                         text-right
-                        ${
-                          sort[0] === "views"
-                            ? "text-gray-700 dark:text-color-primary"
-                            : ""
-                        }`}
+                        ${sort[0] === 'views' ? 'text-gray-700 dark:text-color-primary' : ''}`}
                 onClick={sortViews}
               >
-                {sort[0] === "views" ? (sort[1] === "asc" ? "↑" : "↓") : ""}
+                {sort[0] === 'views' ? (sort[1] === 'asc' ? '↑' : '↓') : ''}
                 views
               </button>
             </TableHead>
@@ -86,19 +79,19 @@ function List({ posts, sort }: any) {
   const sortedPosts = useMemo(() => {
     const [sortKey, sortDirection] = sort;
     return [...posts].sort((a, b) => {
-      if (sortKey === "date") {
-        return sortDirection === "desc"
+      if (sortKey === 'date') {
+        return sortDirection === 'desc'
           ? new Date(b.date).getTime() - new Date(a.date).getTime()
           : new Date(a.date).getTime() - new Date(b.date).getTime();
       } else {
-        return sortDirection === "desc" ? b.views - a.views : a.views - b.views;
+        return sortDirection === 'desc' ? b.views - a.views : a.views - b.views;
       }
     });
   }, [posts, sort]);
 
   return (
     <TableBody>
-      {sortedPosts.map((post, i: number) => {
+      {sortedPosts.map((post) => {
         const year = getYear(post.date);
 
         return (

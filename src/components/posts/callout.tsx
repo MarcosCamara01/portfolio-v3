@@ -1,4 +1,4 @@
-export const Callout = ({ emoji = null, text = null, children }: any) => (
+export const Callout = ({ text = null, children }: any) => (
   <div className="bg-gray-200 dark:bg-foreground dark:text-gray-300 rounded flex items-start p-3 my-6 text-base gap-2">
     <span className="block w-6 text-center text-color-secondary">
       <RayIcon />

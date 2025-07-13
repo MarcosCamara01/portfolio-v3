@@ -1,14 +1,9 @@
-import { type ReactNode, Suspense } from "react";
-import { Tweet, getTweet } from "react-tweet/api";
-import {
-  EmbeddedTweet,
-  TweetNotFound,
-  TweetSkeleton,
-  type TweetProps,
-} from "react-tweet";
-import redis from "../../redis";
-import { Caption } from "./caption";
-import "./tweet.css";
+import { type ReactNode, Suspense } from 'react';
+import { Tweet, getTweet } from 'react-tweet/api';
+import { EmbeddedTweet, TweetNotFound, TweetSkeleton, type TweetProps } from 'react-tweet';
+import redis from '../../redis';
+import { Caption } from './caption';
+import './tweet.css';
 
 interface TweetArgs {
   id: string;
@@ -20,21 +15,21 @@ async function getAndCacheTweet(id: string): Promise<Tweet | undefined> {
   try {
     const tweet = await getTweet(id);
 
-    // @ts-ignore
+    // @ts-ignore - tweet type from react-tweet doesn't properly type the tombstone property
     if (tweet && !tweet.tombstone) {
       // we populate the cache if we have a fresh tweet
       await redis.set(`tweet:${id}`, tweet);
       return tweet;
     }
   } catch (error) {
-    console.error("tweet fetch error", error);
+    console.error('tweet fetch error', error);
   }
 
   const cachedTweet: Tweet | null = await redis.get(`tweet:${id}`);
 
-  // @ts-ignore
+  // @ts-ignore - tweet type from react-tweet doesn't properly type the tombstone property
   if (!cachedTweet || cachedTweet.tombstone) return undefined;
-  console.log("tweet cache hit", id);
+  console.warn('tweet cache hit', id);
 
   return cachedTweet;
 }

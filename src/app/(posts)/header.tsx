@@ -1,21 +1,19 @@
-"use client";
+'use client';
 
-import { useSelectedLayoutSegments } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { ago } from "time-ago";
-import useSWR from "swr";
-import type { Post } from "@/get-posts";
+import { useSelectedLayoutSegments } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { ago } from 'time-ago';
+import useSWR from 'swr';
+import type { Post } from '@/get-posts';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function Header({ posts }: { posts: Post[] }) {
   const segments = useSelectedLayoutSegments();
 
-  const initialPost = posts.find(
-    (post) => post.id === segments[segments.length - 1]
-  );
+  const initialPost = posts.find((post) => post.id === segments[segments.length - 1]);
   const { data: post, mutate } = useSWR(
-    `${process.env.VERCEL_URL}/api/view?id=${initialPost?.id ?? ""}`,
+    `${process.env.VERCEL_URL}/api/view?id=${initialPost?.id ?? ''}`,
     fetcher,
     {
       fallbackData: initialPost,
@@ -27,9 +25,7 @@ export function Header({ posts }: { posts: Post[] }) {
 
   return (
     <>
-      <h1 className="text-[26px] font-bold mb-3 dark:text-gray-100">
-        {post.title}
-      </h1>
+      <h1 className="text-[26px] font-bold mb-3 dark:text-gray-100">{post.title}</h1>
 
       <p className="font-mono flex text-xs md:mb-10 text-gray-500 dark:text-gray-500">
         <span className="flex-grow">
@@ -53,11 +49,7 @@ export function Header({ posts }: { posts: Post[] }) {
         </span>
 
         <span className="pr-1.5">
-          <Views
-            id={post.id}
-            mutate={mutate}
-            defaultValue={post.viewsFormatted}
-          />
+          <Views id={post.id} mutate={mutate} defaultValue={post.viewsFormatted} />
         </span>
       </p>
     </>
@@ -69,9 +61,9 @@ function Views({ id, mutate, defaultValue }: any) {
   const didLogViewRef = useRef(false);
 
   useEffect(() => {
-    if ("development" === process.env.NODE_ENV) return;
+    if ('development' === process.env.NODE_ENV) return;
     if (!didLogViewRef.current) {
-      const url = "/api/view?incr=1&id=" + encodeURIComponent(id);
+      const url = '/api/view?incr=1&id=' + encodeURIComponent(id);
       fetch(url)
         .then((res) => res.json())
         .then((obj) => {
