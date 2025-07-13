@@ -7,7 +7,7 @@ export const FootNotes = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-export const Ref = ({ id }:any) => (
+export const Ref = ({ id }: any) => (
   <a
     href={`#f${id}`}
     id={`s${id}`}
@@ -17,10 +17,10 @@ export const Ref = ({ id }:any) => (
   </a>
 );
 
-export const FootNote = ({ id, children }:any) => (
+export const FootNote = ({ id, children }: any) => (
   <P>
     {id}.{" "}
-    <A href={`#s${id}`} id={`f${id}`} className="no-underline">
+    <A href={`#s${id}`} className="no-underline">
       ^
     </A>{" "}
     {children}

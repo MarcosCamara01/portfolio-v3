@@ -43,7 +43,7 @@
     --foreground: #31363f;
 
     --text-primary: #f3f4f6;
-    --text-secondary: #437274;
+    --text-secondary: #76abae;
 
     --card: 224 71.4% 4.1%;
     --card-foreground: 210 20% 98%;
@@ -66,7 +66,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 215 27.9% 16.9%;
+    --border: 215 27.9% 20%;
     --input: 215 27.9% 16.9%;
     --ring: 216 12.2% 83.9%;
   }

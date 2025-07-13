@@ -26,7 +26,9 @@ export async function Image({
 
         if (src.startsWith("http")) {
           imageBuffer = Buffer.from(
-            await fetch(src).then((res) => res.arrayBuffer())
+            await fetch(src)
+              .then((res) => res.arrayBuffer())
+              .then((arrayBuffer) => new Uint8Array(arrayBuffer))
           );
         } else {
           if (
@@ -35,9 +37,9 @@ export async function Image({
             process.env.NODE_ENV === "production"
           ) {
             imageBuffer = Buffer.from(
-              await fetch("https://" + process.env.VERCEL_URL + src).then(
-                (res) => res.arrayBuffer()
-              )
+              await fetch("https://" + process.env.VERCEL_URL + src)
+                .then((res) => res.arrayBuffer())
+                .then((arrayBuffer) => new Uint8Array(arrayBuffer))
             );
           } else {
             const imagePath = join(process.cwd(), "public", src);
@@ -73,6 +75,7 @@ export async function Image({
       return (
         <span className="my-5 flex flex-col items-center">
           <NextImage
+            className="rounded"
             width={width * factor}
             height={height * factor}
             alt={alt ?? ""}

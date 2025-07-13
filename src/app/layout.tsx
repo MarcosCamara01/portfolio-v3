@@ -43,13 +43,13 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <main className="p-6 pt-3 md:pt-6 min-h-screen">
+          <main className="p-6 pt-3 md:pt-6 min-h-dvh">
             <Header />
 
             {children}
-
-            <Footer />
           </main>
+
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

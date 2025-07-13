@@ -1,5 +1,5 @@
 // we use `[ul_&]` prefix for the <UL> variety
-export function LI({ children }: { children: React.ReactNode }) {
+export function Li({ children }: { children: React.ReactNode }) {
   return (
     <li
       className={`

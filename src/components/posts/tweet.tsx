@@ -51,7 +51,6 @@ const TweetContent = async ({ id, components }: TweetProps) => {
 
 export const ReactTweet = (props: TweetProps) => (
   <Suspense fallback={<TweetSkeleton />}>
-    {/* @ts-ignore: Async components are valid in the app directory */}
     <TweetContent {...props} />
   </Suspense>
 );

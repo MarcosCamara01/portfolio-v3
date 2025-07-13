@@ -1,8 +1,7 @@
 import Link from "next/link";
-import React from "react";
 
 const Footer = () => (
-  <footer className="mt-8 md:mt-16">
+  <footer className="p-6 pt-3 pb-6 flex items-center justify-center mt-3 dark:text-gray-400 text-gray-500 font-mono">
     <ul className="flex items-center justify-center gap-6">
       <li>
         <Link

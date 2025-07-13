@@ -1,7 +1,6 @@
-import React from "react";
 import { ThemeToggle } from "../theme/theme-toggle";
 import { Logo } from "./logo";
-import Links from "./links";
+import Link from "next/link";
 
 const Header = () => {
   return (
@@ -10,7 +9,13 @@ const Header = () => {
 
       <nav className="font-mono text-sm grow justify-end items-center flex gap-3 md:gap-5">
         <ThemeToggle />
-        <Links />
+
+        <Link
+          href="/blog"
+          className="hover:bg-foreground p-2 rounded-sm -ml-2 transition-[background-color]"
+        >
+          Blog
+        </Link>
       </nav>
     </header>
   );

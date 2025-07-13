@@ -1,25 +1,35 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function A({ children, className = "", href, ...props }: any) {
-  if (href[0] === "#") {
+  const styles =
+    "border-b text-color-primary border-gray-300 transition-[border-color] hover:border-gray-600 dark:border-gray-600 dark:hover:border-gray-300";
+
+  if (href?.[0] === "#") {
+    return (
+      <a href={href} className={cn(styles, className)} {...props}>
+        <strong>{children}</strong>
+      </a>
+    );
+  }
+
+  if (href?.startsWith("http")) {
     return (
       <a
         href={href}
-        className={`border-b text-gray-600 border-gray-300 transition-[border-color] hover:border-gray-600 dark:text-white dark:border-gray-500 dark:hover:border-white ${className}`}
+        className={cn(styles, className)}
+        target="_blank"
+        rel="noopener"
         {...props}
       >
-        {children}
+        <strong>{children}</strong>
       </a>
     );
-  } else {
-    return (
-      <Link
-        href={href}
-        className={`border-b text-gray-600 border-gray-300 transition-[border-color] hover:border-gray-600 dark:text-white dark:border-gray-500 dark:hover:border-white ${className}`}
-        {...props}
-      >
-        {children}
-      </Link>
-    );
   }
+
+  return (
+    <Link href={href || ""} className={cn(styles, className)} {...props}>
+      <strong>{children}</strong>
+    </Link>
+  );
 }

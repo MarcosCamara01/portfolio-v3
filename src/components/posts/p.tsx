@@ -1,3 +1,13 @@
-export function P({ children }: { children: React.ReactNode }) {
-  return <p className="my-5 [blockquote_&]:my-2">{children}</p>;
+import { cn } from "@/lib/utils";
+
+export function P({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <p className={cn("my-5 [blockquote_&]:my-2", className)}>{children}</p>
+  );
 }

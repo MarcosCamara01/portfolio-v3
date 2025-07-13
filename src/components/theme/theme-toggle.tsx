@@ -2,28 +2,36 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [isHovering, setIsHovering] = useState(false);
 
   return (
-    <>
-      {isHovering && (
-        <span className="text-[9px] text-gray-400 mr-[-5px] hidden md:inline">
-          {theme}
-        </span>
-      )}
+    <div className="flex items-center">
+      <AnimatePresence>
+        {isHovering && (
+          <motion.span
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="text-[9px] text-gray-400 mr-2 hidden md:inline"
+          >
+            {theme}
+          </motion.span>
+        )}
+      </AnimatePresence>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
         aria-label="Toggle theme"
         className="inline-flex rounded-sm p-2 
         text-color-primary
         bg-foreground
-        theme-system:!bg-inherit
-        [&_.sun-icon]:hidden
-        dark:[&_.moon-icon]:hidden
-        dark:[&_.sun-icon]:inline"
+        theme-system:!bg-inherit"
         onClick={(ev) => {
           ev.preventDefault();
 
@@ -40,14 +48,33 @@ export function ThemeToggle() {
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-        <span className="sun-icon">
-          <SunIcon />
-        </span>
-        <span className="moon-icon">
-          <MoonIcon />
-        </span>
-      </button>
-    </>
+        <AnimatePresence mode="wait">
+          {theme === "dark" ? (
+            <motion.span
+              key="sun"
+              initial={{ opacity: 0, rotate: -180, scale: 0.5 }}
+              animate={{ opacity: 1, rotate: 0, scale: 1 }}
+              exit={{ opacity: 0, rotate: 180, scale: 0.5 }}
+              transition={{ duration: 0.2 }}
+              className="sun-icon"
+            >
+              <SunIcon />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="moon"
+              initial={{ opacity: 0, rotate: 180, scale: 0.5 }}
+              animate={{ opacity: 1, rotate: 0, scale: 1 }}
+              exit={{ opacity: 0, rotate: -180, scale: 0.5 }}
+              transition={{ duration: 0.2 }}
+              className="moon-icon"
+            >
+              <MoonIcon />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+    </div>
   );
 }
 

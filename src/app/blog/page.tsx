@@ -1,12 +1,11 @@
 import { PostsTable } from "@/components/blog/PostsTable";
 import { getPosts } from "@/get-posts";
-import React from "react";
 
 const Blog = async () => {
   const posts = await getPosts();
 
   return (
-    <section className="min-h-[calc(100vh-108px)] md:min-h-[calc(100vh-152px)]">
+    <section className="min-h-[calc(100dvh-108px)] md:min-h-[calc(100dvh-152px)]">
       <PostsTable posts={posts} />
     </section>
   );
