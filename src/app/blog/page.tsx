@@ -1,4 +1,4 @@
-import { PostsTable } from '@/components/blog/postsTable';
+import { PostsTable } from '@/components/blog/posts-table';
 import { getPosts } from '@/get-posts';
 
 const Blog = async () => {

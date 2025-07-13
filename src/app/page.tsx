@@ -1,6 +1,6 @@
 import { About } from '@/components/portfolio/about';
 import { Experience } from '@/components/portfolio/experience';
-import { FeaturedProject } from '@/components/portfolio/featuredProject';
+import { FeaturedProject } from '@/components/portfolio/featured-project';
 import { Writing } from '@/components/portfolio/writing';
 
 export default function Home() {
