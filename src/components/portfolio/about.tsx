@@ -31,7 +31,7 @@ export const About = () => {
           </div>
           <P>
             I&apos;m <b>Marcos Penelas Cámara</b>, a Full Stack Developer based in San Sebastián,
-            Spain. I have extensive experience with <b>React, Next.js, Node.js, and Python</b>. My
+            Spain. I have advanced knowledge with <b>React, Next.js, Node.js, and Python</b>. My
             professional journey started with a year working as a freelancer, where I delivered
             end-to-end solutions for a variety of clients and gained a broad perspective on software
             development.

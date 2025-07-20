@@ -55,7 +55,7 @@ export async function FeaturedProject() {
             </div>
             <p className="text-sm text-muted-foreground">
               A modern, full-featured e-commerce template built with Next.js 14, Server Components,
-              and best practices. Features include authentication, product management, shopping
+              Supabase and Stripe. Features include authentication, product management, shopping
               cart, and admin dashboard.
             </p>
           </div>

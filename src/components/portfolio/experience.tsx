@@ -28,8 +28,7 @@ export const Experience = () => {
         <P className="mb-6 text-sm text-muted-foreground">
           Part of the team developing a product to optimize legal practice, covering the full
           development cycle and using the latest technologies. I apply advanced knowledge in React,
-          Next.js, Node.js, and Python. Currently studying engineering in AI, Machine Learning, and
-          Deep Learning to connect these fields with my software development skills.
+          Next.js, Supabase, Stripe, Three and BetterAuth.
         </P>
 
         <div className="grid grid-cols-3 gap-4 text-sm font-mono text-gray-500 dark:text-gray-500">
@@ -38,7 +37,7 @@ export const Experience = () => {
             <div>React</div>
           </div>
           <div className="space-y-3">
-            <div>Node.js</div>
+            <div>Three</div>
             <div>TypeScript</div>
           </div>
           <div className="space-y-3">
