@@ -59,13 +59,15 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            aria-label="Copiar código"
+            aria-label="Copy code"
             className={`
               absolute top-2 right-2 
               inline-flex rounded-sm p-2 
               text-color-primary
-              bg-foreground
-              hover:bg-gray-700
+              bg-transparent
+              hover:bg-background
+              transition-colors
+              duration-200
             `}
             onClick={handleCopy}
           >

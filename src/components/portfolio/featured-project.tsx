@@ -1,3 +1,6 @@
+/** COMPONENTS */
+import Link from 'next/link';
+/** ICONS */
 import { FiFolder, FiGithub } from 'react-icons/fi';
 import { FaCodeFork, FaStar } from 'react-icons/fa6';
 
@@ -39,11 +42,11 @@ export async function FeaturedProject() {
         </div>
         <div className="flex-1 h-px bg-border" />
       </div>
-      <a
+      <Link
         href={GITHUB_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="block bg-foreground border border-border rounded p-6 shadow-sm"
+        className="block bg-foreground border border-border rounded-lg p-6 will-change-transform hover:border-gray-400 dark:hover:border-gray-600 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1"
       >
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
@@ -61,7 +64,7 @@ export async function FeaturedProject() {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-sm font-mono text-gray-500 dark:text-gray-500 mb-6">
+        <div className="flex items-center gap-6 text-sm font-mono text-gray-500 dark:text-gray-400 mb-6">
           <div className="flex items-center gap-2">
             <FaStar className="w-4 h-4 text-color-secondary" />
             <span>{stats.stars} stars</span>
@@ -72,21 +75,33 @@ export async function FeaturedProject() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 text-sm font-mono text-gray-500 dark:text-gray-500">
+        <div className="grid grid-cols-3 gap-4 text-xs font-mono">
           <div className="space-y-3">
-            <div>Next.js</div>
-            <div>TypeScript</div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Next.js
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              TypeScript
+            </div>
           </div>
           <div className="space-y-3">
-            <div>Node.js</div>
-            <div>Supabase</div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Node.js
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Supabase
+            </div>
           </div>
           <div className="space-y-3">
-            <div>Tailwind CSS</div>
-            <div>NextAuth</div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Tailwind CSS
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              NextAuth
+            </div>
           </div>
         </div>
-      </a>
+      </Link>
     </section>
   );
 }

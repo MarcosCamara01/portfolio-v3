@@ -1,13 +1,13 @@
 import Link from 'next/link';
 
 const Footer = () => (
-  <footer className="p-6 pt-3 pb-6 flex items-center justify-center mt-3 dark:text-gray-400 text-gray-500 font-mono">
+  <footer className="p-6 pt-3 pb-6 flex items-center justify-center mt-3 dark:text-gray-300 text-gray-600 font-mono">
     <ul className="flex items-center justify-center gap-6">
       <li>
         <Link
           href="https://twitter.com/marcoscamara01"
           target="_blank"
-          className="text-gray-600 dark:text-gray-300 transition-[color] hover:text-color-primary"
+          className="opacity-75 hover:opacity-100 transition-opacity"
         >
           <TwitterIcon />
         </Link>
@@ -16,7 +16,7 @@ const Footer = () => (
         <Link
           href="https://github.com/MarcosCamara01"
           target="_blank"
-          className="text-gray-600 dark:text-gray-300 transition-[color] hover:text-color-primary"
+          className="opacity-75 hover:opacity-100 transition-opacity"
         >
           <GitHubIcon />
         </Link>
@@ -25,7 +25,7 @@ const Footer = () => (
         <Link
           href="https://www.linkedin.com/in/marcospenelascamara"
           target="_blank"
-          className="text-gray-600 dark:text-gray-300 transition-[color] hover:text-color-primary"
+          className="opacity-75 hover:opacity-100 transition-opacity"
         >
           <LinkedInIcon />
         </Link>
@@ -34,7 +34,7 @@ const Footer = () => (
         <Link
           href="https://medium.com/@marcoscamara"
           target="_blank"
-          className="text-gray-600 dark:text-gray-300 transition-[color] hover:text-color-primary"
+          className="opacity-75 hover:opacity-100 transition-opacity"
         >
           <MediumIcon />
         </Link>

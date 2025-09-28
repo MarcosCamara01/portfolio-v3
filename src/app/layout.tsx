@@ -40,11 +40,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${inter.className} scroll-smooth`}>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <main className="p-6 pt-3 md:pt-6 min-h-dvh">
-            <Header />
+          <Header />
 
-            {children}
-          </main>
+          <main className="p-6 pt-8 md:pt-16 min-h-dvh">{children}</main>
 
           <Footer />
         </ThemeProvider>

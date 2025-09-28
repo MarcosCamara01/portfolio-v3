@@ -1,4 +1,7 @@
+/** COMPONENTS */
+import Link from 'next/link';
 import { P } from '../posts/p';
+/** ICONS */
 import { FiBriefcase, FiCode } from 'react-icons/fi';
 
 export const Experience = () => {
@@ -13,12 +16,18 @@ export const Experience = () => {
         </div>
         <div className="flex-1 h-px bg-border" />
       </div>
-      <div className="bg-foreground border border-border rounded p-6 shadow-sm hover:shadow-md transition-all duration-300">
+      <Link
+        href="https://togga.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block bg-foreground border border-border rounded-lg p-6 will-change-transform hover:border-gray-400 dark:hover:border-gray-600 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1"
+      >
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-color-primary mb-1">Full Stack Developer</h3>
-            <p className="text-color-secondary mb-2">Togga</p>
-            <p className="text-sm font-mono text-gray-500 dark:text-gray-500">2024 - Present</p>
+            <h3 className="text-lg font-semibold text-color-primary mb-1">
+              Full Stack Developer · Togga
+            </h3>
+            <p className="text-sm font-mono text-gray-500 dark:text-gray-400">2024 - Present</p>
           </div>
           <div className="w-10 h-10 bg-background rounded flex items-center justify-center">
             <FiCode className="w-5 h-5 text-color-secondary" />
@@ -31,21 +40,33 @@ export const Experience = () => {
           Next.js, Supabase, Stripe, Three and BetterAuth.
         </P>
 
-        <div className="grid grid-cols-3 gap-4 text-sm font-mono text-gray-500 dark:text-gray-500">
+        <div className="grid grid-cols-3 gap-4 text-xs font-mono">
           <div className="space-y-3">
-            <div>Next.js</div>
-            <div>React</div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Next.js
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              React
+            </div>
           </div>
           <div className="space-y-3">
-            <div>Three</div>
-            <div>TypeScript</div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Three
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              TypeScript
+            </div>
           </div>
           <div className="space-y-3">
-            <div>Supabase</div>
-            <div>Tailwind CSS</div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Supabase
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
+              Tailwind CSS
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
     </section>
   );
 };

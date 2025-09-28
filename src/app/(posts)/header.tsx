@@ -10,10 +10,11 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function Header({ posts }: { posts: Post[] }) {
   const segments = useSelectedLayoutSegments();
+  const postId = segments?.length >= 2 ? segments[1] : null;
 
-  const initialPost = posts.find((post) => post.id === segments[segments.length - 1]);
+  const initialPost = posts.find((post) => post.id === postId);
   const { data: post, mutate } = useSWR(
-    `${process.env.VERCEL_URL}/api/view?id=${initialPost?.id ?? ''}`,
+    initialPost?.id ? `/api/view?id=${initialPost.id}` : null,
     fetcher,
     {
       fallbackData: initialPost,

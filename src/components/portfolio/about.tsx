@@ -20,11 +20,11 @@ export const About = () => {
           <div className="float-right ml-6 mb-4">
             <div className="w-32 h-32 relative">
               <Image
-                src="https://media.licdn.com/dms/image/v2/D4D03AQGjE8MzCcPE-A/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1709333102715?e=1756944000&v=beta&t=JyCaqT9w-IgIweLtma6fNN0dEStCJT2G7wtk9DlgMww"
+                src="/images/personal/marcos.webp"
                 alt="Profile"
                 width={128}
                 height={128}
-                className="w-full h-full object-cover rounded-full grayscale hover:grayscale-0 transition-all duration-300"
+                className="w-full h-full object-cover rounded-lg grayscale hover:grayscale-0 transition-all duration-300"
                 sizes="128px"
               />
             </div>
