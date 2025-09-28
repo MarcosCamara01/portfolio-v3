@@ -20,7 +20,7 @@ export const Experience = () => {
         href="https://togga.com"
         target="_blank"
         rel="noopener noreferrer"
-        className="block bg-foreground border border-border rounded-lg p-6 will-change-transform hover:border-gray-400 dark:hover:border-gray-600 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1"
+        className="block bg-foreground rounded-lg p-6 will-change-transform hover:border-gray-400 dark:hover:border-gray-600 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1"
       >
         <div className="flex items-start justify-between mb-6">
           <div>
