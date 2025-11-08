@@ -3,7 +3,7 @@ import { getPosts } from '@/get-posts';
 
 export const revalidate = 60;
 
-export default async function Layout({ children }: { children: React.ReactElement }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
   const posts = await getPosts();
 
   return (

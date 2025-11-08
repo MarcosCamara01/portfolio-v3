@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import { P } from '../posts/p';
 import { FiUser } from 'react-icons/fi';
+import { ImageSkeletonLoader } from './image-skeleton-loader';
 
 export const About = () => {
   return (
@@ -19,14 +19,7 @@ export const About = () => {
         <div className="relative">
           <div className="float-right ml-6 mb-4">
             <div className="w-32 h-32 relative">
-              <Image
-                src="/images/personal/marcos.webp"
-                alt="Profile"
-                width={128}
-                height={128}
-                className="w-full h-full object-cover rounded-lg grayscale hover:grayscale-0 transition-all duration-300"
-                sizes="128px"
-              />
+              <ImageSkeletonLoader />
             </div>
           </div>
           <P>

@@ -1,5 +1,4 @@
 import postsData from './posts.json';
-import redis from './redis';
 import commaNumber from 'comma-number';
 
 export type Post = {
@@ -10,25 +9,14 @@ export type Post = {
   viewsFormatted: string;
 };
 
-type Views = {
-  [key: string]: string;
-};
-
+// Build time: returns posts with 0 views
+// Client time: SWR fetches actual views from /api/posts
 export const getPosts = async () => {
-  let allViews: null | Views = null;
-
-  try {
-    allViews = await redis.hgetall('views');
-  } catch (error) {
-    console.error('Error fetching views from Redis:', error);
-  }
-
   const posts = postsData.posts.map((post): Post => {
-    const views = Number(allViews?.[post.id] ?? 0);
     return {
       ...post,
-      views,
-      viewsFormatted: commaNumber(views),
+      views: 0,
+      viewsFormatted: commaNumber(0),
     };
   });
   return posts;

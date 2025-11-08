@@ -8,11 +8,6 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 module.exports = withMDX({
-  experimental: {
-    turbo: {
-      enabled: false,
-    },
-  },
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   reactStrictMode: true,
   images: {
