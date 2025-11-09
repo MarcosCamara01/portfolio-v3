@@ -44,11 +44,12 @@ export async function GET(req: NextRequest) {
       viewsFormatted: commaNumber(views),
     });
   } else {
-    const views = (await redis.hget('views', id)) ?? 0;
+    const viewsStr = (await redis.hget('views', id)) ?? '0';
+    const views = Number(viewsStr);
     return NextResponse.json({
       ...post,
       views,
-      viewsFormatted: commaNumber(Number(views)),
+      viewsFormatted: commaNumber(views),
     });
   }
 }

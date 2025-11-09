@@ -59,11 +59,11 @@ export function Header({ posts }: { posts: Post[] }) {
 
 function Views({ id, mutate, defaultValue }: any) {
   const views = defaultValue;
-  const didLogViewRef = useRef(false);
+  const lastIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if ('development' === process.env.NODE_ENV) return;
-    if (!didLogViewRef.current) {
+    if (lastIdRef.current !== id) {
       const url = '/api/view?incr=1&id=' + encodeURIComponent(id);
       fetch(url)
         .then((res) => res.json())
@@ -71,9 +71,9 @@ function Views({ id, mutate, defaultValue }: any) {
           mutate(obj);
         })
         .catch(console.error);
-      didLogViewRef.current = true;
+      lastIdRef.current = id;
     }
-  });
+  }, [id, mutate]);
 
   return <>{views != null ? <span>{views} views</span> : null}</>;
 }
