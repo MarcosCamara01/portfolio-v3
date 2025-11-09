@@ -46,7 +46,7 @@ export async function FeaturedProject() {
         href={GITHUB_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="block bg-foreground rounded-lg p-6 will-change-transform hover:border-gray-400 dark:hover:border-gray-600 transition-[border-color,transform,box-shadow] duration-200 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1"
+        className="block bg-foreground rounded-lg p-6 will-change-transform duration-200 ease-out"
       >
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
@@ -77,28 +77,16 @@ export async function FeaturedProject() {
 
         <div className="grid grid-cols-3 gap-4 text-xs font-mono">
           <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
-              Next.js
-            </div>
-            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
-              TypeScript
-            </div>
+            <div className="text-gray-600 dark:text-gray-400">Next.js</div>
+            <div className="text-gray-600 dark:text-gray-400">TypeScript</div>
           </div>
           <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
-              Node.js
-            </div>
-            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
-              Supabase
-            </div>
+            <div className="text-gray-600 dark:text-gray-400">Node.js</div>
+            <div className="text-gray-600 dark:text-gray-400">Supabase</div>
           </div>
           <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
-              Tailwind CSS
-            </div>
-            <div className="text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-150 ease-in">
-              NextAuth
-            </div>
+            <div className="text-gray-600 dark:text-gray-400">Tailwind CSS</div>
+            <div className="text-gray-600 dark:text-gray-400">NextAuth</div>
           </div>
         </div>
       </Link>

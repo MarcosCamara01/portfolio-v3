@@ -6,9 +6,13 @@ import { Logo } from './logo';
 import Link from 'next/link';
 /** FUNCTIONALITY */
 import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useScrollFix } from '@/hooks/use-scroll-fix';
 
 const Header = () => {
   const [isSticky, setIsSticky] = useState(false);
+
+  useScrollFix();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,9 +26,13 @@ const Header = () => {
   return (
     <div className="sticky top-3 z-50">
       <header
-        className={`flex items-center bg-background rounded-lg py-4 px-[23px] border transition-colors ${
-          isSticky ? 'border-border' : 'border-transparent'
-        }`}
+        className={cn(
+          'flex items-center bg-background rounded-lg py-4 px-[23px] border transition-colors',
+          {
+            'border-border': isSticky,
+            'border-transparent': !isSticky,
+          }
+        )}
       >
         <Logo />
 
