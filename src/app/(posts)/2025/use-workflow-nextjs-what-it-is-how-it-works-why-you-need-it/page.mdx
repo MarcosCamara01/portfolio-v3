@@ -1,0 +1,372 @@
+export const metadata = {
+  title: '"use workflow" Next.js: What It Is, How It Works, and Why You Need It',
+  description:
+    'Discover "use workflow", a game-changing directive that transforms async functions into durable workflows. Learn how to eliminate cron jobs, Redis workers, and message queues with simple Next.js code.',
+};
+
+Imagine your application needs to send a welcome email, wait 24 hours, and then send an automatic follow-up. Your current solution? Probably a cron job, a Redis worker, or a message queue with separate infrastructure. **What if you could do it all in a Next.js function with a simple `await sleep("24h")`?**
+
+That's exactly what `"use workflow"` does, a new directive that turns your async functions into durable workflows. No more queues, no more cron jobs, no more extra infrastructure. Just JavaScript code that works.
+
+In this article, I'll explain how `"use workflow"` works internally, showcase advanced use cases that change the game, and show you exactly how to get started building reliable systems without extra infrastructure.
+
+1. [What is "use workflow"?](#what-is-use-workflow)
+1. [Why You Need This Now](#why-you-need-this-now)
+1. [Advanced Use Cases That Change the Game](#advanced-use-cases-that-change-the-game)
+1. [What Nobody Tells You About Directives](#what-nobody-tells-you-about-directives)
+1. [Steps: Where Your Business Logic Lives](#steps-where-your-business-logic-lives)
+1. [Real-World Example: AI-Powered Email System](#real-world-example-ai-powered-email-system)
+1. [Webhooks: Waiting for External Events](#webhooks-waiting-for-external-events)
+1. [The 5 Key Advantages](#the-5-key-advantages)
+1. [When NOT to Use Workflows](#when-not-to-use-workflows)
+1. [Deployment: The Magic of Framework-defined Infrastructure](#deployment-the-magic-of-framework-defined-infrastructure)
+
+## 1. What is "use workflow"? [#what-is-use-workflow]
+
+`"use workflow"` is a JavaScript directive introduced by the Workflow Development Kit (WDK) that transforms normal async functions into durable workflows. **These workflows can pause for minutes, hours, or even months, survive crashes and deployments, and resume exactly where they left off**.
+
+The key lies in how it works internally: when a workflow executes, each step saves its result in an event log. **If the workflow suspends, when it resumes, it simply "replays" from the beginning using cached results**. It's like teleporting to the future without consuming resources.
+
+```typescript
+export async function handleUserSignup(email: string) {
+  'use workflow';
+
+  const user = await createUser(email);
+  await sendWelcomeEmail(user);
+  await sleep('24h'); // Pause 24h without consuming resources
+  await sendOnboardingEmail(user);
+
+  return { userId: user.id, status: 'onboarded' };
+}
+```
+
+During the first 24 hours, this function simply **doesn't exist in memory**. No open connections, no polling, nothing consuming CPU.
+
+## 2. Why You Need This Now [#why-you-need-this-now]
+
+If you've ever built any of these features, you know the pain involved:
+
+- **User onboarding with staggered emails**: Send messages over days or weeks without losing state
+- **Complex payment processing**: Wait for confirmations, send notifications, generate invoices
+- **Integrations with external services**: Create tickets in project management tools, sync with CRMs, call rate-limited APIs
+- **AI workflows**: Generate content, wait for human validation, process results in multiple stages
+- **E-commerce systems**: Wait for user actions without maintaining open connections
+
+**The traditional problem is you need to build an entire infrastructure**: message queues, databases for state, separate workers, retry logic, distributed error handling. With WDK, all of that comes included.
+
+## 3. Advanced Use Cases That Change the Game [#advanced-use-cases-that-change-the-game]
+
+### 3.1 Retry Systems with Complex Logic
+
+Workflows let you implement sophisticated retry strategies that would be impossible with traditional queues:
+
+```typescript
+export async function processPaymentWithRetry(orderId: string) {
+  'use workflow';
+
+  let attempts = 0;
+  let lastError;
+
+  while (attempts < 5) {
+    try {
+      const result = await chargeCard(orderId);
+
+      if (result.status === 'success') {
+        await sendConfirmationEmail(orderId);
+        return result;
+      }
+
+      // If card has insufficient funds, wait longer
+      if (result.error === 'insufficient_funds') {
+        await sleep(attempts === 0 ? '1h' : '24h');
+      } else {
+        await sleep('5m');
+      }
+    } catch (error) {
+      lastError = error;
+    }
+
+    attempts++;
+  }
+
+  // After 5 attempts, mark as failed
+  await notifyAdminOfFailure(orderId, lastError);
+  throw new FatalError('Payment failed after 5 attempts');
+}
+```
+
+This workflow adjusts its retry strategy based on error type. **It tries charging every hour if there are no funds, but every 5 minutes for other errors**.
+
+### 3.2 Workflows That Wait for Human Actions
+
+A little-known use case: **pause a workflow until a human makes a decision**:
+
+```typescript
+import { createWebhook } from 'workflow';
+
+export async function handleContentModeration(postId: string) {
+  'use workflow';
+
+  const post = await fetchPost(postId);
+  const aiResult = await analyzeWithAI(post.content);
+
+  // If AI isn't confident, request human review
+  if (aiResult.confidence < 0.8) {
+    const webhook = createWebhook();
+
+    await notifyModerator({
+      postId,
+      approveUrl: `${webhook.url}?action=approve`,
+      rejectUrl: `${webhook.url}?action=reject`,
+    });
+
+    // Workflow pauses here until moderator clicks
+    const { request } = await webhook;
+    const params = new URL(request.url).searchParams;
+    const action = params.get('action');
+
+    if (action === 'approve') {
+      await publishPost(postId);
+    } else {
+      await archivePost(postId);
+    }
+  } else {
+    await publishPost(postId);
+  }
+
+  return { postId, status: 'processed' };
+}
+```
+
+**The workflow can be paused for days waiting for the moderator to review content**. No polling, no queues constantly checking, it just waits.
+
+### 3.3 Workflows That Call Themselves
+
+This is advanced and few people know it: **a workflow can schedule its own future re-execution**:
+
+```typescript
+export async function monitorUserActivity(userId: string, checkNumber: number = 0) {
+  'use workflow';
+
+  const activity = await getUserActivity(userId);
+
+  if (activity.lastLoginDays > 7) {
+    await sendReEngagementEmail(userId, checkNumber);
+  }
+
+  // If user still inactive after 3 emails, archive
+  if (checkNumber >= 3 && activity.lastLoginDays > 30) {
+    await archiveInactiveUser(userId);
+    return { userId, status: 'archived' };
+  }
+
+  // Wait 7 days and re-execute this same workflow
+  await sleep('7d');
+  return monitorUserActivity(userId, checkNumber + 1);
+}
+```
+
+This workflow executes recursively every 7 days. **It's like a cron job, but with persistent state between executions**.
+
+## 4. What Nobody Tells You About Directives [#what-nobody-tells-you-about-directives]
+
+### Why It Doesn't Work with Wrappers
+
+Many people ask: "Why not use `useWorkflow(async () => {})` like React?" The technical answer is fascinating.
+
+**The fundamental problem: workflows aren't runtime values, they're compile-time declarations**. If you used a wrapper, the compiler couldn't detect that your function is a workflow without analyzing your entire codebase, which is computationally impossible at scale.
+
+With `"use workflow"`, the compiler **knows immediately** that it's processing a workflow and can validate everything you do inside.
+
+### Closures vs Parameters: The Crucial Detail
+
+This surprises many developers: **closures DON'T work as you expect in workflows**:
+
+```typescript
+export async function badExample() {
+  'use workflow';
+
+  let counter = 0;
+
+  await updateDatabase(() => {
+    counter++; // ❌ This mutation is lost in replays
+    return counter;
+  });
+
+  console.log(counter); // During execution: 1, during replay: 0
+}
+```
+
+**Why**: steps execute outside the workflow. Variables captured by closure don't persist between suspensions.
+
+**The solution**: steps receive parameters, not closures:
+
+```typescript
+async function updateDatabase(value: number) {
+  'use step';
+  return await db.insert({ count: value });
+}
+
+export async function goodExample() {
+  'use workflow';
+
+  let counter = 0;
+
+  // Callbacks inside the workflow DO work
+  await Promise.all(
+    [1, 2, 3].map(async (num) => {
+      counter += num; // ✅ This works because it runs in workflow sandbox
+      await saveNumber(num);
+    })
+  );
+
+  console.log(counter); // Always 6, consistent
+}
+```
+
+Callbacks inside the workflow work because **they execute in the workflow's deterministic sandbox, not as independent steps**.
+
+## 5. Steps: Where Your Business Logic Lives [#steps-where-your-business-logic-lives]
+
+Steps are units of work that execute in isolation and **automatically retry if they fail**. There's a crucial detail: **each step is a separate HTTP request**.
+
+```typescript
+import { FatalError } from 'workflow';
+
+async function createUser(email: string) {
+  'use step';
+
+  console.log(`Creating user: ${email}`);
+  return { id: crypto.randomUUID(), email };
+}
+
+async function sendWelcomeEmail(user: { id: string; email: string }) {
+  'use step';
+
+  console.log(`Sending welcome email to: ${user.id}`);
+
+  // If this fetch fails, the step retries automatically
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    body: JSON.stringify({ to: user.email, subject: 'Welcome!' }),
+  });
+
+  if (!response.ok) throw new Error('Email failed');
+}
+
+async function sendOnboardingEmail(user: { id: string; email: string }) {
+  'use step';
+
+  if (!user.email.includes('@')) {
+    // FatalError = don't retry, it's a permanent error
+    throw new FatalError('Invalid email format');
+  }
+
+  console.log(`Sending onboarding email to: ${user.id}`);
+}
+```
+
+**The magic here is that each step executes in a separate HTTP request**. If a step fails, only that step retries, not the entire workflow. This is especially important in long workflows: a failure in the last step doesn't force re-execution of the first 50 steps.
+
+## 6. Real-World Example: AI-Powered Email System [#real-world-example-ai-powered-email-system]
+
+Let's see a practical example that combines AI, email sending, and integrations:
+
+```typescript
+export async function welcome(email: string, name: string, plan: string) {
+  'use workflow';
+
+  // Step 1: Generate personalized email with AI
+  const { subject, body } = await generateEmail({
+    name,
+    plan,
+  });
+
+  // Step 2: Send transactional email
+  const { status } = await sendEmail({
+    to: email,
+    subject,
+    body,
+  });
+
+  // Step 3: If premium plan, create support ticket
+  if (plan === 'premium') {
+    await createSupportTicket({
+      title: `New premium user: ${name}`,
+      description: `Setup onboarding for ${email}`,
+      priority: 1,
+    });
+  }
+
+  return { status, subject, body };
+}
+```
+
+This workflow orchestrates three different operations. **If the email service fails, only that specific step retries, not the AI generation that already completed**.
+
+## 7. Webhooks: Waiting for External Events [#webhooks-waiting-for-external-events]
+
+One of the most powerful features is the ability to **pause a workflow until an external event arrives**:
+
+```typescript
+import { createWebhook, fetch } from 'workflow';
+
+export async function validatePayment(orderId: string) {
+  'use workflow';
+
+  const webhook = createWebhook();
+
+  // Send payment request with callback URL
+  await fetch('https://api.stripe.com/validate', {
+    method: 'POST',
+    body: JSON.stringify({
+      orderId,
+      callback: webhook.url, // Unique URL for this workflow
+    }),
+  });
+
+  // Workflow pauses here until Stripe calls the webhook
+  const { request } = await webhook;
+  const confirmation = await request.json();
+
+  return { orderId, status: confirmation.status };
+}
+```
+
+**No polling, no message queues, no manual state**. The workflow simply waits until the webhook receives data.
+
+## 8. The 5 Key Advantages [#the-5-key-advantages]
+
+**No Extra Infrastructure** — You don't need Redis, RabbitMQ, or queue services. **Everything works with your current Next.js stack**.
+
+**Automatic Durability** — Workflow state is saved automatically after each step. **Crashes and deployments don't lose progress**.
+
+**Smart Retries** — Errors retry automatically with exponential backoff. Use `FatalError` for errors that shouldn't retry.
+
+**Built-in Observability** — Run `npx workflow web` to see a visual dashboard of all executions, steps, inputs, outputs, and errors.
+
+**Native JavaScript** — No YAML, no state machines, no domain-specific languages. **Just async/await you already know**.
+
+## 9. When NOT to Use Workflows [#when-not-to-use-workflows]
+
+Be honest about limitations. Workflows are NOT for:
+
+- **Synchronous operations in HTTP requests**: If you need to respond immediately to the user in under 100ms
+- **Ultra-simple tasks**: If your function completes in 50ms and never fails, durability is overkill
+- **Real-time processing**: Workflows add minimal latency (~50-100ms) for persistence
+
+**Use workflows when reliability matters more than instant speed**.
+
+## 10. Deployment: The Magic of Framework-defined Infrastructure [#deployment-the-magic-of-framework-defined-infrastructure]
+
+In local development, WDK uses a "Local World" that simulates virtual infrastructure without needing anything extra. **Simply `npm run dev` and it works**.
+
+In production on Vercel, it uses Framework-defined Infrastructure (FdI) that **automatically provisions persistence, queues, and routing based on your code**. No YAML, no manual configuration. The same code works identically in both environments.
+
+Want to deploy elsewhere? WDK is completely open source. Community implementations for Postgres and Jazz already exist.
+
+---
+
+**Are you building systems that need to be reliable and not just fast?** Durable workflows eliminate one of the biggest obstacles in modern applications. You no longer need to be an expert in distributed systems to build reliable software.
+
+**Have you used workflows in Next.js or have a use case you'd like to automate?** Share your experience in the comments 👇
