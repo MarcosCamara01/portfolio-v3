@@ -4,36 +4,11 @@
 import { ThemeToggle } from '../theme/theme-toggle';
 import { Logo } from './logo';
 import Link from 'next/link';
-/** FUNCTIONALITY */
-import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { useScrollFix } from '@/hooks/use-scroll-fix';
 
 const Header = () => {
-  const [isSticky, setIsSticky] = useState(false);
-
-  useScrollFix();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsSticky(window.scrollY > 0);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className="sticky top-3 z-50">
-      <header
-        className={cn(
-          'flex items-center bg-background rounded-lg py-4 px-[23px] border transition-colors',
-          {
-            'border-border': isSticky,
-            'border-transparent': !isSticky,
-          }
-        )}
-      >
+    <div className="sticky top-0 z-50 px-3">
+      <header className="flex items-center rounded-b-xl rounded-t-none border-x border-b border-border bg-background px-[23px] py-4">
         <Logo />
 
         <nav className="font-mono text-sm grow justify-end items-center flex gap-3 md:gap-5">
