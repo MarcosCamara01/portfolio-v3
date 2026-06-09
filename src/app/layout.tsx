@@ -3,6 +3,7 @@ import Header from '@/components/common/header';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import Footer from '@/components/common/footer';
 import { Analytics } from '@vercel/analytics/react';
+import { SITE_URL } from '@/lib/site';
 
 import './globals.css';
 
@@ -11,20 +12,20 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: "Marcos Cámara's blog",
   description:
-    'Guillermo Rauch is the CEO and founder of Vercel, a software engineer, and the creator of Next.js, Mongoose, Socket.io and other open source libraries.',
+    'Marcos Cámara is a software engineer focused on TypeScript, React and Next.js. Personal blog and portfolio.',
   openGraph: {
     title: "Marcos Cámara's blog",
     description:
-      'Guillermo Rauch is the CEO and founder of Vercel, a software engineer, and the creator of Next.js, Mongoose, Socket.io and other open source libraries.',
-    url: 'https://portfolio-v3-zeta-ecru.vercel.app',
+      'Marcos Cámara is a software engineer focused on TypeScript, React and Next.js. Personal blog and portfolio.',
+    url: SITE_URL,
     siteName: "Marcos Cámara's blog",
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@rauchg',
-    creator: '@rauchg',
+    site: '@marcoscamara01',
+    creator: '@marcoscamara01',
   },
-  metadataBase: new URL('https://portfolio-v3-zeta-ecru.vercel.app'),
+  metadataBase: new URL(SITE_URL),
 };
 
 export const viewport = {
