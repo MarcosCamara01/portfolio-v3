@@ -8,6 +8,8 @@ type MinimalRedis = {
   set: (key: string, value: any) => Promise<'OK'>;
 };
 
+// Outside production we always use a mock so local navigation never pollutes
+// the real view counts.
 const mockRedis: MinimalRedis = {
   hgetall: async () => null,
   hincrby: async () => 0,
@@ -16,25 +18,38 @@ const mockRedis: MinimalRedis = {
   set: async () => 'OK',
 };
 
-let redis: MinimalRedis;
+let client: MinimalRedis | null = null;
 
-try {
-  if (
-    !process.env.UPSTASH_REDIS_REST_TOKEN ||
-    !process.env.UPSTASH_REDIS_REST_URL ||
-    process.env.NODE_ENV === 'development'
-  ) {
-    console.warn('Warning: Redis credentials not found or in development mode. Using mock Redis.');
-    redis = mockRedis;
-  } else {
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    }) as MinimalRedis;
+// Lazy so that `next build` succeeds without credentials, but the first
+// request in a misconfigured production deployment fails loudly instead of
+// silently serving zeroed view counts from the mock.
+function getClient(): MinimalRedis {
+  if (client) return client;
+
+  if (process.env.NODE_ENV !== 'production') {
+    client = mockRedis;
+    return client;
   }
-} catch (error) {
-  console.error('Error initializing Redis:', error);
-  redis = mockRedis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    throw new Error(
+      'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set in production'
+    );
+  }
+
+  client = new Redis({ url, token }) as MinimalRedis;
+  return client;
 }
+
+const redis: MinimalRedis = {
+  hgetall: (key) => getClient().hgetall(key),
+  hincrby: (key, field, increment) => getClient().hincrby(key, field, increment),
+  hget: (key, field) => getClient().hget(key, field),
+  get: (key) => getClient().get(key),
+  set: (key, value) => getClient().set(key, value),
+};
 
 export default redis;
