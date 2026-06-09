@@ -1,7 +1,5 @@
-export const runtime = 'edge';
-
 import redis from '@/redis';
-import postsData from '@/posts.json';
+import { getPosts } from '@/get-posts';
 import commaNumber from 'comma-number';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -22,7 +20,8 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const post = postsData.posts.find((post) => post.id === id);
+  const posts = await getPosts();
+  const post = posts.find((post) => post.id === id);
 
   if (post == null) {
     return NextResponse.json(

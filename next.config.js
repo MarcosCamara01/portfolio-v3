@@ -10,6 +10,12 @@ const withMDX = require('@next/mdx')({
 module.exports = withMDX({
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   reactStrictMode: true,
+  // getPosts() reads the post page.mdx files with fs at request time in these
+  // routes; Vercel only bundles traced files, so include them explicitly.
+  outputFileTracingIncludes: {
+    '/api/posts': ['./src/app/**/page.mdx'],
+    '/api/view': ['./src/app/**/page.mdx'],
+  },
   images: {
     remotePatterns: [
       {
