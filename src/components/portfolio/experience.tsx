@@ -36,22 +36,24 @@ export const Experience = () => {
 
         <P className="mb-6 text-sm text-muted-foreground">
           Part of the team developing a product to optimize legal practice, covering the full
-          development cycle and using the latest technologies. I apply advanced knowledge in React,
-          Next.js, Supabase, Stripe, Three and BetterAuth.
+          development cycle and using the latest technologies. Among other things, I work on the
+          legal AI chat with the Vercel AI SDK, implementing streaming responses and tool calling
+          over legal documents. I apply advanced knowledge in React, Next.js, Supabase, Stripe and
+          BetterAuth.
         </P>
 
         <div className="grid grid-cols-3 gap-4 text-xs font-mono">
           <div className="space-y-3">
+            <div className="text-gray-600 dark:text-gray-400">AI SDK</div>
             <div className="text-gray-600 dark:text-gray-400">Next.js</div>
-            <div className="text-gray-600 dark:text-gray-400">React</div>
           </div>
           <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">Three</div>
+            <div className="text-gray-600 dark:text-gray-400">React</div>
             <div className="text-gray-600 dark:text-gray-400">TypeScript</div>
           </div>
           <div className="space-y-3">
             <div className="text-gray-600 dark:text-gray-400">Supabase</div>
-            <div className="text-gray-600 dark:text-gray-400">Tailwind CSS</div>
+            <div className="text-gray-600 dark:text-gray-400">PostgreSQL</div>
           </div>
         </div>
       </Link>
