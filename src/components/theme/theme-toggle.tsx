@@ -1,24 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   const [isHovering, setIsHovering] = useState(false);
 
   return (
     <div className="flex items-center">
       <AnimatePresence>
-        {isHovering && (
+        {mounted && isHovering && (
           <motion.span
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
             className="text-[9px] text-gray-400 mr-2 hidden md:inline"
           >
-            {theme}
+            {theme ?? 'system'}
           </motion.span>
         )}
       </AnimatePresence>
@@ -35,6 +40,10 @@ export function ThemeToggle() {
         onClick={(ev) => {
           ev.preventDefault();
 
+          if (!mounted) {
+            return;
+          }
+
           if (theme === 'system') {
             setTheme('dark');
           }
@@ -49,7 +58,9 @@ export function ThemeToggle() {
         onMouseLeave={() => setIsHovering(false)}
       >
         <AnimatePresence mode="wait">
-          {theme === 'dark' ? (
+          {!mounted ? (
+            <span aria-hidden className="block size-4" />
+          ) : theme === 'dark' ? (
             <motion.span
               key="sun"
               initial={{ opacity: 0, rotate: -180, scale: 0.5 }}
