@@ -21,6 +21,9 @@ Post metadata is parsed at build time and a malformed export fails the build.
 - `src/get-posts.ts` — derives the post list from the filesystem. No index to maintain.
 - `src/components/` — UI, split into `blog/` and `portfolio/`.
 - `src/lib/`, `src/redis.ts` — site config and optional tweet cache.
+- `DESIGN.md` — visual redesign source of truth (tokens, type, `max-w-2xl` column, home/blog/article structure). Read it before changing UI.
+
+Implement the redesign in layers, as separate PRs: tokens + chrome → home → `/blog` → article pages → motion/polish. Posts stay MDX in git. Do not install Spec Kit for this work.
 
 ## Writing articles
 
