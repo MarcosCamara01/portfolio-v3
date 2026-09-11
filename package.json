@@ -17,7 +17,6 @@
     "@upstash/redis": "^1.30.0",
     "@vercel/analytics": "^1.2.2",
     "clsx": "^2.1.1",
-    "comma-number": "^2.1.0",
     "framer-motion": "^12.18.1",
     "image-size": "^2.0.2",
     "next": "^16.1.1",
@@ -28,13 +27,11 @@
     "react-tweet": "^3.1.1",
     "react-wrap-balancer": "^1.1.0",
     "react-youtube": "^10.1.0",
-    "swr": "^2.3.4",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "time-ago": "^0.2.1"
   },
   "devDependencies": {
-    "@types/comma-number": "^2.1.2",
     "@types/mdx": "^2.0.13",
     "@types/node": "^24.0.3",
     "@types/react": "^19.2.2",

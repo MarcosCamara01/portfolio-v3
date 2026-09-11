@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Personal portfolio and technical blog. Next.js 16 (App Router) + React 19 + Tailwind,
-articles written as MDX. Deployed on Vercel; view counters live in Upstash Redis.
+articles written as MDX. Deployed on Vercel. Embedded tweets may be cached in Upstash Redis.
 
 ## Commands
 
@@ -20,7 +20,7 @@ Post metadata is parsed at build time and a malformed export fails the build.
 - `src/app/(posts)/{year}/{slug}/page.mdx` — one article per directory.
 - `src/get-posts.ts` — derives the post list from the filesystem. No index to maintain.
 - `src/components/` — UI, split into `blog/` and `portfolio/`.
-- `src/lib/`, `src/redis.ts` — site config and the view counter.
+- `src/lib/`, `src/redis.ts` — site config and optional tweet cache.
 
 ## Writing articles
 

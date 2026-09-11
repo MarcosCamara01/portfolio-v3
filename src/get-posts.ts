@@ -1,13 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import commaNumber from 'comma-number';
 
 export type Post = {
   id: string;
   date: string;
   title: string;
-  views: number;
-  viewsFormatted: string;
 };
 
 const POSTS_ROOT = path.join(process.cwd(), 'src', 'app', '(posts)');
@@ -22,8 +19,6 @@ function extract(source: string, regex: RegExp, what: string, file: string): str
 
 // Posts are derived from the filesystem: src/app/(posts)/{year}/{slug}/page.mdx.
 // Each page.mdx must export `metadata` (with a title) and a `date` string.
-// Build time: returns posts with 0 views
-// Client time: SWR fetches actual views from /api/posts
 export const getPosts = async (): Promise<Post[]> => {
   const years = fs.readdirSync(POSTS_ROOT).filter((entry) => /^\d{4}$/.test(entry));
 
@@ -53,8 +48,6 @@ export const getPosts = async (): Promise<Post[]> => {
           id: slug,
           date,
           title,
-          views: 0,
-          viewsFormatted: commaNumber(0),
         };
       });
   });

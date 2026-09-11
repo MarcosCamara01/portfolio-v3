@@ -22,7 +22,7 @@ are wrong. Verify before finishing:
 - `new Date(date).getFullYear()` must equal the `{year}` directory, or the build fails.
 - No `# H1` in the body. The title comes from `metadata`.
 
-Nothing else needs updating: `/blog`, the sitemap and `/api/posts` all read from the
+Nothing else needs updating: `/blog` and the sitemap read from the
 filesystem. There is no index to register the post in.
 
 ## 2. File skeleton

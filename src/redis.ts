@@ -1,33 +1,22 @@
 import { Redis } from '@upstash/redis';
 
-type MinimalRedis = {
-  hgetall: (key: string) => Promise<Record<string, string> | null>;
-  hincrby: (key: string, field: string, increment: number) => Promise<number>;
-  hget: (key: string, field: string) => Promise<string | null>;
+type TweetCache = {
   get: <T>(key: string) => Promise<T | null>;
-  set: (key: string, value: any) => Promise<'OK'>;
+  set: (key: string, value: unknown) => Promise<'OK'>;
 };
 
-// Outside production we always use a mock so local navigation never pollutes
-// the real view counts.
-const mockRedis: MinimalRedis = {
-  hgetall: async () => null,
-  hincrby: async () => 0,
-  hget: async () => null,
+const mockCache: TweetCache = {
   get: async () => null,
   set: async () => 'OK',
 };
 
-let client: MinimalRedis | null = null;
+let client: TweetCache | null = null;
 
-// Lazy so that `next build` succeeds without credentials, but the first
-// request in a misconfigured production deployment fails loudly instead of
-// silently serving zeroed view counts from the mock.
-function getClient(): MinimalRedis {
+function getClient(): TweetCache {
   if (client) return client;
 
   if (process.env.NODE_ENV !== 'production') {
-    client = mockRedis;
+    client = mockCache;
     return client;
   }
 
@@ -40,14 +29,11 @@ function getClient(): MinimalRedis {
     );
   }
 
-  client = new Redis({ url, token }) as MinimalRedis;
+  client = new Redis({ url, token }) as TweetCache;
   return client;
 }
 
-const redis: MinimalRedis = {
-  hgetall: (key) => getClient().hgetall(key),
-  hincrby: (key, field, increment) => getClient().hincrby(key, field, increment),
-  hget: (key, field) => getClient().hget(key, field),
+const redis: TweetCache = {
   get: (key) => getClient().get(key),
   set: (key, value) => getClient().set(key, value),
 };
