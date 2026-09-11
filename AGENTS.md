@@ -45,6 +45,16 @@ Reusable agent instructions live in `.agents/skills/`, committed to the repo:
 | `research` | Gathering facts from primary sources into a cited Markdown file |
 | `humanizer` | Editing prose for AI writing patterns ([blader/humanizer](https://github.com/blader/humanizer), MIT) |
 | `review` | Read-only bug-and-risk review of a diff |
+| `frontend-design` | Distinctive visual identity (not Inter + gray defaults) |
+| `design-taste-frontend` | Portfolio/redesign direction, anti-slop |
+| `emil-design-eng` | Motion, hover, interaction feel |
+| `web-design-guidelines` | UX/accessibility review (Vercel) |
+| `better-ui` | Surface, radius, icon, micro-interaction polish |
+| `better-typography` | Type scale, wrapping, tabular numbers |
+| `better-layout` | Spacing, grouping, breakpoints |
+| `better-accessibility` | Focus, keyboard, hit areas, reduced motion |
+| `impeccable` | Production polish pass |
+| `vercel-react-best-practices` | React/Next performance while redesigning |
 
 `.agents/skills/` is the tool-neutral location, so most agent tools pick these up as
 soon as the repo is cloned. Claude Code reads `.claude/skills/` instead, which is
