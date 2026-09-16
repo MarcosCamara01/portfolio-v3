@@ -16,17 +16,9 @@ The answer is not a lack of raw compute or missing world knowledge inside neural
 
 When modern automobiles emerged at the turn of the twentieth century, early manufacturers built what were literally termed "horseless carriages." Rather than rethinking mechanical transportation from first engineering principles, they took traditional wooden horse-drawn carriages and mechanically swapped the horse for an internal combustion engine. They retained high bench seats, wagon wheels, leaf-spring buggy suspensions, and even a whip socket mounted to the dashboard. It took nearly a third of a century for the industry to realize that a car was not a motorized buggy, but an entirely different machine requiring its own monocoque chassis, aerodynamics, low-pressure tires, and low-slung seating adapted to speed.
 
-```
-The Evolution of Technological Interfaces:
+![The evolution of the interface: from horse-drawn carriage to automobile, and from human dialogue to decision models.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-01-interface-evolution.png)
 
-[Legacy System]                     [Transitional Phase]                [Native Form]
-Horse-drawn carriage  ──────────>   Horseless carriage      ──────────> Modern automobile chassis
-(Biological animal)                 (Conceptual patch)                  (Designed from first principles)
-
-[Artificial Intelligence]           [Current Transition Phase]          [Native Software Form]
-Human interaction     ──────────>   Chatbot / Text Agent    ──────────> Decision Models (System One)
-(Human dialogue)                    (Forcing prose into APIs)           (Types, probabilities, and code)
-```
+*The chatbot is the horseless carriage: a conceptual patch on a form that is still not native to software.*
 
 In modern artificial intelligence, we made the exact same mistake: **the chatbot is our horseless carriage.** 
 
@@ -42,21 +34,9 @@ When a software process requires the judgment of artificial intelligence, it doe
 
 When a backend engineering team attempts to embed a conventional large language model (an autoregressive LLM such as GPT-4, Claude, or Llama) into the transactional core of a production application, they immediately run into hard physical bottlenecks imposed by GPU silicon.
 
-```
-The Autoregressive Hardware Bottleneck:
+![The autoregressive bottleneck: parallel Prefill versus sequential token-by-token Decode.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-02-prefill-decode.png)
 
-                    PREFILL PHASE (Parallel)               DECODE PHASE (Sequential token-by-token)
-                  ┌────────────────────────────┐          ┌──────────────────────────────────────────────┐
-Input ───────────>│ Ingests entire prompt      │─────────>│ Read weights from VRAM ──> Emit Token 1     │
-(State + Prompt)  │ Saturates Tensor Cores     │          │ Read weights from VRAM ──> Emit Token 2     │
-                  │ Compute-bound (Efficient)  │          │ ...                                          │
-                  └────────────────────────────┘          │ Read weights from VRAM ──> Emit Token N     │
-                                                          │ Memory-bandwidth bound (Slow, expensive)     │
-                                                          └──────────────────────────────────────────────┘
-                                                                                 │
-                                                                                 ▼ (3 to 30 seconds later)
-                                                          [Free-form text string / Brittle JSON]
-```
+*Prefill saturates the Tensor Cores. Decode rereads VRAM for every token and spends 3 to 30 seconds emitting a brittle string.*
 
 To understand why LLMs are the wrong primitive for backend routing and decision-making, one must inspect how graphics processing units (GPUs) actually execute tensor operations:
 
@@ -91,19 +71,9 @@ The technical solution to this architectural dead-end is not building slightly f
 
 This category has been formalized by TypeSafe AI—founded by Diogo Almeida, former OpenAI researcher and primary author on the foundational InstructGPT research (arXiv:2203.02155)—under the moniker **System One Models**, with **Jev** as their initial flagship release.
 
-```
-Native Decision Architecture (System One):
+![System One architecture: a single GPU forward pass with parallel Noul, Choice, and Score heads.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-03-system-one.png)
 
-[Application State]       ──┐
-  (Text, JSON, Logs)        │
-                            ├──> [Single GPU Forward Pass] ──> [Parallel Decision Heads]
-[Typed Questions]           │      (Saturates Tensor Cores)      │  - Noul: Scalar probability
-  (Noul, Choice, Score)     ──┘    (70 to 500 milliseconds)      │  - Choice: Discrete distribution
-                                                                 │  - Score: Continuous expectation
-                                                                 ▼
-                                                  [Typed Decisions + Calibrated Certainty]
-                                                  (Zero decode loop, output tokens permanently free)
-```
+*Typed questions share one forward pass. There is no decode loop; the typed answer arrives in 70 to 500 ms.*
 
 ### The Kahneman Analogy: System 1 vs. System 2
 The terminology draws directly on the cognitive taxonomy popularized by Nobel laureate Daniel Kahneman in *Thinking, Fast and Slow*:
@@ -147,22 +117,9 @@ If we define a customer frustration rubric as `["Calm", "Frustrated", "Very angr
 
 To understand why conventional LLMs fail at unattended automation, one must inspect the optimization objective used to train them.
 
-```
-Fundamental Divergence in Training Objectives:
+![Training divergence: RLHF maximizes human preference; RLCD minimizes calibration error.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-04-rlhf-rlcd.png)
 
-RLHF (Human Conversational Alignment):
-[Prompt Dataset] ──> [Text Generation] ──> [Human Preference Model] ──> Maximizes Preference
-                                                                        - Rewards verbosity
-                                                                        - Rewards confident tone
-                                                                        - Rewards Sycophancy
-                                                                        - Induces Mode Dropping
-
-RLCD (Calibrated Decision Alignment):
-[State + Question] ──> [Probability Dist] ──> [Verification against Outcomes] ──> Minimizes Calibration Error
-                                                                                - Penalizes overconfidence
-                                                                                - Rewards honest uncertainty
-                                                                                - Preserves empirical entropy
-```
+*RLHF rewards confident tone and sycophancy. RLCD penalizes overconfidence and pays for honest uncertainty.*
 
 ### The Pathologies of RLHF
 Almost all conversational models (including ChatGPT and Claude) are post-trained using **RLHF** (*Reinforcement Learning from Human Feedback*). This process fine-tunes model weights to maximize the score awarded by human contractors rating which response they prefer to read.
@@ -215,18 +172,9 @@ For enterprise software, **a calibrated "I don't know" is infinitely more valuab
 
 Integrating decision models into enterprise architectures is not about swapping prompt strings; it involves structuring application workflows around four formal architectural patterns:
 
-```
-The 4 Canonical System One Design Patterns:
+![The four System One patterns: Speculative Fan-Out, Composite Scoring, Confidence-Gated, and SDE Cascade.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-05-four-patterns.png)
 
-1. Speculative Fan-Out        2. Composite Scoring        3. Confidence-Gated        4. SDE Cascade
-┌─────────────────────┐      ┌────────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│ Single State        │      │ State              │      │ Risk Thresholds  │      │ System One      │
-│  ├─ Question A      │      │  ├─ Score A (0.4)  │      │  ├─ >0.90: Auto  │      │ (95% Filter)    │
-│  ├─ Question B (Spec│      │  ├─ Score B (0.4)  │      │  ├─ 0.60: Confirm│      │        │        │
-│  └─ Question C (Spec│      │  └─ Score C (0.2)  │      │  └─ <0.60: Human │      │        ▼ (5% unc)
-│ Parallel Execution  │      │ Weighted in Code   │      │ Dynamic Routing  │      │ LLM / Human     │
-└─────────────────────┘      └────────────────────┘      └──────────────────┘      └─────────────────┘
-```
+*Four benches: parallel questions, weights in code, risk thresholds, and a 95% filter before the LLM.*
 
 ### Pattern 1: Speculative Fan-Out
 In conversational pipelines, engineers routinely fall into the trap of sequential roundtrips: first querying an LLM to check if a ticket is a bug; if yes, making a second call to determine the component; if database, making a third call to assess severity. Each hop multiplies latency and cost.
@@ -362,20 +310,9 @@ To contrast the concrete impact of this architecture against conventional genera
 
 One of the greatest flaws in AI analysis is unquestioning acceptance of marketing claims. To evaluate decision models rigorously, we must audit the official benchmark published by TypeSafe on their evaluation dashboard ([evals.typesafe.ai](https://evals.typesafe.ai/)), comprising **711 empirical case studies** across four automated enterprise workflows.
 
-```
-Accuracy Distribution across 711 Workflow Eval Cases:
+![Jev accuracy versus GPT Sol and Claude Opus 5 across 711 public evals.typesafe.ai cases.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-06-evals-711.png)
 
-100% ┌──────────────────────────────────────────────────────────────┐
-     │                                                              │
- 80% │                                                Sol (79.1%)   │
-     │                      Sol (76.6%)               Opus (78.4%)  │ Sol (78.3%)
- 60% │  Opus (66.2%)        Jev (71.6%)               Jev (61.8%)   │ Jev (76.0%)
-     │  Jev (61.7%)                                   ▼ The Achilles│
- 40% │                                                Heel Gap      │
-     └──────────────────────────────────────────────────────────────┘
-        Security Incidents    Agent Observability       Invoices       Customer Service
-           (240 cases)            (117 cases)          (150 cases)        (204 cases)
-```
+*Jev tracks frontier models on three workflows. The Achilles heel is invoices: 61.8% versus Sol at 79.1%.*
 
 Every task ran inside an identical workflow harness where each model competed under the exact same programmatic rules. To enable LLMs to compete, TypeSafe engineered an official adapter ([system-one-adapter-python](https://github.com/typesafe-ai/system-one-adapter-python)) wrapping OpenAI and Anthropic APIs with strict structured outputs and probability normalization.
 
@@ -505,20 +442,9 @@ For applications in Go, Rust, or Java consuming raw HTTP endpoints, the protocol
 
 A rigorous engineering review must clearly state what this technology **cannot do**:
 
-```
-Architectural Decision Matrix:
+![Architectural decision matrix: when to use a generative LLM, a reasoning model, or a decision model.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-07-decision-matrix.png)
 
-Do you need to write prose, generate new code, or converse with humans?
-  ├── YES ──> Use a Generative LLM (Claude, GPT-4, Llama)
-  └── NO
-       │
-       Does the problem require deep sequential mathematical derivation (multi-step proofs)?
-         ├── YES ──> Use a Reasoning Model (o1, o3, Extended Thinking)
-         └── NO
-              │
-              Is the goal to classify, route, verify, or extract decisions in the backend?
-                └── YES ──> Use a Decision Model (System One / Jev)
-```
+*If you need prose, use an LLM. If you need a multi-step proof, use a reasoning model. If you need to classify in the backend, use System One.*
 
 1. **Complete Inability to Generate Text:** System One models lack an open vocabulary decoder. They cannot draft summaries, reply to emails, generate TypeScript functions, or engage in conversational dialogue.
 2. **Weak at Multi-Step Sequential Reasoning:** In the candid words of Diogo Almeida, on tasks requiring step-by-step mathematical logic, these models perform poorly (comparable to older base models without tools). They are designed for rapid perceptual assessment, not chain-of-thought calculation.
@@ -536,19 +462,9 @@ The name pays direct tribute to William Stanley Jevons, the nineteenth-century B
 
 By dramatically lowering the cost of mechanical power per unit of work, the steam engine made steam power economically viable across thousands of textile mills, steamships, locomotives, and mines that could never before afford coal.
 
-```
-Jevons Paradox in Artificial Intelligence:
+![Jevons paradox in AI: cheaper semantic judgment explodes demand for intelligent computation.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-08-jevons-paradox.png)
 
-Current Generative LLM Inference:        Decision Model Inference:
-Cost: Cents per evaluation               Cost: Fractions of a cent ($0.042/MTok in, out free)
-Latency: 5 to 15 seconds                 Latency: 70 to 500 milliseconds
-Adoption: Sparse, visible UI only        Adoption: Ubiquitous across backend codebases
-
-           Radical drop in the cost of semantic judgment
-                                    │
-                                    ▼
-       Cambrian explosion in demand for intelligent computation
-```
+*When a decision drops from cents and fifteen seconds to $0.042 per million tokens and 100 ms, the entire backend becomes a candidate.*
 
 Modern artificial intelligence is reaching its own **Jevons Paradox**:
 

@@ -16,17 +16,9 @@ La respuesta no se encuentra en una hipotética falta de potencia de cálculo ni
 
 Cuando surgió el automóvil moderno a principios del siglo XX, los primeros talleres fabricaron lo que la industria denominaba literalmente "carruajes sin caballos" (*horseless carriages*). En lugar de concebir el transporte mecánico desde sus primeros principios físicos, tomaron el carruaje de madera tradicional y simplemente sustituyeron el caballo por un motor de combustión. Mantuvieron los asientos elevados de banco, las ruedas de carro, las ballestas de suspensión e incluso el receptáculo para encajar el látigo. Hizo falta casi un tercio de siglo para que la industria comprendiera que un automóvil exigía un chasis autoportante, aerodinámica propia, neumáticos de baja presión y una posición de conducción adaptada a la velocidad.
 
-```
-La evolución de la interfaz tecnológica:
+![La evolución de la interfaz: del carruaje de caballos al automóvil, y del diálogo humano al modelo de decisión.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-01-evolucion-interfaz.png)
 
-[Transporte Antiguo]                [Fase de Transición]                [Forma Nativa]
-Carruaje de caballos  ──────────>   Carruaje sin caballos   ──────────> Automóvil con chasis moderno
-(Vehículo biológico)                (Parche conceptual)                 (Diseño desde primeros principios)
-
-[Inteligencia Artificial]           [Fase de Transición Actual]         [Forma Nativa de Software]
-Interacción humana     ──────────>   Chatbot / Agente de Texto ────────> Modelos de Decisión (System One)
-(Diálogo entre personas)            (Forzar prosa en APIs)              (Tipos, probabilidades y código)
-```
+*El chatbot es el carruaje sin caballos: un parche conceptual sobre una forma que todavía no es nativa del software.*
 
 En la inteligencia artificial moderna hemos caído exactamente en la misma trampa: **el chatbot es nuestro carruaje sin caballos.** 
 
@@ -42,21 +34,9 @@ Cuando un proceso empresarial necesita el criterio de una inteligencia artificia
 
 Para cualquier equipo de ingeniería que haya intentado incrustar un modelo de lenguaje convencional (un LLM autoregresivo como GPT-4, Claude o Llama) en el núcleo transaccional de una aplicación de producción, la experiencia se convierte rápidamente en una guerra de trincheras contra la física misma del hardware.
 
-```
-Cuello de botella de la arquitectura autorregresiva:
+![Cuello de botella autorregresivo: fase de Prefill paralela frente a Decode secuencial token a token.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-02-prefill-decode.png)
 
-                    FASE DE PREFILL (Paralela)             FASE DE DECODE (Secuencial token a token)
-                  ┌────────────────────────────┐          ┌──────────────────────────────────────────────┐
-Entrada ─────────>│ Procesa todo el prompt     │─────────>│ Lee pesos de VRAM ──> Emite Token 1         │
-(Estado + Prompt) │ Satura Tensor Cores        │          │ Lee pesos de VRAM ──> Emite Token 2         │
-                  │ Compute-bound (Eficiente)  │          │ ...                                          │
-                  └────────────────────────────┘          │ Lee pesos de VRAM ──> Emite Token N         │
-                                                          │ Memory-bandwidth bound (Ineficiente, caro)   │
-                                                          └──────────────────────────────────────────────┘
-                                                                                 │
-                                                                                 ▼ (3 a 30 segundos después)
-                                                          [String en texto libre / JSON frágil]
-```
+*El Prefill satura los Tensor Cores. El Decode vuelve a leer la VRAM para cada token y tarda de 3 a 30 segundos en devolver un string frágil.*
 
 Para comprender por qué los LLMs son la herramienta equivocada para el enrutamiento y la toma de decisiones en código, es imprescindible examinar cómo ejecutan la computación las unidades de procesamiento gráfico (GPUs):
 
@@ -91,19 +71,9 @@ La respuesta técnica a este callejón sin salida no consiste en construir LLMs 
 
 Esta categoría ha sido formalizada por TypeSafe AI —empresa fundada por Diogo Almeida, investigador procedente de OpenAI y autor primario del trabajo fundacional de InstructGPT (arXiv:2203.02155)— bajo el concepto de **Modelos System One**, cuyo primer lanzamiento insignia es el modelo **Jev**.
 
-```
-Arquitectura de decisión nativa (System One):
+![Arquitectura System One: un único forward pass en GPU con cabezas paralelas Noul, Choice y Score.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-03-system-one.png)
 
-[Estado de la aplicación] ──┐
-  (Texto, JSON, Logs)       │
-                            ├──> [Forward Pass Único en GPU] ──> [Cabezas Paralelas de Decisión]
-[Preguntas tipadas]         │         (Satura Tensor Cores)        │  - Noul: Probabilidad escalar
-  (Noul, Choice, Score)     ──┘       (70 a 500 milisegundos)      │  - Choice: Distribución discreta
-                                                                   │  - Score: Esperanza continua
-                                                                   ▼
-                                                     [Salida Tipada + Certeza Calibrada]
-                                                     (Cero bucle de decode, tokens salida gratis)
-```
+*Estado más preguntas tipadas entran una sola vez. La GPU no entra en el bucle de decode; la salida llega tipada en 70 a 500 ms.*
 
 ### La analogía de Daniel Kahneman: Sistema 1 vs. Sistema 2
 El nombre no es casualidad; rescata la dicotomía cognitiva articulada por el premio Nobel Daniel Kahneman en su célebre tratado *Thinking, Fast and Slow*:
@@ -147,22 +117,9 @@ Si definimos una rúbrica de frustración de cliente como `["Calmado", "Molesto"
 
 Para entender por qué los modelos de lenguaje actuales son constitutivamente incapaces de gobernar procesos desatendidos, es imprescindible estudiar el mecanismo con el que han sido alineados durante los últimos años.
 
-```
-Divergencia fundamental de objetivos de entrenamiento:
+![Divergencia de entrenamiento: RLHF maximiza preferencia humana; RLCD minimiza el error de calibración.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-04-rlhf-rlcd.png)
 
-RLHF (Alineación Conversacional Humana):
-[Dataset de Prompts] ──> [Generación de Texto] ──> [Modelo de Recompensa Humana] ──> Maximiza Preferencia
-                                                                                     - Premia longitud
-                                                                                     - Premia tono seguro
-                                                                                     - Premia adulación (Sycophancy)
-                                                                                     - Provoca Mode Dropping
-
-RLCD (Alineación de Decisiones Calibradas):
-[Estado + Pregunta]  ──> [Distribución de Prob] ──> [Verificación contra Casos Reales] ──> Minimiza Error Calibración
-                                                                                       - Castiga sobreconfianza
-                                                                                       - Premia incertidumbre honesta
-                                                                                       - Preserva entropía real
-```
+*RLHF premia el tono seguro y la adulación. RLCD castiga la sobreconfianza y paga la incertidumbre honesta.*
 
 ### La patología de RLHF
 Casi todos los modelos conversacionales actuales (incluidos ChatGPT y Claude) se post-entrenan mediante **RLHF** (*Reinforcement Learning from Human Feedback*). Este método ajusta los pesos de la red para que sus salidas obtengan la máxima puntuación por parte de evaluadores humanos contratados para calificar qué respuesta prefieren leer.
@@ -215,18 +172,9 @@ Para un sistema empresarial, **un "no estoy seguro" calibrado es infinitamente m
 
 Integrar modelos de decisión en sistemas reales no consiste en reemplazar un prompt por otro, sino en estructurar flujos de código según patrones arquitectónicos formales documentados en los manuales de ingeniería de este nuevo paradigma:
 
-```
-Los 4 patrones arquitectónicos de System One:
+![Los cuatro patrones System One: Speculative Fan-Out, Composite Scoring, Confidence-Gated y SDE Cascade.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-05-cuatro-patrones.png)
 
-1. Speculative Fan-Out        2. Composite Scoring        3. Confidence-Gated        4. SDE Cascade
-┌─────────────────────┐      ┌────────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│ State único         │      │ State              │      │ Umbrales Riesgo  │      │ System One      │
-│  ├─ Pregunta A      │      │  ├─ Score A (0.4)  │      │  ├─ >0.90: Auto  │      │ (Filtro 95%)    │
-│  ├─ Pregunta B (Esp)│      │  ├─ Score B (0.4)  │      │  ├─ 0.60: Confirm│      │        │        │
-│  └─ Pregunta C (Esp)│      │  └─ Score C (0.2)  │      │  └─ <0.60: Human │      │        ▼ (5% dud)
-│ Ejecución paralela  │      │ Ponderación Código │      │ Enrutamiento     │      │ LLM / Human     │
-└─────────────────────┘      └────────────────────┘      └──────────────────┘      └─────────────────┘
-```
+*Cuatro bancos de trabajo: preguntas en paralelo, ponderación en código, umbrales de riesgo y un filtro del 95% antes del LLM.*
 
 ### Patrón 1: Abanico Especulativo (*Speculative Fan-Out*)
 En las arquitecturas conversacionales tradicionales, los desarrolladores caen en la trampa del encadenamiento secuencial: primero llaman al LLM para saber si un ticket es un bug; si es un bug, hacen una segunda llamada para saber el componente; si el componente es la base de datos, hacen una tercera llamada para estimar la severidad. Cada paso suma latencia y coste.
@@ -362,20 +310,9 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
 
 Uno de los mayores defectos de la literatura sobre inteligencia artificial es la complacencia ante las cifras publicitarias de las empresas. Para evaluar rigurosamente el estado de los modelos de decisión, es necesario auditar la suite de pruebas oficial publicada por TypeSafe en su portal de evaluaciones ([evals.typesafe.ai](https://evals.typesafe.ai/)), compuesta por **711 casos de estudio empíricos** distribuidos en cuatro flujos de trabajo de automatización reales.
 
-```
-Distribución de precisión en los 711 casos de workflow evals:
+![Precisión de Jev frente a GPT Sol y Claude Opus 5 en los 711 casos públicos de evals.typesafe.ai.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-06-evals-711.png)
 
-100% ┌──────────────────────────────────────────────────────────────┐
-     │                                                              │
- 80% │                                                Sol (79.1%)   │
-     │                      Sol (76.6%)               Opus (78.4%)  │ Sol (78.3%)
- 60% │  Opus (66.2%)        Jev (71.6%)               Jev (61.8%)   │ Jev (76.0%)
-     │  Jev (61.7%)                                   ▼ El talón    │
- 40% │                                                de Aquiles    │
-     └──────────────────────────────────────────────────────────────┘
-        Incidentes Seg.       Trazas Agentes           Facturas       Atención Cliente
-          (240 casos)           (117 casos)           (150 casos)        (204 casos)
-```
+*Jev se acerca a los modelos de frontera en tres flujos. El talón de Aquiles está en facturas: 61,8% frente al 79,1% de Sol.*
 
 Cada tarea fue ejecutada bajo un mismo código de orquestación donde cada modelo competía bajo las mismas condiciones. Para que los LLMs pudieran competir, TypeSafe desarrolló un adaptador oficial ([system-one-adapter-python](https://github.com/typesafe-ai/system-one-adapter-python)) que envuelve las APIs de OpenAI y Anthropic con decodificación estructurada estricta y extracción de probabilidades.
 
@@ -505,20 +442,9 @@ Para arquitecturas basadas en otros lenguajes (Go, Rust, Java) que consuman la A
 
 Un análisis técnico creíble no puede caer en el entusiasmo ciego. Es indispensable trazar con total nitidez las fronteras de lo que esta tecnología **no puede hacer**:
 
-```
-Matriz de decisión arquitectónica:
+![Matriz de decisión arquitectónica: cuándo usar un LLM generativo, un modelo de razonamiento o un modelo de decisión.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-07-matriz-decision.png)
 
-¿Necesitas redactar emails, generar código o conversar con personas?
-  ├── SÍ ──> Utiliza un LLM Generativo (Claude, GPT-4, Llama)
-  └── NO
-       │
-       ¿El problema exige razonamiento matemático secuencial profundo (pruebas lógicas paso a paso)?
-         ├── SÍ ──> Utiliza un Modelo de Razonamiento (o1, o3, Extended Thinking)
-         └── NO
-              │
-              ¿El problema es clasificar, enrutar, verificar o extraer decisiones en backend?
-                └── SÍ ──> Utiliza un Modelo de Decisión (System One / Jev)
-```
+*Si hay que redactar, un LLM. Si hay que demostrar paso a paso, un modelo de razonamiento. Si hay que clasificar en el backend, System One.*
 
 1. **Incapacidad absoluta para generar texto:** Jev y los modelos System One no tienen un decodificador de vocabulario libre. No pueden redactar un resumen, responder un correo electrónico, escribir una función de TypeScript ni mantener una conversación empática con un cliente.
 2. **Fragilidad en razonamiento matemático secuencial:** El propio Diogo Almeida ha reconocido públicamente que en dimensiones que exigen razonamiento matemático paso a paso (resolver integrales complejas, deducciones formales), el modelo rinde a un nivel deficiente (comparable a un modelo base antiguo sin herramientas). No está diseñado para pensar durante minutos, sino para evaluar de inmediato.
@@ -536,19 +462,9 @@ El nombre rinde tributo directo a William Stanley Jevons, el célebre economista
 
 Al abaratar radicalmente el coste de la energía mecánica utilizable, la máquina de vapor hizo económicamente rentable instalar motores en miles de fábricas textiles, ferrocarriles, buques mercantes y minas que jamás se habrían podido costear el carbón bajo la tecnología anterior.
 
-```
-La Paradoja de Jevons en la Inteligencia Artificial:
+![Paradoja de Jevons en la IA: al abaratar el juicio semántico, explota la demanda de computación inteligente.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-08-paradoja-jevons.png)
 
-Inferencia de LLM Actual:                Inferencia de Modelos de Decisión:
-Coste: Céntimos por decisión             Coste: Fracciones de céntimo ($0.042/MTok in, out gratis)
-Latencia: 5 a 15 segundos                Latencia: 70 a 500 milisegundos
-Uso: Escaso, solo en UI visible          Uso: Ubicuo en cada línea de código backend
-
-           Disminución radical del coste por juicio semántico
-                                    │
-                                    ▼
-       Explosión cámbrica de la demanda de computación inteligente
-```
+*Cuando una decisión baja de céntimos y quince segundos a 0,042 dólares por millón de tokens y 100 ms, el backend entero se vuelve candidato.*
 
 En la inteligencia artificial moderna estamos presenciando el umbral de nuestra propia **Paradoja de Jevons**:
 
