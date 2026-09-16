@@ -185,20 +185,24 @@ Pedirle a una inteligencia artificial en un solo prompt *"califica del 1 al 100 
 El patrón de **Composite Scoring** descompone un juicio multifactorial ambiguo en factores atómicos independientes evaluados mediante primitivas tipadas, delegando la ponderación matemática al código anfitrión:
 
 ```python
-# Descomposición atómica de la calidad de un informe técnico:
-answers = response.answers
+# A Score lands on your rubric (0 .. n-1). Normalize to 0-1 before mixing with Nouls.
+TECH_LEVELS = [
+    "Vague or unsourced",
+    "Mostly accurate",
+    "Precise and checkable",
+]
 
-indice_calidad = (
-    0.40 * answers["precision_tecnica"].score
-    + 0.35 * answers["fuentes_contrastadas"].noul
-    + 0.25 * (1.0 - answers["sesgo_comercial"].noul)
-)
+precision = response.answers["technical_accuracy"].score / (len(TECH_LEVELS) - 1)
+sources = response.answers["verified_sources"].noul
+bias = response.answers["commercial_bias"].noul
 
-if indice_calidad >= 8.5:
-    publicar_en_directorio(doc)
+quality = 0.40 * precision + 0.35 * sources + 0.25 * (1.0 - bias)
+
+if quality >= 0.75:
+    publish_to_directory(doc)
 ```
 
-**La ventaja operativa es colosal:** si el comité de dirección de la empresa decide mañana que la ausencia de sesgo comercial debe pesar más que las fuentes, el equipo de ingeniería modifica un coeficiente de punto flotante en el código (`0.25 -> 0.40`) y lo despliega mediante un commit ordinario en milisegundos. No hace falta reentrenar modelos, alterar prompts literarios ni rezar para que un LLM interprete bien las nuevas instrucciones redactadas en inglés.
+**La ventaja operativa es colosal:** si el comité de dirección de la empresa decide mañana que la ausencia de sesgo comercial debe pesar más que las fuentes, el equipo de ingeniería modifica un coeficiente de punto flotante en el código (`0.25 -> 0.40`) y lo despliega mediante un commit ordinario en milisegundos. El umbral `0.75` vive en la misma escala 0–1 que las primitivas ya normalizadas. No hace falta reentrenar modelos, alterar prompts literarios ni rezar para que un LLM interprete bien las nuevas instrucciones redactadas en inglés.
 
 ### Patrón 3: Enrutamiento Graduado por Incertidumbre (*Confidence-Gated Escalation*)
 Este patrón materializa el cortafuegos de seguridad de la aplicación: el umbral de activación no es estático, sino proporcional a la gravedad y reversibilidad del efecto secundario que desencadenará la acción.
@@ -336,101 +340,118 @@ La conclusión de ingeniería es contundente: Jev no es superior en inteligencia
 Un modelo de infraestructura solo es útil si sus contratos de integración son robustos. A continuación se detalla cómo se integra este servicio en un entorno de producción real utilizando el SDK oficial de Python (`typesafe-sdk`, versión 0.6.0), demostrando cómo interactuar con el endpoint `POST https://api.typesafe.ai/v1/systemone` e implementar resiliencia operativa.
 
 ```python
-import os
-import sys
-from typing import Any, Dict
-from typesafe_sdk import TypeSafeClient, Choice, Noul, Score
-from typesafe_sdk.api.exceptions import (
-    AuthenticationError,
-    BadRequestError,
-    RateLimitError,
-    InternalServerError,
+from typesafe_sdk import (
+    Choice,
+    Noul,
+    Score,
+    TypeSafeAuthenticationError,
+    TypeSafeClient,
+    TypeSafeError,
+    TypeSafeInternalServerError,
+    TypeSafePermissionDeniedError,
+    TypeSafeRateLimitError,
+    TypeSafeUnprocessableEntityError,
 )
 
-# Inicialización del cliente leyendo credenciales de entorno:
-api_key = os.getenv("TYPESAFE_API_KEY")
-if not api_key:
-    sys.exit("Error crítico: Falta configurar la variable TYPESAFE_API_KEY")
+# TypeSafeClient() reads TYPESAFE_API_KEY. Missing key raises TypeSafeError at init,
+# not an HTTP 401.
+try:
+    client = TypeSafeClient()
+except TypeSafeError as exc:
+    raise SystemExit(str(exc)) from exc
 
-client = TypeSafeClient(api_key=api_key)
-
-# 1. Definición del Estado de Entrada:
-# Puede contener objetos complejos, arrays o texto plano
-incoming_state: Dict[str, Any] = {
+incoming_state = {
     "audit_event": {
         "user_id": "usr_99812",
         "action": "export_database_dump",
         "ip_address": "194.26.29.112",
         "geo_country": "RU",
-        "user_home_country": "ES"
+        "user_home_country": "ES",
     },
     "user_profile": {
         "role": "junior_developer",
         "mfa_active": True,
-        "past_violations": 0
+        "past_violations": 0,
     },
-    "policy_rules": "Exportar dumps de base de datos fuera del país de origen exige autorización expresa de Seguridad."
+    "policy_rules": (
+        "Exporting database dumps outside the user's home country "
+        "requires explicit Security authorization."
+    ),
 }
 
-# 2. Ejecución de preguntas en paralelo:
+THREAT_LEVELS = ["Benign", "Suspicious", "Critical incident"]
+
 try:
-    response = client.system_one(
-        state=incoming_state,
-        model="jev-latest",
-        questions={
-            "violates_policy": Noul(
-                instructions="Contrastando `audit_event` con `policy_rules`, ¿la acción supone una infracción de seguridad?"
-            ),
-            "threat_level": Score(
-                instructions="Nivel de riesgo operativo del evento",
-                criteria=["Inocuo", "Sospechoso", "Incidente Crítico"]
-            ),
-            "recommended_action": Choice(
-                instructions="Protocolo de respuesta inmediata",
-                criteria={
-                    "allow": "Permitir la ejecución sin trabas",
-                    "challenge_mfa": "Requerir verificación secundaria biométrica",
-                    "revoke_tokens": "Cerrar sesiones y congelar credenciales inmediatamente"
-                }
-            )
-        }
-    )
+    with client:
+        response = client.system_one(
+            state=incoming_state,
+            model="jev-latest",
+            questions={
+                "violates_policy": Noul(
+                    instructions=(
+                        "Comparing `audit_event` against `policy_rules`, "
+                        "does this action constitute a security violation?"
+                    ),
+                ),
+                "threat_level": Score(
+                    instructions="Operational risk severity",
+                    criteria=THREAT_LEVELS,
+                ),
+                "recommended_action": Choice(
+                    instructions="Immediate protocol action",
+                    criteria={
+                        "allow": "Allow execution without interruption",
+                        "challenge_mfa": "Require a secondary MFA challenge",
+                        "revoke_tokens": (
+                            "Terminate active sessions and freeze credentials"
+                        ),
+                    },
+                ),
+            },
+        )
 
-    # 3. Extracción de resultados con tipado estricto garantizado:
-    infraccion_prob: float = response.answers["violates_policy"].noul
-    riesgo_score: float = response.answers["threat_level"].score
-    accion_choice: str = response.answers["recommended_action"].choice
-    accion_confianza: float = response.answers["recommended_action"].confidence
+    violation = response.nouls["violates_policy"].noul
+    risk = response.scores["threat_level"].score
+    action = response.choices["recommended_action"].choice
+    confidence = response.choices["recommended_action"].confidence
 
-    print(f"Probabilidad de infracción: {infraccion_prob:.2f}")
-    print(f"Riesgo ponderado: {riesgo_score:.2f} / 2.0")
-    print(f"Acción recomendada: {accion_choice} (Certeza: {accion_confianza:.2f})")
+    print(f"Violation probability: {violation:.2f}")
+    print(f"Risk score: {risk:.2f} / {len(THREAT_LEVELS) - 1}")
+    print(f"Recommended action: {action} (confidence: {confidence:.2f})")
 
-    # 4. Control de flujo determinista basado en riesgo:
-    if infraccion_prob > 0.85:
-        if accion_confianza > 0.80 and accion_choice == "revoke_tokens":
-            print("[AUTO-ACTION] Revocando credenciales inmediatamente...")
-        else:
-            print("[ESCALATION] Discrepancia detectada. Derivando a guardia de seguridad...")
+    if violation > 0.85 and action == "revoke_tokens" and confidence > 0.80:
+        print("[AUTO-ACTION] Revoking credentials.")
+    elif violation > 0.85:
+        print("[ESCALATION] Route to security on-call.")
     else:
-        print("[AUDIT] Evento aprobado y registrado en logs.")
+        print("[AUDIT] Event logged.")
 
-except AuthenticationError:
-    print("Fallo de autenticación: Verifica tu API Key.")
-except RateLimitError as e:
-    # Código HTTP 429: El SDK implementa backoff exponencial, pero aquí podemos pausar la cola
-    print(f"Límite de tasa alcanzado: Reintento recomendado tras recibir 429.")
-except InternalServerError as e:
-    # Código HTTP 529: Servicio saturado temporalmente
-    print(f"Servicio TypeSafe temporalmente sobrecargado (HTTP 529). Activando fallback...")
+except TypeSafeAuthenticationError:
+    # HTTP 401: invalid or missing Bearer on the request.
+    print("Authentication failed. Check TYPESAFE_API_KEY.")
+except TypeSafePermissionDeniedError:
+    # HTTP 403.
+    print("Permission denied.")
+except TypeSafeUnprocessableEntityError as exc:
+    # HTTP 422: malformed questions or state.
+    print(f"Invalid request: {exc}")
+except TypeSafeRateLimitError as exc:
+    # HTTP 429 after the SDK's default retries (it already honors Retry-After).
+    wait_ms = exc.retry_after_ms
+    print(f"Rate limited after retries. retry_after_ms={wait_ms}")
+except TypeSafeInternalServerError as exc:
+    # 5xx after retries. Docs also list 529 Overloaded; the SDK maps it here.
+    print(f"Server error {exc.status}. request_id={exc.request_id}")
 ```
 
 ### Códigos de estado HTTP oficiales del protocolo
-Para arquitecturas basadas en otros lenguajes (Go, Rust, Java) que consuman la API REST vía HTTP crudo, el protocolo define cuatro respuestas de error estándar:
-* **`401 Unauthorized`:** Token Bearer ausente, revocado o mal configurado.
-* **`422 Unprocessable Entity`:** La carga útil del cuerpo JSON viola el esquema (por ejemplo, omitir el campo obligatorio `type` en una pregunta o enviar una rúbrica de Score con menos de dos niveles).
-* **`429 Too Many Requests`:** Se ha superado la cuota de peticiones concurrentes por segundo. El cliente debe honrar la cabecera `Retry-After`.
-* **`529 Overloaded`:** El clúster de inferencia de TypeSafe experimenta sobrecarga transitoria. La especificación exige capturar este código e implementar un reintento con retroceso exponencial (*exponential backoff*).
+Para clientes que hablen HTTP crudo (Go, Rust, Java), TypeSafe documenta estos errores. El SDK de Python ya reintenta `429` y `5xx` (incluido `529`) con backoff; el `except` de arriba solo corre cuando esos reintentos se agotan.
+
+* **`401 Unauthorized`:** API key ausente o inválida en el header `Authorization`. En el SDK: `TypeSafeAuthenticationError`. Si falta la variable de entorno *antes* de llamar, `TypeSafeClient()` lanza `TypeSafeError`.
+* **`403 Forbidden`:** acceso denegado. En el SDK: `TypeSafePermissionDeniedError`.
+* **`422 Unprocessable Entity`:** el JSON no pasa validación (falta `type`, un Score con menos de dos niveles, etc.). En el SDK: `TypeSafeUnprocessableEntityError`.
+* **`429 Too Many Requests`:** límite de tasa. Reintentar con backoff; el SDK lee `Retry-After` / `retry-after-ms`.
+* **`529 Overloaded`:** saturación transitoria del cluster. Misma receta de backoff; tras agotar reintentos llega como `TypeSafeInternalServerError` con `status == 529`.
 
 ---
 

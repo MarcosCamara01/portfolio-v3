@@ -185,20 +185,24 @@ Asking an AI model in a single prompt to *"rate lead quality from 1 to 100"* is 
 The **Composite Scoring** pattern decomposes an ambiguous multi-factor assessment into atomic, independent questions, delegating mathematical weighting to the host application code:
 
 ```python
-# Atomic decomposition of technical document quality:
-answers = response.answers
+# A Score lands on your rubric (0 .. n-1). Normalize to 0-1 before mixing with Nouls.
+TECH_LEVELS = [
+    "Vague or unsourced",
+    "Mostly accurate",
+    "Precise and checkable",
+]
 
-quality_score = (
-    0.40 * answers["technical_accuracy"].score
-    + 0.35 * answers["verified_sources"].noul
-    + 0.25 * (1.0 - answers["commercial_bias"].noul)
-)
+precision = response.answers["technical_accuracy"].score / (len(TECH_LEVELS) - 1)
+sources = response.answers["verified_sources"].noul
+bias = response.answers["commercial_bias"].noul
 
-if quality_score >= 8.5:
+quality = 0.40 * precision + 0.35 * sources + 0.25 * (1.0 - bias)
+
+if quality >= 0.75:
     publish_to_directory(doc)
 ```
 
-**The operational advantage is immense:** if executive leadership decides tomorrow that commercial bias should carry more weight than source citations, the engineering team modifies a single floating-point multiplier in code (`0.25 -> 0.40`) and deploys via a standard git commit in milliseconds. There is no need to re-train models, re-engineer natural language prompts, or pray that an LLM interprets English instructions consistently.
+**The operational advantage is immense:** if executive leadership decides tomorrow that commercial bias should carry more weight than source citations, the engineering team modifies a single floating-point multiplier in code (`0.25 -> 0.40`) and deploys via a standard git commit in milliseconds. The `0.75` gate sits on the same 0–1 scale as the normalized primitives. There is no need to re-train models, re-engineer natural language prompts, or pray that an LLM interprets English instructions consistently.
 
 ### Pattern 3: Confidence-Gated Escalation
 This pattern establishes dynamic application safety boundaries: activation thresholds are proportional to the severity and reversibility of the triggered action.
@@ -336,101 +340,118 @@ The engineering takeaway is clear: Jev does not surpass a $200/hr frontier model
 An infrastructure model is only as viable as its integration contracts. Below is an end-to-end production implementation using the official Python SDK (`typesafe-sdk`, version 0.6.0), demonstrating interaction with `POST https://api.typesafe.ai/v1/systemone` and operational error handling.
 
 ```python
-import os
-import sys
-from typing import Any, Dict
-from typesafe_sdk import TypeSafeClient, Choice, Noul, Score
-from typesafe_sdk.api.exceptions import (
-    AuthenticationError,
-    BadRequestError,
-    RateLimitError,
-    InternalServerError,
+from typesafe_sdk import (
+    Choice,
+    Noul,
+    Score,
+    TypeSafeAuthenticationError,
+    TypeSafeClient,
+    TypeSafeError,
+    TypeSafeInternalServerError,
+    TypeSafePermissionDeniedError,
+    TypeSafeRateLimitError,
+    TypeSafeUnprocessableEntityError,
 )
 
-# Initialize client using environment credentials:
-api_key = os.getenv("TYPESAFE_API_KEY")
-if not api_key:
-    sys.exit("Critical error: Missing TYPESAFE_API_KEY environment variable")
+# TypeSafeClient() reads TYPESAFE_API_KEY. Missing key raises TypeSafeError at init,
+# not an HTTP 401.
+try:
+    client = TypeSafeClient()
+except TypeSafeError as exc:
+    raise SystemExit(str(exc)) from exc
 
-client = TypeSafeClient(api_key=api_key)
-
-# 1. Define Input State:
-# Ingests complex dictionaries, arrays, or plain text
-incoming_state: Dict[str, Any] = {
+incoming_state = {
     "audit_event": {
         "user_id": "usr_99812",
         "action": "export_database_dump",
         "ip_address": "194.26.29.112",
         "geo_country": "RU",
-        "user_home_country": "ES"
+        "user_home_country": "ES",
     },
     "user_profile": {
         "role": "junior_developer",
         "mfa_active": True,
-        "past_violations": 0
+        "past_violations": 0,
     },
-    "policy_rules": "Exporting database dumps outside the user's home country requires explicit Security authorization."
+    "policy_rules": (
+        "Exporting database dumps outside the user's home country "
+        "requires explicit Security authorization."
+    ),
 }
 
-# 2. Execute parallel questions in a single forward pass:
+THREAT_LEVELS = ["Benign", "Suspicious", "Critical incident"]
+
 try:
-    response = client.system_one(
-        state=incoming_state,
-        model="jev-latest",
-        questions={
-            "violates_policy": Noul(
-                instructions="Comparing `audit_event` against `policy_rules`, does this action constitute a security violation?"
-            ),
-            "threat_level": Score(
-                instructions="Operational risk severity level",
-                criteria=["Benign", "Suspicious", "Critical Incident"]
-            ),
-            "recommended_action": Choice(
-                instructions="Immediate protocol action",
-                criteria={
-                    "allow": "Allow execution without interruption",
-                    "challenge_mfa": "Require secondary biometric challenge",
-                    "revoke_tokens": "Terminate active sessions and freeze credentials immediately"
-                }
-            )
-        }
-    )
+    with client:
+        response = client.system_one(
+            state=incoming_state,
+            model="jev-latest",
+            questions={
+                "violates_policy": Noul(
+                    instructions=(
+                        "Comparing `audit_event` against `policy_rules`, "
+                        "does this action constitute a security violation?"
+                    ),
+                ),
+                "threat_level": Score(
+                    instructions="Operational risk severity",
+                    criteria=THREAT_LEVELS,
+                ),
+                "recommended_action": Choice(
+                    instructions="Immediate protocol action",
+                    criteria={
+                        "allow": "Allow execution without interruption",
+                        "challenge_mfa": "Require a secondary MFA challenge",
+                        "revoke_tokens": (
+                            "Terminate active sessions and freeze credentials"
+                        ),
+                    },
+                ),
+            },
+        )
 
-    # 3. Extract strictly typed outputs:
-    violation_prob: float = response.answers["violates_policy"].noul
-    risk_score: float = response.answers["threat_level"].score
-    action_choice: str = response.answers["recommended_action"].choice
-    action_confidence: float = response.answers["recommended_action"].confidence
+    violation = response.nouls["violates_policy"].noul
+    risk = response.scores["threat_level"].score
+    action = response.choices["recommended_action"].choice
+    confidence = response.choices["recommended_action"].confidence
 
-    print(f"Violation probability: {violation_prob:.2f}")
-    print(f"Weighted risk score: {risk_score:.2f} / 2.0")
-    print(f"Recommended action: {action_choice} (Certainty: {action_confidence:.2f})")
+    print(f"Violation probability: {violation:.2f}")
+    print(f"Risk score: {risk:.2f} / {len(THREAT_LEVELS) - 1}")
+    print(f"Recommended action: {action} (confidence: {confidence:.2f})")
 
-    # 4. Deterministic, auditable risk-gated execution:
-    if violation_prob > 0.85:
-        if action_confidence > 0.80 and action_choice == "revoke_tokens":
-            print("[AUTO-ACTION] Revoking credentials immediately...")
-        else:
-            print("[ESCALATION] Discrepancy detected. Escalating to security on-call...")
+    if violation > 0.85 and action == "revoke_tokens" and confidence > 0.80:
+        print("[AUTO-ACTION] Revoking credentials.")
+    elif violation > 0.85:
+        print("[ESCALATION] Route to security on-call.")
     else:
-        print("[AUDIT] Event approved and logged.")
+        print("[AUDIT] Event logged.")
 
-except AuthenticationError:
-    print("Authentication failed: Verify your API key.")
-except RateLimitError:
-    # HTTP 429: SDK implements exponential backoff automatically
-    print("Rate limit reached: Pause queue workers.")
-except InternalServerError:
-    # HTTP 529: Transient inference cluster overload
-    print("TypeSafe service overloaded (HTTP 529). Engaging fallback routing...")
+except TypeSafeAuthenticationError:
+    # HTTP 401: invalid or missing Bearer on the request.
+    print("Authentication failed. Check TYPESAFE_API_KEY.")
+except TypeSafePermissionDeniedError:
+    # HTTP 403.
+    print("Permission denied.")
+except TypeSafeUnprocessableEntityError as exc:
+    # HTTP 422: malformed questions or state.
+    print(f"Invalid request: {exc}")
+except TypeSafeRateLimitError as exc:
+    # HTTP 429 after the SDK's default retries (it already honors Retry-After).
+    wait_ms = exc.retry_after_ms
+    print(f"Rate limited after retries. retry_after_ms={wait_ms}")
+except TypeSafeInternalServerError as exc:
+    # 5xx after retries. Docs also list 529 Overloaded; the SDK maps it here.
+    print(f"Server error {exc.status}. request_id={exc.request_id}")
 ```
 
-### Official HTTP Status Codes
-For applications in Go, Rust, or Java consuming raw HTTP endpoints, the protocol defines four standard error responses:
-* **`401 Unauthorized`:** Missing, expired, or invalid Bearer token.
-* **`422 Unprocessable Entity`:** The request JSON payload violates schema rules (e.g., missing a required `type` field or passing a Score rubric with fewer than two levels).
-* **`429 Too Many Requests`:** Concurrency limits exceeded; clients must respect the `Retry-After` header.
-* **`529 Overloaded`:** Transient inference cluster saturation. Systems must implement exponential backoff.
+### Official HTTP status codes
+For Go, Rust, or Java clients talking raw HTTP, TypeSafe documents these errors. The Python SDK already retries `429` and `5xx` (including `529`) with backoff; the `except` blocks above run only after those retries are exhausted.
+
+* **`401 Unauthorized`:** Missing or invalid API key in the `Authorization` header. SDK: `TypeSafeAuthenticationError`. If the env var is missing *before* the call, `TypeSafeClient()` raises `TypeSafeError`.
+* **`403 Forbidden`:** Access denied. SDK: `TypeSafePermissionDeniedError`.
+* **`422 Unprocessable Entity`:** Request JSON failed validation (missing `type`, a Score with fewer than two levels, etc.). SDK: `TypeSafeUnprocessableEntityError`.
+* **`429 Too Many Requests`:** Rate limit. Back off and retry; the SDK honors `Retry-After` / `retry-after-ms`.
+* **`529 Overloaded`:** Transient cluster saturation. Same backoff recipe; after retries it surfaces as `TypeSafeInternalServerError` with `status == 529`.
 
 ---
 
