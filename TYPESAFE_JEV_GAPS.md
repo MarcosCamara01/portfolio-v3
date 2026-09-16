@@ -74,10 +74,52 @@ La misma tabla llama «análisis forense» a ratios derivados de esas etiquetas 
 
 ### 4. Cifras colgadas de la misma tabla
 
-- «DeepSeek v4 Pro (71.6%)» en Observabilidad: 71.6% es **el número de Jev** en esa fila. El brief, el mismo día, leyó Sol 76.6% y luna 76.1% como comparadores. No hay fuente primaria en el artículo para un empate con «v4 Pro».
-- «reduciendo el tiempo de 90 segundos a medio segundo»: el Flash de esa fila, en el brief, era **51.7 s**, no 90 s.
-- «90% del discernimiento» de los gigantes: 67.8 / 74.1 ≈ 91.5% de la **media igual** de Sol, que mide acuerdo con Astra+Fable, no discernimiento empírico. TypeSafe no publica ese 90%.
+- Empate Jev / DeepSeek v4 Pro en Observabilidad **sí está en el SVG**: `DS v4 pro · workflow · 71.6% · $0.0357 · 90.1 s` frente a `Jev · workflow · 71.6% · $0.0003 · 0.5 s` ([agent_trace_observability](https://evals.typesafe.ai/agent_trace_observability.html)). El 90 s es el de Pro, no el de Flash (`DS v4 flash · workflow · 73.0% · 51.7 s`). El brief original no listó Pro; el artículo sí, y acierta.
+- CS: Jev 76.0% supera a Opus 72.4% y Sonnet 69.3%, pero Flash **76.8%** y Pro **76.1%** también están ahí. «Empate con los más caros» recorta el dashboard.
+- «90% del discernimiento» de los gigantes: 67.8 / 74.1 ≈ 91.5% de la **media igual** de Sol (acuerdo con Astra+Fable). TypeSafe no publica ese 90% ni un «$200/hr».
 - «sistema ligero de microsegundos» (ES, patrón cascada): 70–500 ms son **milisegundos**. [blog](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
+
+### 8. El blueprint de Python no importa
+
+ES/EN §8:
+
+```python
+from typesafe_sdk.api.exceptions import (
+    AuthenticationError,
+    BadRequestError,
+    RateLimitError,
+    InternalServerError,
+)
+```
+
+Ese módulo **no existe**. El SDK 0.6.0 exporta desde el paquete raíz: `TypeSafeAuthenticationError`, `TypeSafeBadRequestError`, `TypeSafeRateLimitError`, `TypeSafeInternalServerError`, más `TypeSafePermissionDeniedError` (403) y `TypeSafeUnprocessableEntityError` (422). Fuentes: [`__init__.py`](https://raw.githubusercontent.com/typesafe-ai/typesafe-sdk-python/main/src/typesafe_sdk/__init__.py), [exceptions](https://docs.typesafe.ai/sdk/python/api/exceptions.md).
+
+El artículo dice que un Bearer ausente es **401**. Los docs del SDK separan 401 (`TypeSafeAuthenticationError`) y 403 (`TypeSafePermissionDeniedError`). Mapear 529 → `InternalServerError` es un cubo 5xx, no un tipo documentado para 529.
+
+«El cliente debe honrar `Retry-After`»: la página HTTP lista 429/529 con backoff; el header concreto vive en el SDK (`retry_after_ms`, `respect_retry_after`). No está en la tabla corta de [api.md](https://docs.typesafe.ai/api.md).
+
+**Edición:** imports oficiales; 401 vs 403 según el caso; 529 como código de docs, no como clase inventada.
+
+### 9. El cuarto patrón no es una cascada System One → LLM
+
+[patterns.md](https://docs.typesafe.ai/patterns.md) lista cuatro: Speculative Fan-Out, Confidence-Gated Routing, Composite Scoring, **Intent Routing**.
+
+El cookbook [sde_cascade](https://docs.typesafe.ai/cookbooks/sde_cascade.md) es otro algoritmo: `gpt-5.4-mini` extrae → Jev (`jev-1.12`) verifica con Nouls por campo → si `P(wrong) > 0.7` escala a `gpt-5.5`. Jev no es el primer filtro del 80–90%.
+
+Composite Scoring del artículo:
+
+```python
+indice_calidad = 0.40 * score + 0.35 * noul + 0.25 * (1.0 - noul)
+if indice_calidad >= 8.5:
+```
+
+Docs: normalizar cada Score por `len(criteria)-1` **antes** de ponderar. Mezclar un score 0–N con nouls 0–1 y umbral 8.5 no puede dispararse si el score está en la misma escala que el noul.
+
+Umbrales 0.55 / 0.92: los ejemplos oficiales son **0.5 y 0.9** ([confidence](https://docs.typesafe.ai/confidence.md)) y **0.6 / 0.85** ([confidence-routing](https://docs.typesafe.ai/patterns/confidence-routing.md)), más «test with your own data».
+
+Noul como «estimación escalar bayesiana» y ECE como método de TypeSafe: el primer define calibración por frecuencias de grupo; no nombra Bayes ni ECE. [system-one](https://docs.typesafe.ai/concepts/system-one.md) marca los valores de primitivas como ilustrativos.
+
+**Edición:** cuarto patrón = Intent Routing. SDE = mini → Jev verifier → reasoning, o fuera. Composite con scores normalizados. Umbrales copiados de docs y rotulados como ejemplos.
 
 ### 5. Almeida no es *el* autor primario de InstructGPT
 
@@ -113,8 +155,9 @@ De `TYPESAFE_JEV_RESEARCH.md` §9 / overclaims:
 
 - No hay paper de RLCD. El artículo describe RLCD como si el objetivo de calibración bastara para el mecanismo.
 - No hay diagrama ECE público. El artículo escribe la ecuación de calibración perfecta como contrato de producción.
-- No se ejecutó `POST /v1/systemone`. El blueprint de §8 es el SDK documentado más retries 401/422/429/529 ([API](https://docs.typesafe.ai/api.md)), no una traza real.
+- No se ejecutó `POST /v1/systemone`. El blueprint de §8 además **no compila**: módulo y nombres de excepción inventados.
 - FAQ plegadas (¿subvencionado?, ¿JSON mode?, ¿determinista?) siguen sin texto SSR. No citarlas de memoria.
+- Cabezas de clasificación / «KV cache cero» como física de Jev: el blog dice «parallel sampler», no publica arquitectura.
 
 ## Qué no tocar
 
@@ -125,12 +168,14 @@ De `TYPESAFE_JEV_RESEARCH.md` §9 / overclaims:
 
 ## Edits concretos (ES y EN, el mismo criterio)
 
-1. §6: de «reales» a «ejemplos». Fuera probs, 40k/s, 82%, 80–90%, 90 s, microsegundos.
-2. Fan-Out: 12.2× / 10.0×, `jev-1.12`, caveat de latencia secuencial vs coste de tokens. Fuente: cookbook, no primitives.md (está desfasado respecto al cookbook).
-3. Tabla evals: «media igual de 4 tareas». Quitar «ponderado». Quitar el empate inventado con DeepSeek v4 Pro. Quitar «90% del discernimiento» o sustituirlo por 67.8 vs 74.1 de acuerdo con Astra+Fable.
+1. §6: de «reales» a «ejemplos». Fuera probs, 40k/s, 82%, 80–90%, microsegundos.
+2. Fan-Out: 12.2× / 10.0×, `jev-1.12`, caveat de latencia secuencial vs coste de tokens. Fuente: cookbook, no primitives.md.
+3. Tabla evals: «media igual de las 4 tareas». Dejar el empate SVG Jev / DS v4 Pro (71.6%, 0.5 s vs 90.1 s). Quitar «90% del discernimiento» / «$200/hr».
 4. Almeida: uno de los autores primarios de InstructGPT, no el único.
 5. Precio: list price + frase de TypeSafe sobre subsidio. Output free = tarifa, no ausencia de `usage.output_tokens`.
-6. Sincronizar el brief: actualizar la fila del cookbook a 12.2× / 10.0×.
+6. §8: imports `TypeSafe*Error` del paquete raíz; no inventar `typesafe_sdk.api.exceptions`.
+7. §5: cuarto patrón = Intent Routing; SDE cookbook = mini → Jev → `gpt-5.5`; Composite con scores normalizados; umbrales de docs.
+8. Sincronizar el brief de investigación: cookbook 12.2× / 10.0×.
 
 ## Fuentes primarias abiertas en esta pasada
 
@@ -143,3 +188,8 @@ De `TYPESAFE_JEV_RESEARCH.md` §9 / overclaims:
 - [openai.com/index/instruction-following](https://openai.com/index/instruction-following/)
 - [pypi.org/project/typesafe-sdk](https://pypi.org/project/typesafe-sdk/) (0.6.0)
 - Brief previo: `TYPESAFE_JEV_RESEARCH.md`
+- [docs.typesafe.ai/patterns.md](https://docs.typesafe.ai/patterns.md)
+- [docs.typesafe.ai/cookbooks/sde_cascade.md](https://docs.typesafe.ai/cookbooks/sde_cascade.md)
+- [docs.typesafe.ai/sdk/python/api/exceptions.md](https://docs.typesafe.ai/sdk/python/api/exceptions.md)
+- [evals.typesafe.ai/agent_trace_observability.html](https://evals.typesafe.ai/agent_trace_observability.html) (`DS v4 pro · workflow · 71.6% · 90.1 s`)
+- [github.com/typesafe-ai/typesafe-sdk-python `src/typesafe_sdk/__init__.py`](https://raw.githubusercontent.com/typesafe-ai/typesafe-sdk-python/main/src/typesafe_sdk/__init__.py)
