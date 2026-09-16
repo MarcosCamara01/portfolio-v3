@@ -16,10 +16,6 @@ The answer is not a lack of raw compute or missing world knowledge inside neural
 
 When modern automobiles emerged at the turn of the twentieth century, early manufacturers built what were literally termed "horseless carriages." Rather than rethinking mechanical transportation from first engineering principles, they took traditional wooden horse-drawn carriages and mechanically swapped the horse for an internal combustion engine. They retained high bench seats, wagon wheels, leaf-spring buggy suspensions, and even a whip socket mounted to the dashboard. It took nearly a third of a century for the industry to realize that a car was not a motorized buggy, but an entirely different machine requiring its own monocoque chassis, aerodynamics, low-pressure tires, and low-slung seating adapted to speed.
 
-![The evolution of the interface: from horse-drawn carriage to automobile, and from human dialogue to decision models.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-01-interface-evolution.png)
-
-*The chatbot is the horseless carriage: a conceptual patch on a form that is still not native to software.*
-
 In modern artificial intelligence, we made the exact same mistake: **the chatbot is our horseless carriage.** 
 
 When general semantic reasoning first emerged in foundation models, the industry rushed forward by forcing the technology into the familiar shape of a polite human assistant chatting in a text box. But software systems do not cooperate by exchanging stories or swapping pleasantries.

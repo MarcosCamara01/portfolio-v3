@@ -16,10 +16,6 @@ La respuesta no se encuentra en una hipotética falta de potencia de cálculo ni
 
 Cuando surgió el automóvil moderno a principios del siglo XX, los primeros talleres fabricaron lo que la industria denominaba literalmente "carruajes sin caballos" (*horseless carriages*). En lugar de concebir el transporte mecánico desde sus primeros principios físicos, tomaron el carruaje de madera tradicional y simplemente sustituyeron el caballo por un motor de combustión. Mantuvieron los asientos elevados de banco, las ruedas de carro, las ballestas de suspensión e incluso el receptáculo para encajar el látigo. Hizo falta casi un tercio de siglo para que la industria comprendiera que un automóvil exigía un chasis autoportante, aerodinámica propia, neumáticos de baja presión y una posición de conducción adaptada a la velocidad.
 
-![La evolución de la interfaz: del carruaje de caballos al automóvil, y del diálogo humano al modelo de decisión.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-01-evolucion-interfaz.png)
-
-*El chatbot es el carruaje sin caballos: un parche conceptual sobre una forma que todavía no es nativa del software.*
-
 En la inteligencia artificial moderna hemos caído exactamente en la misma trampa: **el chatbot es nuestro carruaje sin caballos.** 
 
 Al presenciar la emergencia del razonamiento semántico en modelos masivos de lenguaje, la industria apresuró el desarrollo forzando a la tecnología a adoptar la máscara de un asistente humano con el que se charla en una ventana de texto. Pero los sistemas informáticos no cooperan entre sí contándose historias ni intercambiando cordialidades. 
