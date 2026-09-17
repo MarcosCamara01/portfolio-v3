@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev: chat was the wrong interface</title>
+<style>
+  body {
+    margin: 0 auto;
+    max-width: 42rem;
+    padding: 48px 24px 96px;
+    font: 18px/1.65 Georgia, "Iowan Old Style", serif;
+    color: #141820;
+    background: #fff;
+  }
+  h1 { font: 600 34px/1.15 system-ui, sans-serif; letter-spacing: -0.03em; }
+  h2, h3 { font-family: system-ui, sans-serif; letter-spacing: -0.02em; }
+  h2 { font-size: 24px; margin-top: 2.4em; }
+  h3 { font-size: 18px; margin-top: 1.8em; }
+  img { max-width: 100%; height: auto; display: block; margin: 1.5em 0 0.4em; }
+  em:has(+ br), p > em:first-child { color: #5A6270; }
+  blockquote { margin: 0 0 1.5em; padding: 0; border: 0; font-style: italic; color: #5A6270; }
+  pre, code { font-family: ui-monospace, "Azeret Mono", monospace; font-size: 14px; }
+  pre { background: #F4F6F8; padding: 16px; overflow-x: auto; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border: 1px solid #D5DAE2; padding: 8px 10px; text-align: left; vertical-align: top; }
+  hr { border: 0; border-top: 1px solid #D5DAE2; margin: 2em 0; }
+  a { color: #E24A12; }
+</style>
+</head>
+<body>
+<h1>Jev: chat was the wrong interface</h1>
+<blockquote>
+<p><em>For four years, the tech industry tried to make enterprise software talk to chatbots. The real automation revolution does not generate words: it returns types, probabilities, milliseconds, and strict control.</em></p>
+</blockquote>
+<hr />
+<h2>1. The Automation Paradox</h2>
+<p>For four years, we have been told that artificial intelligence models have achieved superhuman capabilities. They pass medical licensing examinations, solve competitive programming problems, debate philosophy, and synthesize thousands of pages of legal literature in seconds. Yet across everyday software engineering and real business operations, an awkward contradiction persists:</p>
+<p><em>Why does your bank still take three business days to resolve an obvious duplicate charge? Why do cybersecurity operations centers remain buried under tens of thousands of false-positive alerts manually reviewed by humans? Why do supply chains and enterprise billing systems remain anchored to brittle regular expressions, Excel macros, and repetitive human queues?</em></p>
+<p>If frontier models are so extraordinarily capable, where is all the promised automation?</p>
+<p>The answer is not a lack of raw compute or missing world knowledge inside neural networks: it is a fundamental architectural category error. <strong>We confused computational intelligence with conversational eloquence.</strong></p>
+<p>When modern automobiles emerged at the turn of the twentieth century, early manufacturers built what were literally termed "horseless carriages." Rather than rethinking mechanical transportation from first engineering principles, they took traditional wooden horse-drawn carriages and mechanically swapped the horse for an internal combustion engine. They retained high bench seats, wagon wheels, leaf-spring buggy suspensions, and even a whip socket mounted to the dashboard. It took nearly a third of a century for the industry to realize that a car was not a motorized buggy, but an entirely different machine requiring its own monocoque chassis, aerodynamics, low-pressure tires, and low-slung seating adapted to speed.</p>
+<p>In modern artificial intelligence, we made the exact same mistake: <strong>the chatbot is our horseless carriage.</strong> </p>
+<p>When general semantic reasoning first emerged in foundation models, the industry rushed forward by forcing the technology into the familiar shape of a polite human assistant chatting in a text box. But software systems do not cooperate by exchanging stories or swapping pleasantries.</p>
+<p>The history of computing demonstrates that complex capabilities only transform the global economy when distilled into abstractions that ordinary software can reliably compose. It happened with database management: in the 1960s, every business application stored data in flat text files using bespoke record pointers and hand-rolled lookup loops; the software industry's explosion did not occur by adding more text files, but when relational algebra and the SQL standard turned data storage into a deterministic, queryable primitive.</p>
+<p>When a software process requires the judgment of artificial intelligence, it does not need explanatory prose, hedging disclaimers, or persuasive arguments: <strong>it needs strictly typed decisions, honest probabilities, and response latencies compatible with a standard server lifecycle.</strong></p>
+<hr />
+<h2>2. Hardware Physics: Why LLMs Break the Traditional Backend</h2>
+<p>When a backend engineering team attempts to embed a conventional large language model (an autoregressive LLM such as GPT-4, Claude, or Llama) into the transactional core of a production application, they immediately run into hard physical bottlenecks imposed by GPU silicon.</p>
+<p><img alt="JSON Mode writes the schema token by token; one prefill shares the KV cache and each field slices logits to valid options." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-02-prefill-decode.png" /></p>
+<p><em>Top: JSON Mode still pays for decode. Bottom: one prefill, then softmax over that field’s tokens only. Editorial version of <a href="https://x.com/NielsRogge/status/2100239244501430438">Niels Rogge’s explanation</a>; not an official TypeSafe diagram. Probabilities are illustrative.</em></p>
+<p>To understand why LLMs are the wrong primitive for backend routing and decision-making, one must inspect how graphics processing units (GPUs) actually execute tensor operations:</p>
+<h3>1. Prefill vs. Decode: The Memory-Bandwidth Tax</h3>
+<p>Every inference pass in a generative transformer is split into two radically different operational phases:<br />
+* <strong>Prefill Phase (Context processing):</strong> The GPU ingests the entire input prompt in a single massive matrix multiplication. Thousands of tensor operations execute in parallel, saturating the GPU's <em>Tensor Cores</em>. This phase is compute-bound and exceptionally fast: processing 2,000 tokens of context takes only a few dozen milliseconds.<br />
+* <strong>Decode Phase (Autoregressive generation):</strong> To produce an answer, the model is forced to predict one token at a time, conditioning each token on all preceding ones. Here, the underlying physics flips: to compute a single token, the GPU must transfer <strong>hundreds of gigabytes of model weights from high-bandwidth memory (VRAM) into the arithmetic compute registers</strong>. <br />
+Because the GPU is processing a single token vector at a time, the compute cores sit mostly idle, starved for memory throughput. This phase is strictly memory-bandwidth bound.</p>
+<p>This physical disparity explains why cloud providers charge 3x to 5x more for output tokens than input tokens: generating words is physically far more inefficient for silicon than reading them.</p>
+<h3>2. The KV Cache Bottleneck</h3>
+<p>At each step of the sequential decode loop, the attention mechanism must recall the Key and Value states of all preceding tokens. To prevent re-calculating them, they are cached in GPU memory inside the <strong>KV Cache</strong>.</p>
+<p>As an enterprise system scales to hundreds of concurrent calls or processes long document histories, the KV Cache consumes tens of gigabytes of VRAM per active tenant. If a server runs out of VRAM for the KV Cache, it must evict sessions or drop requests. It is an architecture fundamentally hostile to massive concurrency and deterministic low-latency execution.</p>
+<h3>3. The Latency of the "Hot-Path" vs. Human Time</h3>
+<p>A human using a chat interface happily tolerates waiting 4, 8, or 15 seconds because humans read at biological speed while words stream across a screen.</p>
+<p>For a software backend, an 8-second freeze in the execution thread is an operational disaster. Modern microservice architectures demand p95 response times below <strong>150–200 milliseconds</strong>. Introducing a multi-second generative call into the middle of a transactional pipeline blocks application threads, exhausts database connection pools, and triggers cascading distributed timeouts.</p>
+<h3>4. The Illusion of "JSON Mode" and Constrained Decoding</h3>
+<p>To prevent models from writing conversational prose when code needs structured data, the industry invented <em>JSON Mode</em>, <em>Function Calling</em>, and grammar-constrained decoding (such as CFG/BNF masks).</p>
+<p>While these techniques successfully force the model's token sampler to adhere to syntactic JSON rules (closing brackets and quotation marks properly), <strong>they do not alter the underlying physics</strong>: the model still runs the expensive sequential token-by-token decode loop, the application still pays full price for every generated output token, and end-to-end latency remains measured in seconds. Worse: if the model changes its semantic interpretation midway through generation, it can produce syntactically valid JSON that is semantically catastrophic.</p>
+<p>Grammar masking and candidate slicing are different tricks. The first still emits <code>{</code>, <code>"risk"</code>, and <code>:</code>. <a href="https://x.com/NielsRogge/status/2100239244501430438">Niels Rogge reconstructs the second</a> on an open decoder: prefill context and schema once, reuse the KV cache, and for each field run softmax only over that field’s legal tokens. Application code assembles the JSON. TypeSafe has not said Jev is that model; the pattern is what fits a parallel sampler and a schema the model cannot break.</p>
+<hr />
+<h2>3. The Paradigm Shift: What is a "Decision Model" (System One)?</h2>
+<p>The technical solution to this architectural dead-end is not building slightly faster LLMs or inventing more complex regex parsers. It requires abandoning open-ended text decoding entirely and designing a model class built exclusively for <strong>machine-native decisions</strong>.</p>
+<p>This category has been formalized by TypeSafe AI—founded by Diogo Almeida, former OpenAI researcher and one of the primary authors on the foundational InstructGPT research (arXiv:2203.02155)—under the moniker <strong>System One Models</strong>, with <strong>Jev</strong> as their initial flagship release.</p>
+<p><img alt="System One architecture: a single GPU forward pass with parallel Noul, Choice, and Score heads." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-03-system-one.png" /></p>
+<p><em>Typed questions share one forward pass. There is no decode loop; the typed answer arrives in 70 to 500 ms.</em></p>
+<h3>The Kahneman Analogy: System 1 vs. System 2</h3>
+<p>The terminology draws directly on the cognitive taxonomy popularized by Nobel laureate Daniel Kahneman in <em>Thinking, Fast and Slow</em>:<br />
+* <strong>System 2 (Slow, deliberative, compute-heavy thought):</strong> The natural domain of traditional LLMs and reasoning models (such as OpenAI o1/o3 or Claude with extended thinking). It excels at deep deductive multi-step reasoning, writing novel software, deriving mathematical proofs, and composing nuanced prose.<br />
+* <strong>System 1 (Fast, intuitive, perceptual judgment):</strong> The instantaneous snap assessment made by an experienced professional. When a senior systems engineer glances at a server log, they do not deliberate for ten minutes to determine whether a line represents a critical database corruption or a benign warning. Their biological neural network performs perceptual classification in milliseconds based on recognized patterns.</p>
+<p>A System One model replicates this capability: <strong>it ingests ambiguous contextual state and projects structured determinations in a single parallel forward pass, without generating a single token of text.</strong></p>
+<h3>Why Output Tokens Are "Too Cheap to Meter"</h3>
+<p>By eliminating the autoregressive decode loop:<br />
+1. <strong>No Decode Loop Exists:</strong> The model computes context representation tensors once and immediately branches into parallel classification and projection heads.<br />
+2. <strong>Zero Persistent KV Cache:</strong> GPU memory is released instantly after the forward pass, enabling massive request concurrency impossible on standard LLM inference nodes.<br />
+3. <strong>Zero Output Token Billing:</strong> Because the hardware never spends seconds stalled on memory-bandwidth bottlenecks, returning structured decisions requires negligible marginal work. TypeSafe prices input at <strong>$0.042 per million tokens</strong> with <strong>free output tokens</strong>. In their launch notes, TypeSafe candidly observes that long-term operation will be required to prove pricing sustainability against potential early subsidies, though they expect intelligence delivery costs to trend downward over time.</p>
+<h3>The Strict Input/Output (I/O) Contract</h3>
+<p>Unlike conversational endpoints that simulate a persona, a System One model operates with an explicit function signature:</p>
+<ul>
+<li><strong>State (<code>state</code>):</strong> The unstructured or structured material being evaluated. It can be a plain string, an array of event logs, or an arbitrary JSON object (a bank statement, an ERP purchase order, an audit record).</li>
+<li><strong>Questions (<code>questions</code>):</strong> A dictionary of custom keys where each entry defines an atomic question with an explicit type and evaluation criteria.</li>
+<li><strong>Answers (<code>answers</code>):</strong> A dictionary echoing the exact same keys, where each value is a guaranteed mathematical structure with mathematically zero possibility of schema breakage or invented keys.</li>
+</ul>
+<h3>The Three Universal Primitives</h3>
+<p>Instead of asking the model to invent arbitrary JSON structures, computation is constrained to three composable mathematical primitives:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Primitive</th>
+<th style="text-align: left;">Mathematical Function</th>
+<th style="text-align: left;">What the software asks</th>
+<th style="text-align: left;">What the model returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Noul</strong></td>
+<td style="text-align: left;">Scalar Bayesian estimation</td>
+<td style="text-align: left;"><em>Is this assertion true?</em> (e.g., "Does the customer request a refund?")</td>
+<td style="text-align: left;">A scalar float <code>noul</code> strictly bounded in <em>[0.0, 1.0]</em> representing the calibrated probability of truth. It does not return a blind boolean, but a continuous probability.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Choice</strong></td>
+<td style="text-align: left;">Discrete space distribution</td>
+<td style="text-align: left;"><em>Which of these mutually exclusive options applies?</em> (Up to 255 options)</td>
+<td style="text-align: left;">The winning choice (<code>choice</code>), the complete probability vector summing to exactly 1.0 (<code>probabilities</code>), and a certainty index (<code>confidence</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Score</strong></td>
+<td style="text-align: left;">Mathematical expectation on rubric</td>
+<td style="text-align: left;"><em>Where does the state sit along an ordered rubric?</em> (Minimum 2 levels)</td>
+<td style="text-align: left;">A continuous float (<code>score</code>), the descriptive legend (<code>legend</code>), probability mass across levels, and certainty (<code>confidence</code>).</td>
+</tr>
+</tbody>
+</table>
+<p>A powerful algebraic property in the <strong>Score</strong> primitive: the returned value is not restricted to discrete integers. The model calculates the mathematical expectation across rubric levels:</p>
+<p><p style="font-family:ui-monospace,monospace;font-size:15px;overflow-x:auto">\mathbb{E}[\text{Score}] = \sum_{i=0}^{n-1} i \cdot P(\text{level}_i)</p></p>
+<p>If we define a customer frustration rubric as <code>["Calm", "Frustrated", "Very angry"]</code> (indices 0, 1, and 2), the model can return a score of <code>1.65</code>. This decimal is not arbitrary noise: it indicates precisely that the customer's state is evaluated nearly two-thirds of the way from mild frustration toward outright rage.</p>
+<hr />
+<h2>4. RLCD vs. RLHF: Calibration and Honest Uncertainty</h2>
+<p>To understand why conventional LLMs fail at unattended automation, one must inspect the optimization objective used to train them.</p>
+<p><img alt="Training divergence: RLHF maximizes human preference; RLCD minimizes calibration error." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-04-rlhf-rlcd.png" /></p>
+<p><em>RLHF rewards confident tone and sycophancy. RLCD penalizes overconfidence and pays for honest uncertainty.</em></p>
+<h3>The Pathologies of RLHF</h3>
+<p>Almost all conversational models (including ChatGPT and Claude) are post-trained using <strong>RLHF</strong> (<em>Reinforcement Learning from Human Feedback</em>). This process fine-tunes model weights to maximize the score awarded by human contractors rating which response they prefer to read.</p>
+<p>While RLHF creates pleasant, helpful assistants, it introduces destructive pathologies when consumed by software programs:<br />
+1. <strong>Sycophancy:</strong> Human raters consistently favor verbose, articulate, confident answers that flatter the user. The model quickly learns that admitting ignorance or giving blunt answers hurts its reward score. When uncertain, it prefers to hallucinate a plausible fact rather than disappoint.<br />
+2. <strong>Pathological Overconfidence:</strong> A standard LLM asserts hallucinations with the exact same syntactic authority and confident tone it uses for basic arithmetic.<br />
+3. <strong>Mode Dropping:</strong> Optimizing for average human preference causes the model to collapse its probabilistic diversity toward a narrow set of agreeable conversational styles, suppressing valid alternative answers.<br />
+4. <strong>Distorted Softmax Distributions:</strong> Following RLHF, the raw logits of a transformer lose their rigorous statistical meaning. A nominal 99% probability in a commercial LLM decoder rarely correlates with a 99% real-world empirical accuracy.</p>
+<h3>What is RLCD (<em>Reinforcement Learning for Calibrated Decisions</em>)?</h3>
+<p>Decision models discard human conversational preference in favor of <strong>statistical calibration</strong>.</p>
+<p>While TypeSafe has not yet published a formal paper detailing the exact mathematical loss function of RLCD, the industry standard framework for evaluating calibration is the <strong>Expected Calibration Error (ECE)</strong> and reliability diagrams. Within this framework, a model is defined as perfectly calibrated when:</p>
+<p><p style="font-family:ui-monospace,monospace;font-size:15px;overflow-x:auto">\mathbb{P}(\hat{Y} = Y \mid \hat{P} = p) = p, \quad \forall p \in [0, 1]</p></p>
+<p>This means that across thousands of production requests over a year, whenever the model assigns an 80% probability (p = 0.80) to an outcome, that outcome must be empirically true exactly 80% of the time.</p>
+<pre><code class="language-python"># In production software, honest uncertainty is the single most valuable signal:
+response = client.system_one(state=payout_event, questions={&quot;fraud&quot;: Noul(instructions=&quot;Is this transaction fraudulent?&quot;)})
+
+fraud_prob = response.answers[&quot;fraud&quot;].noul
+
+if fraud_prob &gt; 0.92:
+    # High statistical certainty: block account automatically
+    block_account_immediately(user_id)
+elif fraud_prob &lt; 0.15:
+    # Negligible residual risk: approve payout automatically
+    authorize_transfer(user_id)
+else:
+    # The model expresses calibrated uncertainty (0.15 &lt;= p &lt;= 0.92):
+    # Code routes to a human forensic investigator with the exact score attached
+    escalate_to_human_investigator(user_id, risk_score=fraud_prob)
+</code></pre>
+<h3>Probability vs. Confidence</h3>
+<p>A common point of confusion among engineers is the distinction between winning probability and the confidence score:<br />
+* <strong>Probability</strong> is the mathematical mass assigned to a specific label in the output vector.<br />
+* <strong>Confidence (<code>confidence</code>)</strong> is a synthetic scalar metric (bounded in <em>[0, 1]</em>) that measures the concentration (or inverse entropy) of the entire distribution.</p>
+<p>For example, imagine a Choice question offering 10 classification categories. If the top option scores 35% probability, while the remaining 9 options split 7% each, the top option is the most likely, but the distribution is flat and confidence will be low (the model communicates: <em>"this is the best option available, but I am not certain"</em>). Conversely, if the top option scores 92% and the rest share 8%, the distribution is highly peaked and confidence approaches 1.0.</p>
+<p>For enterprise software, <strong>a calibrated "I don't know" is infinitely more valuable than an articulate hallucination.</strong> If software knows with statistical rigor when a model is unsure, it can safely automate high-certainty decisions while routing ambiguous exceptions directly into human review queues.</p>
+<hr />
+<h2>5. The Four Canonical Production Design Patterns</h2>
+<p>Integrating decision models into enterprise architectures is not about swapping prompt strings; it involves structuring application workflows around four formal architectural patterns:</p>
+<p><img alt="The four System One patterns: Speculative Fan-Out, Composite Scoring, Confidence-Gated, and Intent Routing." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-05-four-patterns.png" /></p>
+<p><em>Four engineering patterns: parallel questions, application weighting, calibrated confidence boundaries, and intent routing.</em></p>
+<h3>Pattern 1: Speculative Fan-Out</h3>
+<p>In conversational pipelines, engineers routinely fall into the trap of sequential roundtrips: first querying an LLM to check if a ticket is a bug; if yes, making a second call to determine the component; if database, making a third call to assess severity. Each hop multiplies latency and cost.</p>
+<p>With decision models, adding extra questions to a single request shares the GPU state forward pass and barely alters latency. The <strong>Speculative Fan-Out</strong> pattern sends <strong>all conceivable questions in a single initial request</strong>, including questions that only matter under specific conditions:</p>
+<p>In official empirical benchmarks published by TypeSafe (evaluating a 13-question regulatory compliance check over the GDPR text using <code>jev-1.12</code>), <strong>batching 13 analytical questions into a single request proved 12.2x cheaper and 10.0x faster</strong> than executing 13 sequential calls over the document (~54,000 characters), yielding identical classification probabilities. Deterministic code simply inspects the top-level answer and discards irrelevant speculative branches.</p>
+<h3>Pattern 2: Composite Scoring</h3>
+<p>Asking an AI model in a single prompt to <em>"rate lead quality from 1 to 100"</em> is an antipattern: it hides complex multi-dimensional criteria inside an un-auditable black box.</p>
+<p>The <strong>Composite Scoring</strong> pattern decomposes an ambiguous multi-factor assessment into atomic, independent questions, delegating mathematical weighting to the host application code:</p>
+<pre><code class="language-python"># A Score lands on your rubric (0 .. n-1). Normalize to 0-1 before mixing with Nouls.
+TECH_LEVELS = [
+    &quot;Vague or unsourced&quot;,
+    &quot;Mostly accurate&quot;,
+    &quot;Precise and checkable&quot;,
+]
+
+precision = response.answers[&quot;technical_accuracy&quot;].score / (len(TECH_LEVELS) - 1)
+sources = response.answers[&quot;verified_sources&quot;].noul
+bias = response.answers[&quot;commercial_bias&quot;].noul
+
+quality = 0.40 * precision + 0.35 * sources + 0.25 * (1.0 - bias)
+
+if quality &gt;= 0.75:
+    publish_to_directory(doc)
+</code></pre>
+<p><strong>The operational advantage is immense:</strong> if executive leadership decides tomorrow that commercial bias should carry more weight than source citations, the engineering team modifies a single floating-point multiplier in code (<code>0.25 -&gt; 0.40</code>) and deploys via a standard git commit in milliseconds. The <code>0.75</code> gate sits on the same 0–1 scale as the normalized primitives. There is no need to re-train models, re-engineer natural language prompts, or pray that an LLM interprets English instructions consistently.</p>
+<h3>Pattern 3: Confidence-Gated Escalation</h3>
+<p>This pattern establishes dynamic application safety boundaries: activation thresholds are proportional to the severity and reversibility of the triggered action. Official documentation illustrates practical reference tiers such as <code>0.60</code> and <code>0.85</code> (or <code>0.50</code> and <code>0.90</code> depending on domain risk), emphasizing that thresholds should be validated against proprietary application data:</p>
+<ul>
+<li><strong>Low-risk read operations (e.g., displaying balance, suggesting FAQ links):</strong> Operate with modest confidence thresholds (<code>confidence &gt; 0.60</code>). If the model makes an occasional error, the impact is minor and easily remediated.</li>
+<li><strong>Irreversible or destructive actions (e.g., executing a bank transfer, terminating a production cluster):</strong> Demand strict thresholds (<code>confidence &gt; 0.85</code>). Any score falling below that line halts automated execution, enforcing two-factor confirmation or human specialist review.</li>
+</ul>
+<h3>Pattern 4: Intent Routing</h3>
+<p>Not every user action requires heavyweight reasoning. The canonical <strong>Intent Routing</strong> pattern positions a System One model at the architecture's ingress to classify immediately which downstream system should fulfill the request:</p>
+<ol>
+<li><strong>Deterministic logic:</strong> Narrow or simple transactional requests route directly to code or database queries without calling generative models.</li>
+<li><strong>Specialist generative models (System 2):</strong> Queries requiring open prose, empathy, or complex synthesis route to a dedicated LLM with pre-filtered context.</li>
+<li><strong>Human escalation:</strong> Borderline cases with conflicting policies escalate directly to customer support.</li>
+</ol>
+<p><em>(Technical note: for high-volume structured data extraction, TypeSafe also documents cookbook patterns like the SDE cascade, where a smaller model such as <code>gpt-5.4-mini</code> extracts fields, Jev verifies field validity with Nouls, and uncertain extractions escalate to a frontier reasoning model like <code>gpt-5.5</code>).</em></p>
+<hr />
+<h2>6. Architectural Scenarios: Three Design Cases</h2>
+<p>To contrast the concrete impact of this architecture against conventional generative approaches, consider three representative design scenarios. <em>(Methodological note: all schemas, scores, and probabilities below are illustrative engineering examples, matching the convention documented in TypeSafe's conceptual reference).</em></p>
+<hr />
+<h3>Case 1: Triage and Resolution in Fintech / E-Commerce</h3>
+<ul>
+<li><strong>The Problem Today:</strong> A customer submits an inquiry requesting a refund for duplicate charges. Keyword rules easily confuse past grievances with active requests, while a generative LLM takes 5 to 12 seconds to generate JSON, choking server concurrency during peak loads.</li>
+<li><strong>With a Decision Model:</strong></li>
+<li><strong>State (<code>state</code>):</strong> A JSON object containing customer message text, recent Stripe charge metadata, and refund policy terms.</li>
+<li><strong>Parallel Questions:</strong><ul>
+<li><code>refund_requested</code> (<em>Noul</em>): Does the user ask for a refund? → Illustrative: <code>0.99</code></li>
+<li><code>duplicate_confirmed</code> (<em>Noul</em>): Are there duplicate charges within 24 hours? → <code>0.96</code></li>
+<li><code>urgency_level</code> (<em>Score</em> on rubric <code>Low</code>, <code>Moderate</code>, <code>Critical</code>): → <code>1.65</code></li>
+<li><code>policy_compliance</code> (<em>Noul</em>): Does this meet criteria for automated refund? → <code>0.98</code></li>
+</ul>
+</li>
+<li><strong>Code Action:</strong><br />
+  Because both refund intent and policy compliance exceed 0.90, the backend executes Stripe's <code>/v1/refunds</code> API directly in milliseconds. If confidence drops below safety boundaries, code routes the ticket to manual review.</li>
+</ul>
+<hr />
+<h3>Case 2: Perimeter Semantic Firewall (Guardrails)</h3>
+<ul>
+<li><strong>The Problem Today:</strong> To prevent prompt injection attacks (<em>jailbreaks</em>) or credential leaks, applications place another generative LLM in front as an inspector. This doubles inference bills and adds several seconds of latency before the user receives the first word.</li>
+<li><strong>With a Decision Model:</strong></li>
+<li><strong>State (<code>state</code>):</strong> The raw user prompt before it reaches the conversational model.</li>
+<li><strong>Parallel Questions:</strong><ul>
+<li><code>is_prompt_injection</code> (<em>Noul</em>): Does the input attempt to override system instructions? → <code>0.98</code></li>
+<li><code>contains_credentials</code> (<em>Noul</em>): Does the text contain private keys, JWTs, or credit cards? → <code>0.01</code></li>
+<li><code>intent</code> (<em>Choice</em> among <code>legitimate_task</code>, <code>jailbreak_probe</code>, <code>toxic_abuse</code>): → <code>jailbreak_probe</code> (confidence: <code>0.96</code>)</li>
+</ul>
+</li>
+<li><strong>Code Action:</strong><br />
+  If <code>is_prompt_injection &gt; 0.85</code>, the reverse proxy rejects the connection immediately with HTTP <code>400 Bad Request</code> in under 100 ms. The expensive downstream model is never called.</li>
+</ul>
+<hr />
+<h3>Case 3: Semantic Validation and Limits on Invoices (ERP)</h3>
+<ul>
+<li><strong>The Problem Today:</strong> Reconciling complex vendor invoices against purchase orders in SQL databases. Generative LLMs suffer numeric hallucinations on dense tabular data, while deep reasoning models are cost-prohibitive at enterprise scale.</li>
+<li><strong>With a Decision Model:</strong></li>
+<li><strong>State (<code>state</code>):</strong> Extracted invoice text paired with structured purchase order records.</li>
+<li><strong>Parallel Questions:</strong><ul>
+<li><code>supplier_identity_match</code> (<em>Noul</em>): Do corporate names and tax IDs match master vendor records? → <code>0.99</code></li>
+<li><code>unauthorized_items_present</code> (<em>Noul</em>): Are there unauthorized line items? → <code>0.03</code></li>
+<li><code>discrepancy_category</code> (<em>Choice</em> among <code>none</code>, <code>tax_error</code>, <code>price_variance</code>, <code>quantity_variance</code>): → <code>none</code> (confidence: <code>0.95</code>)</li>
+</ul>
+</li>
+<li><strong>Code Action:</strong><br />
+  The ERP schedules automated settlement if confidence crosses configured finance thresholds, routing items with classified discrepancies to human review. This scenario also highlights model boundaries: as public evaluations indicate, when an invoice demands deep sequential arithmetic deduction, a System One model without a reasoning loop needs deterministic code validation alongside it.</li>
+</ul>
+<hr />
+<h2>7. What the 711 Public Evals Reveal (and What They Hide)</h2>
+<p>One of the greatest flaws in AI analysis is unquestioning acceptance of marketing claims. To evaluate decision models with technical discipline, we examine the official benchmark published by TypeSafe on their evaluation dashboard (<a href="https://evals.typesafe.ai/">evals.typesafe.ai</a>), comprising <strong>711 empirical case studies</strong> across four automated enterprise workflows.</p>
+<p><img alt="Jev accuracy versus GPT Sol and Claude Opus 5 across 711 public evals.typesafe.ai cases." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-06-evals-711.png" /></p>
+<p><em>Jev tracks frontier models on three workflows. The Achilles heel is invoices: 61.8% versus Sol at 79.1%.</em></p>
+<p>Every task ran inside an identical workflow harness where each model competed under the exact same programmatic rules. To enable LLMs to compete, TypeSafe engineered an official adapter (<a href="https://github.com/typesafe-ai/system-one-adapter-python">system-one-adapter-python</a>) wrapping OpenAI and Anthropic APIs with strict structured outputs and probability normalization.</p>
+<p>Data inspected directly from SVG mark labels and JSON metadata reveals a nuanced engineering picture:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Workflow</th>
+<th style="text-align: left;">Case Count</th>
+<th style="text-align: left;">Jev (System One)</th>
+<th style="text-align: left;">Top Competing Model (Workflow)</th>
+<th style="text-align: left;">Performance Analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Security Incidents</strong></td>
+<td style="text-align: left;">240 cases</td>
+<td style="text-align: left;"><strong>61.7%</strong><br>0.3 s / $0.0001</td>
+<td style="text-align: left;"><strong>Claude Opus 5: 66.2%</strong> (15.1 s / <em>0.0574)<br>GPT Sol: 62.5% (8.5 s / </em>0.0295)</td>
+<td style="text-align: left;">Jev sits within 4.5 percentage points of Opus 5 while running <strong>50x faster</strong> and costing <strong>570x less</strong>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Agent Trace Observability</strong></td>
+<td style="text-align: left;">117 cases</td>
+<td style="text-align: left;"><strong>71.6%</strong><br>0.5 s / $0.0003</td>
+<td style="text-align: left;"><strong>GPT Sol: 76.6%</strong> (40.3 s / $0.0575)<br>DeepSeek v4 Flash: 73.0% (51.7 s)</td>
+<td style="text-align: left;">On agent log analysis, Jev virtually matches DeepSeek v4 Pro (71.6%), reducing evaluation time from 90 seconds to half a second.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Invoice Processing</strong></td>
+<td style="text-align: left;">150 cases</td>
+<td style="text-align: left;"><strong>61.8%</strong><br>0.5 s / $0.0011</td>
+<td style="text-align: left;"><strong>GPT Sol: 79.1%</strong> (34.3 s / <em>0.2152)<br>Claude Opus 5: 78.4% (92.1 s / </em>0.4856)</td>
+<td style="text-align: left;"><strong>Jev's Achilles Heel:</strong> A massive 17.3 percentage point gap behind Sol. Documents with dense tables, spatial deduction, and sequential numeric logic expose the limits of models without multi-step decode reasoning.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Customer Service</strong></td>
+<td style="text-align: left;">204 cases</td>
+<td style="text-align: left;"><strong>76.0%</strong><br>0.4 s / $0.0001</td>
+<td style="text-align: left;"><strong>GPT Sol: 78.3%</strong> (10.1 s / $0.0323)<br>DeepSeek v4 Flash: 76.8% (34.6 s)</td>
+<td style="text-align: left;">Near-tie with frontier models, outperforming Opus 5 (72.4%) and Sonnet 5 (69.3%) in raw classification accuracy.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Global Average (Equal Task Weights)</strong></td>
+<td style="text-align: left;"><strong>711 cases (4 tasks)</strong></td>
+<td style="text-align: left;"><strong>67.8%</strong><br>0.4 s / $0.0004</td>
+<td style="text-align: left;"><strong>GPT Sol: 74.1%</strong> (23.3 s / $0.0836)</td>
+<td style="text-align: left;">Jev dominates the Pareto efficiency curve, but <strong>does not lead in absolute accuracy</strong>. The dashboard reports an unweighted mean across the four workflows rather than weighting by case count.</td>
+</tr>
+</tbody>
+</table>
+<h3>Methodological Caveat on Reference Labels</h3>
+<p>An essential methodological factor must be disclosed: <strong>the "correct" labels in this benchmark do not stem from a human expert ground-truth dataset.</strong></p>
+<p>They represent consensus generated by averaging decisions from <strong>GPT-6 Astra and Claude Fable 5.1 set to high thinking</strong>. Therefore, this benchmark does not measure absolute truth, but rather <strong>Jev's statistical agreement with the smartest and most expensive frontier LLMs on the planet</strong>.</p>
+<p>The engineering takeaway is clear: Jev is not designed to compete on open-ended general intelligence with expensive frontier models; its core value proposition is delivering <strong>strong statistical agreement with frontier reasoning at a two-order-of-magnitude reduction in latency and a three-order-of-magnitude reduction in cost</strong>.</p>
+<hr />
+<h2>8. Integration Blueprint: Production Code and Resilience</h2>
+<p>An infrastructure model is only as viable as its integration contracts. Below is an end-to-end production implementation using the official Python SDK (<code>typesafe-sdk</code>, version 0.6.0), demonstrating interaction with <code>POST https://api.typesafe.ai/v1/systemone</code> and operational error handling.</p>
+<pre><code class="language-python">from typesafe_sdk import (
+    Choice,
+    Noul,
+    Score,
+    TypeSafeAuthenticationError,
+    TypeSafeClient,
+    TypeSafeError,
+    TypeSafeInternalServerError,
+    TypeSafePermissionDeniedError,
+    TypeSafeRateLimitError,
+    TypeSafeUnprocessableEntityError,
+)
+
+# TypeSafeClient() reads TYPESAFE_API_KEY. Missing key raises TypeSafeError at init,
+# not an HTTP 401.
+try:
+    client = TypeSafeClient()
+except TypeSafeError as exc:
+    raise SystemExit(str(exc)) from exc
+
+incoming_state = {
+    &quot;audit_event&quot;: {
+        &quot;user_id&quot;: &quot;usr_99812&quot;,
+        &quot;action&quot;: &quot;export_database_dump&quot;,
+        &quot;ip_address&quot;: &quot;194.26.29.112&quot;,
+        &quot;geo_country&quot;: &quot;RU&quot;,
+        &quot;user_home_country&quot;: &quot;ES&quot;,
+    },
+    &quot;user_profile&quot;: {
+        &quot;role&quot;: &quot;junior_developer&quot;,
+        &quot;mfa_active&quot;: True,
+        &quot;past_violations&quot;: 0,
+    },
+    &quot;policy_rules&quot;: (
+        &quot;Exporting database dumps outside the user's home country &quot;
+        &quot;requires explicit Security authorization.&quot;
+    ),
+}
+
+THREAT_LEVELS = [&quot;Benign&quot;, &quot;Suspicious&quot;, &quot;Critical incident&quot;]
+
+try:
+    with client:
+        response = client.system_one(
+            state=incoming_state,
+            model=&quot;jev-latest&quot;,
+            questions={
+                &quot;violates_policy&quot;: Noul(
+                    instructions=(
+                        &quot;Comparing `audit_event` against `policy_rules`, &quot;
+                        &quot;does this action constitute a security violation?&quot;
+                    ),
+                ),
+                &quot;threat_level&quot;: Score(
+                    instructions=&quot;Operational risk severity&quot;,
+                    criteria=THREAT_LEVELS,
+                ),
+                &quot;recommended_action&quot;: Choice(
+                    instructions=&quot;Immediate protocol action&quot;,
+                    criteria={
+                        &quot;allow&quot;: &quot;Allow execution without interruption&quot;,
+                        &quot;challenge_mfa&quot;: &quot;Require a secondary MFA challenge&quot;,
+                        &quot;revoke_tokens&quot;: (
+                            &quot;Terminate active sessions and freeze credentials&quot;
+                        ),
+                    },
+                ),
+            },
+        )
+
+    violation = response.nouls[&quot;violates_policy&quot;].noul
+    risk = response.scores[&quot;threat_level&quot;].score
+    action = response.choices[&quot;recommended_action&quot;].choice
+    confidence = response.choices[&quot;recommended_action&quot;].confidence
+
+    print(f&quot;Violation probability: {violation:.2f}&quot;)
+    print(f&quot;Risk score: {risk:.2f} / {len(THREAT_LEVELS) - 1}&quot;)
+    print(f&quot;Recommended action: {action} (confidence: {confidence:.2f})&quot;)
+
+    if violation &gt; 0.85 and action == &quot;revoke_tokens&quot; and confidence &gt; 0.80:
+        print(&quot;[AUTO-ACTION] Revoking credentials.&quot;)
+    elif violation &gt; 0.85:
+        print(&quot;[ESCALATION] Route to security on-call.&quot;)
+    else:
+        print(&quot;[AUDIT] Event logged.&quot;)
+
+except TypeSafeAuthenticationError:
+    # HTTP 401: invalid or missing Bearer on the request.
+    print(&quot;Authentication failed. Check TYPESAFE_API_KEY.&quot;)
+except TypeSafePermissionDeniedError:
+    # HTTP 403.
+    print(&quot;Permission denied.&quot;)
+except TypeSafeUnprocessableEntityError as exc:
+    # HTTP 422: malformed questions or state.
+    print(f&quot;Invalid request: {exc}&quot;)
+except TypeSafeRateLimitError as exc:
+    # HTTP 429 after the SDK's default retries (it already honors Retry-After).
+    wait_ms = exc.retry_after_ms
+    print(f&quot;Rate limited after retries. retry_after_ms={wait_ms}&quot;)
+except TypeSafeInternalServerError as exc:
+    # 5xx after retries. Docs also list 529 Overloaded; the SDK maps it here.
+    print(f&quot;Server error {exc.status}. request_id={exc.request_id}&quot;)
+</code></pre>
+<h3>Official HTTP status codes</h3>
+<p>For Go, Rust, or Java clients talking raw HTTP, TypeSafe documents these errors. The Python SDK already retries <code>429</code> and <code>5xx</code> (including <code>529</code>) with backoff; the <code>except</code> blocks above run only after those retries are exhausted.</p>
+<ul>
+<li><strong><code>401 Unauthorized</code>:</strong> Missing or invalid API key in the <code>Authorization</code> header. SDK: <code>TypeSafeAuthenticationError</code>. If the env var is missing <em>before</em> the call, <code>TypeSafeClient()</code> raises <code>TypeSafeError</code>.</li>
+<li><strong><code>403 Forbidden</code>:</strong> Access denied. SDK: <code>TypeSafePermissionDeniedError</code>.</li>
+<li><strong><code>422 Unprocessable Entity</code>:</strong> Request JSON failed validation (missing <code>type</code>, a Score with fewer than two levels, etc.). SDK: <code>TypeSafeUnprocessableEntityError</code>.</li>
+<li><strong><code>429 Too Many Requests</code>:</strong> Rate limit. Back off and retry; the SDK honors <code>Retry-After</code> / <code>retry-after-ms</code>.</li>
+<li><strong><code>529 Overloaded</code>:</strong> Transient cluster saturation. Same backoff recipe; after retries it surfaces as <code>TypeSafeInternalServerError</code> with <code>status == 529</code>.</li>
+</ul>
+<hr />
+<h2>9. Reality Check: Limitations, Risks, and When NOT to Use This Approach</h2>
+<p>A rigorous engineering review must clearly state what this technology <strong>cannot do</strong>:</p>
+<p><img alt="Architectural decision matrix: when to use a generative LLM, a reasoning model, or a decision model." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-07-decision-matrix.png" /></p>
+<p><em>If you need prose, use an LLM. If you need a multi-step proof, use a reasoning model. If you need to classify in the backend, use System One.</em></p>
+<ol>
+<li><strong>Complete Inability to Generate Text:</strong> System One models lack an open vocabulary decoder. They cannot draft summaries, reply to emails, generate TypeScript functions, or engage in conversational dialogue.</li>
+<li><strong>Weak at Multi-Step Sequential Reasoning:</strong> In the candid words of Diogo Almeida, on tasks requiring step-by-step mathematical logic, these models perform poorly (comparable to older base models without tools). They are designed for rapid perceptual assessment, not chain-of-thought calculation.</li>
+<li><strong>The Myth of "Zero Hallucinations":</strong> This is the most dangerous marketing claim in recent AI discourse. TypeSafe guarantees that the model <strong>never commits schema or type errors</strong> (it cannot emit an invalid label outside your defined Choice). But <strong>it can still make semantic errors</strong>: if input state is ambiguous or instructions poorly phrased, the model can choose the wrong option with 90% probability. Confusing syntactic validity with semantic infallibility is the fastest route to production outages.</li>
+<li><strong>Engineering Effort Moves to Taxonomy Design:</strong> If an engineer defines overlapping Choice criteria (e.g., <code>cancellation</code> and <code>service_termination</code> without defining the boundary), probability distributions flatten and confidence collapses. Technical skill shifts from writing persuasive prompts to architecting orthogonal domain taxonomies.</li>
+<li><strong>Early-Stage Closed Ecosystem:</strong> As of September 2026, the technology operates under gated access (<em>waitlist</em> / private console), lacks open weights, and TypeSafe has not published a peer-reviewed academic paper detailing the mathematical loss function or training data mixture behind RLCD.</li>
+</ol>
+<hr />
+<h2>10. The Future: Jevons Paradox and Composable Software</h2>
+<p>Why was this foundation model named <strong>Jev</strong>?</p>
+<p>The name pays direct tribute to William Stanley Jevons, the nineteenth-century British economist and logician. In his 1865 treatise <em>The Coal Question</em>, Jevons articulated a paradox that baffled Victorian industrial planners: following James Watt's invention of the modern steam engine—which consumed coal far more efficiently than older Newcomen engines—Britain's national coal consumption did not decrease: <strong>it skyrocketed exponentially</strong>.</p>
+<p>By dramatically lowering the cost of mechanical power per unit of work, the steam engine made steam power economically viable across thousands of textile mills, steamships, locomotives, and mines that could never before afford coal.</p>
+<p><img alt="Jevons paradox in AI: cheaper semantic judgment explodes demand for intelligent computation." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-08-jevons-paradox.png" /></p>
+<p><em>When a decision drops from cents and fifteen seconds to $0.042 per million tokens and 100 ms, the entire backend becomes a candidate.</em></p>
+<p>Modern artificial intelligence is reaching its own <strong>Jevons Paradox</strong>:</p>
+<ul>
+<li>When evaluating a semantic judgment costs 3 cents and takes 10 seconds, software architects use AI sparingly, restricting it to high-margin, user-visible interfaces.</li>
+<li>When the cost drops to <strong>$0.042 per million input tokens with free output tokens</strong> and answers return in <strong>100 milliseconds</strong>, backend software architecture is rewritten from the ground up.</li>
+</ul>
+<p>Suddenly it becomes viable to evaluate every line in an Nginx access log, audit every transaction streaming through Apache Kafka, re-rank search results across millions of products in real time, block prompt injections at the perimeter, and run continuous semantic map-reduces across terabytes of unstructured records.</p>
+<p>The trajectory of software engineering has always been identical: whenever a complex, esoteric capability is distilled into a composable, typed, low-cost primitive, an industry-wide Cambrian explosion follows. It happened when relational databases standardized storage with SQL; it happened when internet protocols standardized networking with TCP/IP; and it will happen when machine intelligence transitions from a chat box into what it always should have been: <strong>a deterministic programming primitive upon which software engineers can build the future.</strong></p>
+<p>As the manifesto of this architectural wave summarizes: the goal is no longer to pursue an all-powerful digital god in a research lab, but to build dependable production components that quietly automate the real world.</p>
+</body>
+</html>

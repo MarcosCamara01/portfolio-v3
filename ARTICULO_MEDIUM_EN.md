@@ -237,7 +237,7 @@ To contrast the concrete impact of this architecture against conventional genera
   * **Parallel Questions:**
     * `refund_requested` (*Noul*): Does the user ask for a refund? $\rightarrow$ Illustrative: `0.99`
     * `duplicate_confirmed` (*Noul*): Are there duplicate charges within 24 hours? $\rightarrow$ `0.96`
-    * `urgency_level` (*Score* on rubric `Low`, `Moderate`, `Critical`): $\rightarrow$ `2.45`
+    * `urgency_level` (*Score* on rubric `Low`, `Moderate`, `Critical`): $\rightarrow$ `1.65`
     * `policy_compliance` (*Noul*): Does this meet criteria for automated refund? $\rightarrow$ `0.98`
 * **Code Action:**
   Because both refund intent and policy compliance exceed 0.90, the backend executes Stripe's `/v1/refunds` API directly in milliseconds. If confidence drops below safety boundaries, code routes the ticket to manual review.
