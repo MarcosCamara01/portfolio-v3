@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #141820;
+        --mute: #5a6270;
+        --signal: #e24a12;
+        --field: #f4f6f8;
+        --line: #d5dae2;
+        --paper: #ffffff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { background: var(--paper); }
+      .cover {
+        width: 1400px;
+        height: 788px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        font-family: "Bricolage Grotesque", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        color: var(--ink);
+      }
+      .pane {
+        padding: 64px 72px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+      }
+      .chat {
+        background: var(--field);
+        border-right: 1px solid var(--line);
+      }
+      .kicker {
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--mute);
+        margin-bottom: 28px;
+      }
+      .thread {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        opacity: 0.72;
+      }
+      .bubble {
+        max-width: 88%;
+        padding: 14px 16px;
+        border-radius: 4px;
+        font-size: 18px;
+        line-height: 1.4;
+        letter-spacing: -0.015em;
+      }
+      .bubble.user {
+        align-self: flex-end;
+        background: var(--paper);
+        border: 1px solid var(--line);
+      }
+      .bubble.bot {
+        align-self: flex-start;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        color: var(--mute);
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .typing {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-top: 6px;
+        color: var(--mute);
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 12px;
+      }
+      .dots span {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: var(--mute);
+        margin-right: 4px;
+        opacity: 0.45;
+      }
+      .jev {
+        background: var(--paper);
+        padding-left: 80px;
+      }
+      .jev .kicker { color: var(--signal); }
+      .card {
+        display: grid;
+        grid-template-columns: 8px 1fr;
+        gap: 28px;
+        align-items: stretch;
+      }
+      .bar {
+        width: 3px;
+        background: var(--signal);
+        border-radius: 1px;
+      }
+      .rows {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        align-items: baseline;
+        gap: 16px;
+      }
+      .row .key {
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 18px;
+        color: var(--mute);
+      }
+      .row .val {
+        font-size: 44px;
+        font-weight: 600;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+      }
+      .row .val.mono {
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 36px;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+      .meta {
+        margin-top: 36px;
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 13px;
+        color: var(--mute);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <section class="pane chat">
+        <div class="kicker">Chat</div>
+        <div class="thread">
+          <div class="bubble user">I was charged twice. Refund it.</div>
+          <div class="bubble bot">
+            I’d be happy to help! I understand this can be frustrating.
+            Let me walk you through a few questions so we can look into
+            the best next steps for your account…
+          </div>
+          <div class="typing">
+            <span class="dots"><span></span><span></span><span></span></span>
+            generating
+          </div>
+        </div>
+      </section>
+      <section class="pane jev">
+        <div class="kicker">Jev</div>
+        <div class="card">
+          <div class="bar"></div>
+          <div class="rows">
+            <div class="row">
+              <span class="key">noul</span>
+              <span class="val mono">0.96</span>
+            </div>
+            <div class="row">
+              <span class="key">choice</span>
+              <span class="val">refund</span>
+            </div>
+            <div class="row">
+              <span class="key">score</span>
+              <span class="val mono">1.65</span>
+            </div>
+          </div>
+        </div>
+        <div class="meta">70–500 ms · typed · no decode</div>
+      </section>
+    </div>
+  </body>
+</html>
