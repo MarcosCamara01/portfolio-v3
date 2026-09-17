@@ -237,7 +237,7 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
   * **Preguntas en paralelo:**
     * `refund_requested` (*Noul*): ¿El cliente solicita la devolución? $\rightarrow$ Ilustrativo: `0.99`
     * `duplicate_confirmed` (*Noul*): ¿Constan dos cargos idénticos en menos de 24 horas? $\rightarrow$ `0.96`
-    * `urgency_level` (*Score* en rúbrica `Baja`, `Moderada`, `Crítica`): $\rightarrow$ `2.45`
+    * `urgency_level` (*Score* en rúbrica `Baja`, `Moderada`, `Crítica`): $\rightarrow$ `1.65`
     * `policy_compliance` (*Noul*): ¿Cumple las condiciones de reembolso directo? $\rightarrow$ `0.98`
 * **Acción en código:**
   Dado que tanto la solicitud como la conformidad con la política superan el umbral del 90%, el backend ejecuta de inmediato la llamada a `/v1/refunds` en milisegundos. Si la certeza cae por debajo del umbral, el ticket pasa a revisión manual.
