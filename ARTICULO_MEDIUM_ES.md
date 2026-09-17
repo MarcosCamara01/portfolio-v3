@@ -129,9 +129,9 @@ Este objetivo produce efectos extraordinarios en chatbots, pero introduce anomal
 4. **La función Softmax está distorsionada:** Tras someterse a RLHF, los logits de salida de un transformador pierden su significado estadístico estricto. Una probabilidad nominal del 99% en el decoder de un LLM comercial rara vez se corresponde con una tasa de acierto del 99% en el mundo real.
 
 ### Qué es RLCD (*Reinforcement Learning for Calibrated Decisions*)
-El paradigma de los modelos de decisión descarta la preferencia humana y adopta como función de pérdida matemática la **calibración epistémica**:
+El paradigma de los modelos de decisión descarta la preferencia humana en favor de la **calibración estadística**.
 
-En teoría estadística y aprendizaje automático, la calibración se mide formalmente mediante el **ECE** (*Expected Calibration Error*) y los diagramas de fiabilidad (*reliability diagrams*). Un modelo se considera perfectamente calibrado si:
+Aunque TypeSafe no ha publicado aún un paper formal con la función de pérdida matemática exacta de RLCD, el marco estándar de la disciplina para evaluar la calibración es el **ECE** (*Expected Calibration Error*) y los diagramas de fiabilidad (*reliability diagrams*). En este marco, un modelo se considera perfectamente calibrado si:
 
 $$\mathbb{P}(\hat{Y} = Y \mid \hat{P} = p) = p, \quad \forall p \in [0, 1]$$
 
@@ -162,7 +162,7 @@ Un error común entre desarrolladores principiantes es confundir la probabilidad
 
 Por ejemplo, imaginemos que un Choice ofrece 10 opciones de clasificación. Si la opción ganadora obtiene un 35% de probabilidad, pero las otras 9 opciones se reparten un insignificante 7% cada una, la opción es la más probable pero la distribución está aplanada y la confianza será baja (el modelo está diciendo: *"es la mejor opción que tengo, pero no pongo la mano en el fuego"*). En cambio, si la ganadora obtiene un 92% y el resto suma un 8%, la distribución es puntiaguda y la confianza rozará el 1.0.
 
-Para un sistema empresarial, **un "no estoy seguro" calibrado es infinitamente más valioso que un párrafo persuasivo pero inventado**. Si el software sabe con rigor estadístico cuándo el modelo duda, puede automatizar con total seguridad el 85% de los casos despejados y canalizar con precisión quirúrgica el 15% restante hacia supervisores humanos.
+Para un sistema empresarial, **un "no estoy seguro" calibrado es infinitamente más valioso que un párrafo persuasivo pero inventado**. Si el software sabe con rigor estadístico cuándo el modelo duda, puede automatizar con garantías las decisiones de alta certeza y desviar con criterio estricto los casos ambiguos hacia supervisores humanos.
 
 ---
 
@@ -223,95 +223,58 @@ No todas las peticiones exigen la misma maquinaria computacional. El patrón can
 
 ---
 
-## 6. Escenarios arquitectónicos: dónde encaja este paradigma
+## 6. Escenarios arquitectónicos: tres casos de diseño
 
-Para contrastar el impacto práctico de esta arquitectura frente a las soluciones generativas convencionales, examinemos cinco escenarios ilustrativos de diseño. *(Nota metodológica: las probabilidades y esquemas presentados a continuación son configuraciones ilustrativas de ingeniería, siguiendo el criterio documentado por TypeSafe en sus guías de conceptos).*
+Para contrastar el impacto práctico de esta arquitectura frente a las soluciones generativas convencionales, examinemos tres escenarios representativos de diseño. *(Nota metodológica: las probabilidades y esquemas presentados a continuación son configuraciones ilustrativas de ingeniería, siguiendo el criterio documentado por TypeSafe en sus guías de conceptos).*
 
 ---
 
 ### Caso 1: Triaje y resolución en Fintech y E-commerce
 
-* **El problema actual:** Un usuario envía el siguiente mensaje: *"Me han cobrado dos veces la suscripción mensual en la tarjeta de crédito y necesito el dinero para pagar el alquiler hoy mismo"*.
-  * Las reglas clásicas de palabras clave ("cobro", "duplicado") confunden fácilmente quejas históricas con peticiones activas.
-  * Los LLMs generativos tardan entre 5 y 12 segundos en razonar la respuesta y estructurar un JSON. En picos de alta carga, el coste en tokens se dispara y la infraestructura sufre saturación.
+* **El problema actual:** Un usuario solicita por chat la devolución de un cobro duplicado. Las reglas por palabras clave confunden fácilmente quejas pasadas con peticiones activas, mientras que un LLM generativo tarda entre 5 y 12 segundos en estructurar un JSON, saturando la concurrencia en picos de carga.
 * **Con un Modelo de Decisión:**
-  * **Estado (`state`):** Estructura JSON que combina el texto del mensaje del cliente, los metadatos de los últimos tres cargos en la pasarela Stripe y la política contractual de devoluciones.
+  * **Estado (`state`):** Objeto JSON con el mensaje del cliente, los metadatos de los últimos cargos en Stripe y la política contractual de devoluciones.
   * **Preguntas en paralelo:**
-    * `refund_requested` (*Noul*): ¿El cliente solicita explícitamente la devolución del dinero? $\rightarrow$ Probabilidad ilustrativa: `0.99`
-    * `duplicate_confirmed` (*Noul*): Contrastando el texto con el extracto de pagos, ¿constan dos cargos con idéntico importe en menos de 24 horas? $\rightarrow$ `0.96`
-    * `urgency_level` (*Score*): Nivel de urgencia percibido en una rúbrica de 3 niveles (`Baja`, `Moderada`, `Crítica`) $\rightarrow$ `2.45`
-    * `policy_compliance` (*Noul*): ¿El incidente cumple las condiciones de reembolso directo sin mediación? $\rightarrow$ `0.98`
+    * `refund_requested` (*Noul*): ¿El cliente solicita la devolución? $\rightarrow$ Ilustrativo: `0.99`
+    * `duplicate_confirmed` (*Noul*): ¿Constan dos cargos idénticos en menos de 24 horas? $\rightarrow$ `0.96`
+    * `urgency_level` (*Score* en rúbrica `Baja`, `Moderada`, `Crítica`): $\rightarrow$ `2.45`
+    * `policy_compliance` (*Noul*): ¿Cumple las condiciones de reembolso directo? $\rightarrow$ `0.98`
 * **Acción en código:**
-  Dado que tanto la solicitud de devolución como la conformidad con la política superan el umbral del 90%, el backend ejecuta inmediatamente la llamada al endpoint `/v1/refunds` de Stripe en una fracción de segundo. Si el índice de certeza hubiese caído por debajo del umbral de seguridad, el código habría derivado el ticket a la bandeja de un especialista financiero.
+  Dado que tanto la solicitud como la conformidad con la política superan el umbral del 90%, el backend ejecuta de inmediato la llamada a `/v1/refunds` en milisegundos. Si la certeza cae por debajo del umbral, el ticket pasa a revisión manual.
 
 ---
 
-### Caso 2: Ciberseguridad y triaje de eventos (SOC / DevOps)
+### Caso 2: Cortafuegos semántico perimetral (Guardrails)
 
-* **El problema actual:** Un centro de operaciones de seguridad corporativo procesa un volumen masivo de eventos de telemetría y alertas de cortafuegos donde la inmensa mayoría resultan ser falsos positivos o escaneos rutinarios.
-  * La plantilla de analistas humanos sufre un colapso crónico por fatiga de alertas.
-  * Conectar un LLM generativo en streaming sobre ese caudal es inviable técnica y financieramente.
+* **El problema actual:** Para evitar ataques de inyección de prompt (*jailbreaks*) o filtración de credenciales, muchas arquitecturas sitúan otro LLM generativo como inspector previo. Esto duplica la factura y suma segundos de espera antes de que el usuario vea la primera palabra.
 * **Con un Modelo de Decisión:**
-  * **Estado (`state`):** Registro de auditoría del sistema operativo (comando Bash ejecutado, binario invocador, árbol de procesos padres y privilegios del usuario).
+  * **Estado (`state`):** El prompt en bruto del usuario antes de alcanzar el modelo conversacional.
   * **Preguntas en paralelo:**
-    * `is_scheduled_maintenance` (*Noul*): ¿La instrucción ejecutada coincide con una ventana de mantenimiento técnico declarada? $\rightarrow$ `0.02`
-    * `threat_severity` (*Score*): Grado de peligrosidad de la cadena en rúbrica ordinal (0 = benigno, 1 = anómalo, 2 = exploit crítico) $\rightarrow$ `1.88`
-    * `containment_protocol` (*Choice*): Selección de protocolo (`log_and_pass`, `notify_slack`, `quarantine_host`) $\rightarrow$ `quarantine_host` (confianza: `0.91`)
+    * `is_prompt_injection` (*Noul*): ¿El texto intenta sobreescribir las instrucciones del sistema? $\rightarrow$ `0.98`
+    * `contains_credentials` (*Noul*): ¿Incluye claves privadas, tokens JWT o tarjetas? $\rightarrow$ `0.01`
+    * `intent` (*Choice* entre `legitimate_task`, `jailbreak_probe`, `toxic_abuse`): $\rightarrow$ `jailbreak_probe` (confianza: `0.96`)
 * **Acción en código:**
-  Al detectar `threat_severity > 1.8` y `containment_protocol == "quarantine_host"` con alta confianza, el demonio de seguridad aísla la máquina comprometida a nivel de cortafuegos de forma inmediata, neutralizando un posible movimiento lateral antes de que el atacante establezca persistencia.
+  Si `is_prompt_injection > 0.85`, el proxy inverso HTTP interrumpe la conexión y devuelve un código `400 Bad Request` en menos de 100 ms. El modelo conversacional principal nunca llega a invocarse.
 
 ---
 
-### Caso 3: Cortafuegos semántico y guardrails para LLMs generativos
+### Caso 3: Validación semántica y límites en facturas (ERP)
 
-* **El problema actual:** Para impedir que usuarios maliciosos ejecuten ataques de inyección de prompt (*jailbreaks*) o fuercen a un bot corporativo a revelar contraseñas o soltar improperios, muchas arquitecturas sitúan **otro LLM generativo por delante** que ejerce de inspector o policía de contenidos.
-  * **Consecuencia:** La latencia percibida por el usuario se multiplica y la factura de inferencia se duplica.
+* **El problema actual:** Cotejar facturas complejas de proveedores contra órdenes de compra en bases de datos. Los LLMs generativos sufren inconsistencias numéricas y alucinaciones en tablas densas, mientras que los modelos de razonamiento profundo resultan prohibitivos a gran escala.
 * **Con un Modelo de Decisión:**
-  * **Estado (`state`):** El prompt en bruto enviado por el usuario a través de la interfaz web antes de alcanzar el modelo conversacional.
+  * **Estado (`state`):** Texto estructurado extraído de la factura junto al desglose tabular de la orden de compra.
   * **Preguntas en paralelo:**
-    * `is_prompt_injection` (*Noul*): ¿El usuario utiliza técnicas de ingeniería social o marcadores para sobreescribir las instrucciones del sistema? $\rightarrow$ `0.98`
-    * `contains_credentials` (*Noul*): ¿El texto incluye claves privadas, tokens JWT o números de tarjetas de crédito? $\rightarrow$ `0.01`
-    * `intent` (*Choice*): Intención de la consulta (`legitimate_task`, `jailbreak_probe`, `toxic_abuse`) $\rightarrow$ `jailbreak_probe` (confianza: `0.96`)
+    * `supplier_identity_match` (*Noul*): ¿Razón social y datos bancarios coinciden con el registro maestro? $\rightarrow$ `0.99`
+    * `unauthorized_items_present` (*Noul*): ¿Hay conceptos no aprobados en la orden de compra? $\rightarrow$ `0.03`
+    * `discrepancy_category` (*Choice* entre `none`, `tax_error`, `price_variance`, `quantity_variance`): $\rightarrow$ `none` (confianza: `0.95`)
 * **Acción en código:**
-  Si `is_prompt_injection > 0.85`, el proxy inverso HTTP interrumpe la conexión de inmediato y responde con un código de estado `400 Bad Request`. El modelo conversacional principal nunca llega a ser invocado, ahorrando presupuesto y protegiendo el sistema.
+  El ERP programa el pago automático si la confianza supera el umbral configurado por finanzas, o deriva a revisión humana si detecta discrepancias tipadas. Este escenario ilustra además la frontera del modelo: como reflejan las evaluaciones públicas, cuando una factura exige deducciones aritméticas secuenciales profundas, un modelo System One sin bucle de razonamiento requiere apoyo de validadores deterministas en código.
 
 ---
 
-### Caso 4: Clasificación y validación de facturas en sistemas ERP
+## 7. Qué revelan (y qué callan) las 711 evaluaciones públicas
 
-* **El problema actual:** En entornos corporativos que reciben miles de facturas y albaranes de proveedores, cada documento debe cotejarse contra la orden de compra interna y la recepción de almacén.
-  * Los LLMs generativos sufren inconsistencias numéricas y alucinaciones de cifras cuando se les fuerza a procesar tablas extensas y complejas.
-  * Procesar millones de páginas con modelos de frontera con ventanas de contexto extendidas arruina el margen del departamento de operaciones.
-* **Con un Modelo de Decisión:**
-  * **Estado (`state`):** Texto estructurado extraído de la factura recibido junto con el desglose tabular de la orden de compra almacenado en la base de datos SQL.
-  * **Preguntas en paralelo:**
-    * `supplier_identity_match` (*Noul*): ¿La razón social, el identificador fiscal y los datos bancarios coinciden con el registro maestro del proveedor homologado? $\rightarrow$ `0.99`
-    * `unauthorized_items_present` (*Noul*): ¿Existen conceptos facturados que no constaban en la orden de compra aprobada? $\rightarrow$ `0.03`
-    * `discrepancy_category` (*Choice*): Naturaleza de la discrepancia detectada (`none`, `tax_error`, `price_variance`, `quantity_variance`) $\rightarrow$ `none` (confianza: `0.95`)
-* **Acción en código:**
-  El sistema ERP programa automáticamente el pago para aquellas facturas que registran una confianza superior al umbral configurado por finanzas, derivando a revisión humana exclusivamente los casos con discrepancias tipadas o baja certeza estadística.
-
----
-
-### Caso 5: Domótica, IoT e interfaces de voz (Abanico Especulativo)
-
-* **El problema actual:** En interfaces controladas por voz (vehículos conectados, domótica industrial, asistentes domésticos), si el sistema tarda tres segundos en procesar un comando físico elemental como apagar una luz, la experiencia de usuario se percibe como defectuosa o averiada.
-  * Los pipelines conversacionales encadenan múltiples llamadas consecutivas (clasificar intención $\rightarrow$ extraer entidad $\rightarrow$ verificar dispositivo), acumulando latencias inaceptables.
-* **Con un Modelo de Decisión (*Speculative Fan-Out*):**
-  * Sobre la transcripción de audio del usuario (*"Apaga las luces de la cocina y pon el termostato a 21 grados"*), el hub dispara **todas las preguntas concebibles en una sola llamada paralela**:
-    * `is_hardware_command` (*Noul*): ¿El enunciado representa una orden física sobre el entorno? $\rightarrow$ `0.99`
-    * `target_room` (*Choice* con 30 estancias registradas): $\rightarrow$ `kitchen`
-    * `device_type` (*Choice* entre luces, climatización, persianas, cerraduras): $\rightarrow$ `lights`
-    * `action` (*Choice* encender, apagar, graduar): $\rightarrow$ `turn_off`
-    * `is_conversational_fallback` (*Noul*): ¿La frase es una consulta enciclopédica o de charla informal ("¿quién fue Alan Turing?")? $\rightarrow$ `0.01`
-* **Acción en código:**
-  El microcontrolador procesa los tensores y conmuta el relé físico de las luces en menos de una décima de segundo. Si `is_conversational_fallback` hubiera superado el umbral, el sistema habría derivado la petición al LLM conversacional. El usuario obtiene una respuesta física inmediata para las órdenes cotidianas sin renunciar a la riqueza conversacional cuando la situación lo requiere.
-
----
-
-## 7. Análisis forense de las evaluaciones públicas: los 711 casos de estudio
-
-Uno de los mayores defectos de la literatura sobre inteligencia artificial es la complacencia ante las cifras publicitarias de las empresas. Para evaluar rigurosamente el estado de los modelos de decisión, es necesario auditar la suite de pruebas oficial publicada por TypeSafe en su portal de evaluaciones ([evals.typesafe.ai](https://evals.typesafe.ai/)), compuesta por **711 casos de estudio empíricos** distribuidos en cuatro flujos de trabajo de automatización reales.
+Uno de los mayores defectos de la literatura sobre inteligencia artificial es la complacencia ante las cifras publicitarias de las empresas. Para evaluar con rigor el estado de los modelos de decisión, conviene examinar la suite de pruebas publicada por TypeSafe en su portal de evaluaciones ([evals.typesafe.ai](https://evals.typesafe.ai/)), compuesta por **711 casos de estudio empíricos** distribuidos en cuatro flujos de trabajo de automatización.
 
 ![Precisión de Jev frente a GPT Sol y Claude Opus 5 en los 711 casos públicos de evals.typesafe.ai.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-06-evals-711.png)
 
@@ -321,7 +284,7 @@ Cada tarea fue ejecutada bajo un mismo código de orquestación donde cada model
 
 Los datos extraídos directamente de las etiquetas SVG y metadatos JSON del portal de evaluación arrojan un balance lleno de matices que cualquier ingeniero debe conocer:
 
-| Flujo de Trabajo | N.º Casos | Jev (System One) | Mejor Modelo Competidor (Workflow) | Análisis Forense de Ingeniería |
+| Flujo de Trabajo | N.º Casos | Jev (System One) | Mejor Modelo Competidor (Workflow) | Análisis de Rendimiento |
 | :--- | :--- | :--- | :--- | :--- |
 | **Incidentes de Seguridad** | 240 casos | **61.7%**<br>0.3 s / $0.0001 | **Claude Opus 5: 66.2%** (15.1 s / $0.0574)<br>GPT Sol: 62.5% (8.5 s / $0.0295) | Jev se sitúa a solo 4.5 puntos porcentuales de Opus 5 pero ejecutando **50 veces más rápido** y costando **570 veces menos**. |
 | **Observabilidad de Trazas** | 117 casos | **71.6%**<br>0.5 s / $0.0003 | **GPT Sol: 76.6%** (40.3 s / $0.0575)<br>DeepSeek v4 Flash: 73.0% (51.7 s) | En análisis de logs de agentes, Jev empata prácticamente con DeepSeek v4 Pro (71.6%) reduciendo el tiempo de 90 segundos a medio segundo. |

@@ -129,9 +129,9 @@ While RLHF creates pleasant, helpful assistants, it introduces destructive patho
 4. **Distorted Softmax Distributions:** Following RLHF, the raw logits of a transformer lose their rigorous statistical meaning. A nominal 99% probability in a commercial LLM decoder rarely correlates with a 99% real-world empirical accuracy.
 
 ### What is RLCD (*Reinforcement Learning for Calibrated Decisions*)?
-Decision models discard human conversational preference in favor of **epistemic calibration**:
+Decision models discard human conversational preference in favor of **statistical calibration**.
 
-In statistical learning theory, calibration is evaluated using the **Expected Calibration Error (ECE)** and reliability diagrams. A model is defined as perfectly calibrated when:
+While TypeSafe has not yet published a formal paper detailing the exact mathematical loss function of RLCD, the industry standard framework for evaluating calibration is the **Expected Calibration Error (ECE)** and reliability diagrams. Within this framework, a model is defined as perfectly calibrated when:
 
 $$\mathbb{P}(\hat{Y} = Y \mid \hat{P} = p) = p, \quad \forall p \in [0, 1]$$
 
@@ -162,7 +162,7 @@ A common point of confusion among engineers is the distinction between winning p
 
 For example, imagine a Choice question offering 10 classification categories. If the top option scores 35% probability, while the remaining 9 options split 7% each, the top option is the most likely, but the distribution is flat and confidence will be low (the model communicates: *"this is the best option available, but I am not certain"*). Conversely, if the top option scores 92% and the rest share 8%, the distribution is highly peaked and confidence approaches 1.0.
 
-For enterprise software, **a calibrated "I don't know" is infinitely more valuable than an articulate hallucination.** If software knows with statistical rigor when a model is unsure, it can automate 85% of standard cases with zero human oversight while routing the remaining 15% directly into human exception queues.
+For enterprise software, **a calibrated "I don't know" is infinitely more valuable than an articulate hallucination.** If software knows with statistical rigor when a model is unsure, it can safely automate high-certainty decisions while routing ambiguous exceptions directly into human review queues.
 
 ---
 
@@ -223,95 +223,58 @@ Not every user action requires heavyweight reasoning. The canonical **Intent Rou
 
 ---
 
-## 6. Architectural Scenarios: Where Decision Models Fit
+## 6. Architectural Scenarios: Three Design Cases
 
-To contrast the concrete impact of this architecture against conventional generative approaches, consider five illustrative design scenarios. *(Methodological note: all schemas, scores, and probabilities below are illustrative engineering examples, matching the convention documented in TypeSafe's conceptual reference).*
+To contrast the concrete impact of this architecture against conventional generative approaches, consider three representative design scenarios. *(Methodological note: all schemas, scores, and probabilities below are illustrative engineering examples, matching the convention documented in TypeSafe's conceptual reference).*
 
 ---
 
 ### Case 1: Triage and Resolution in Fintech / E-Commerce
 
-* **The Problem Today:** A customer submits an inquiry: *"I was charged twice for order A-104 and need this refunded immediately to cover rent today."*
-  * Keyword matching rules confuse historical complaints with active requests.
-  * Generative LLMs take 5 to 12 seconds to generate JSON. During traffic spikes (Black Friday, outages), token costs skyrocket and servers hit concurrency ceilings.
+* **The Problem Today:** A customer submits an inquiry requesting a refund for duplicate charges. Keyword rules easily confuse past grievances with active requests, while a generative LLM takes 5 to 12 seconds to generate JSON, choking server concurrency during peak loads.
 * **With a Decision Model:**
-  * **State (`state`):** A JSON object containing the customer's message, metadata from recent Stripe charges, and company refund policy terms.
+  * **State (`state`):** A JSON object containing customer message text, recent Stripe charge metadata, and refund policy terms.
   * **Parallel Questions:**
-    * `refund_requested` (*Noul*): Does the user explicitly ask for a refund? $\rightarrow$ Illustrative probability: `0.99`
-    * `duplicate_confirmed` (*Noul*): Comparing text against ledger history, are there duplicate charges within 24 hours? $\rightarrow$ `0.96`
-    * `urgency_level` (*Score*): Customer urgency on a 3-level rubric (`Low`, `Moderate`, `Critical`) $\rightarrow$ `2.45`
-    * `policy_compliance` (*Noul*): Does this case meet criteria for instant automated refund? $\rightarrow$ `0.98`
+    * `refund_requested` (*Noul*): Does the user ask for a refund? $\rightarrow$ Illustrative: `0.99`
+    * `duplicate_confirmed` (*Noul*): Are there duplicate charges within 24 hours? $\rightarrow$ `0.96`
+    * `urgency_level` (*Score* on rubric `Low`, `Moderate`, `Critical`): $\rightarrow$ `2.45`
+    * `policy_compliance` (*Noul*): Does this meet criteria for automated refund? $\rightarrow$ `0.98`
 * **Code Action:**
-  Because both refund intent and policy compliance exceed the 0.90 threshold, the backend calls Stripe's `/v1/refunds` API directly in a fraction of a second. If confidence had fallen below the safety threshold, code would have routed the ticket to a billing specialist.
+  Because both refund intent and policy compliance exceed 0.90, the backend executes Stripe's `/v1/refunds` API directly in milliseconds. If confidence drops below safety boundaries, code routes the ticket to manual review.
 
 ---
 
-### Case 2: Real-Time Cybersecurity and Alert Triage (SOC / DevOps)
+### Case 2: Perimeter Semantic Firewall (Guardrails)
 
-* **The Problem Today:** An enterprise Security Operations Center (SOC) ingests high volumes of telemetry and firewall events where the vast majority represent benign automated scans or routine cron jobs.
-  * Human security analysts suffer chronic alert fatigue.
-  * Streaming logs through a generative LLM is technically and financially impossible.
+* **The Problem Today:** To prevent prompt injection attacks (*jailbreaks*) or credential leaks, applications place another generative LLM in front as an inspector. This doubles inference bills and adds several seconds of latency before the user receives the first word.
 * **With a Decision Model:**
-  * **State (`state`):** Operating system audit log entries, invoking binary, parent process execution trees, and user role profiles.
+  * **State (`state`):** The raw user prompt before it reaches the conversational model.
   * **Parallel Questions:**
-    * `is_scheduled_maintenance` (*Noul*): Does the command match an approved infrastructure change window? $\rightarrow$ `0.02`
-    * `threat_severity` (*Score*): Risk level on an ordinal rubric (0 = benign, 1 = anomalous, 2 = critical exploit) $\rightarrow$ `1.88`
-    * `containment_protocol` (*Choice*): Protocol action (`log_and_pass`, `notify_slack`, `quarantine_host`) $\rightarrow$ `quarantine_host` (confidence: `0.91`)
+    * `is_prompt_injection` (*Noul*): Does the input attempt to override system instructions? $\rightarrow$ `0.98`
+    * `contains_credentials` (*Noul*): Does the text contain private keys, JWTs, or credit cards? $\rightarrow$ `0.01`
+    * `intent` (*Choice* among `legitimate_task`, `jailbreak_probe`, `toxic_abuse`): $\rightarrow$ `jailbreak_probe` (confidence: `0.96`)
 * **Code Action:**
-  Detecting `threat_severity > 1.8` and `containment_protocol == "quarantine_host"` with high confidence, security automation isolates the host at the firewall layer immediately, neutralizing lateral movement before an attacker establishes persistence.
+  If `is_prompt_injection > 0.85`, the reverse proxy rejects the connection immediately with HTTP `400 Bad Request` in under 100 ms. The expensive downstream model is never called.
 
 ---
 
-### Case 3: Semantic Firewalls and Guardrails for Generative LLMs
+### Case 3: Semantic Validation and Limits on Invoices (ERP)
 
-* **The Problem Today:** To prevent malicious users from executing prompt injection attacks (*jailbreaks*) or coaxing a customer-facing chatbot into leaking system prompts or passwords, applications frequently place **another generative LLM in front** to inspect incoming prompts.
-  * **Consequence:** Perceived user latency doubles (from 3 seconds to 7 or 8) and inference bills double exactly.
+* **The Problem Today:** Reconciling complex vendor invoices against purchase orders in SQL databases. Generative LLMs suffer numeric hallucinations on dense tabular data, while deep reasoning models are cost-prohibitive at enterprise scale.
 * **With a Decision Model:**
-  * **State (`state`):** The raw user prompt before it ever touches the primary conversational model.
+  * **State (`state`):** Extracted invoice text paired with structured purchase order records.
   * **Parallel Questions:**
-    * `is_prompt_injection` (*Noul*): Does the input attempt to override developer system instructions? $\rightarrow$ `0.98`
-    * `contains_credentials` (*Noul*): Does the text contain private keys, JWT tokens, or credit card numbers? $\rightarrow$ `0.01`
-    * `intent` (*Choice*): Query intent (`legitimate_task`, `jailbreak_probe`, `toxic_abuse`) $\rightarrow$ `jailbreak_probe` (confidence: `0.96`)
+    * `supplier_identity_match` (*Noul*): Do corporate names and tax IDs match master vendor records? $\rightarrow$ `0.99`
+    * `unauthorized_items_present` (*Noul*): Are there unauthorized line items? $\rightarrow$ `0.03`
+    * `discrepancy_category` (*Choice* among `none`, `tax_error`, `price_variance`, `quantity_variance`): $\rightarrow$ `none` (confidence: `0.95`)
 * **Code Action:**
-  If `is_prompt_injection > 0.85`, the reverse proxy rejects the connection immediately, returning an HTTP `400 Bad Request` in a fraction of a second. The expensive downstream model is never invoked, saving budget and securing the perimeter.
+  The ERP schedules automated settlement if confidence crosses configured finance thresholds, routing items with classified discrepancies to human review. This scenario also highlights model boundaries: as public evaluations indicate, when an invoice demands deep sequential arithmetic deduction, a System One model without a reasoning loop needs deterministic code validation alongside it.
 
 ---
 
-### Case 4: Semantic Validation of Invoices in ERP Systems
+## 7. What the 711 Public Evals Reveal (and What They Hide)
 
-* **The Problem Today:** Accounts payable departments handle vendor PDF invoices that must reconcile with purchase orders and goods receipt notes.
-  * Generative LLMs suffer numeric hallucinations when asked to reconcile dense tables in natural language.
-  * Ingesting millions of pages through frontier reasoning models with massive context windows destroys business margins.
-* **With a Decision Model:**
-  * **State (`state`):** Extracted invoice text paired with structured SQL purchase order records.
-  * **Parallel Questions:**
-    * `supplier_identity_match` (*Noul*): Do vendor tax IDs, corporate names, and banking details match approved master vendor records? $\rightarrow$ `0.99`
-    * `unauthorized_items_present` (*Noul*): Are there line items billed that were omitted from the approved purchase order? $\rightarrow$ `0.03`
-    * `discrepancy_category` (*Choice*): Detected discrepancy (`none`, `tax_error`, `price_variance`, `quantity_variance`) $\rightarrow$ `none` (confidence: `0.95`)
-* **Code Action:**
-  The ERP system schedules automated settlement for invoices matching high confidence thresholds, routing to human review only items with classified discrepancies or low statistical certainty.
-
----
-
-### Case 5: Smart Home, IoT, and Voice Interfaces (Speculative Fan-Out)
-
-* **The Problem Today:** In voice-controlled systems (connected vehicles, industrial IoT, smart home hubs), if an assistant takes three seconds to execute a simple physical command like toggling a light, the interface feels completely broken.
-  * Conversational pipelines chain multiple sequential requests (classify intent $\rightarrow$ extract entity $\rightarrow$ verify device), compounding latency.
-* **With a Decision Model (*Speculative Fan-Out*):**
-  * On the raw speech-to-text transcript (*"Turn off the kitchen lights and set the thermostat to 70"*), the hub fires **all conceivable questions in a single parallel call**:
-    * `is_hardware_command` (*Noul*): Does the utterance command a physical device? $\rightarrow$ `0.99`
-    * `target_room` (*Choice* across 30 zones): $\rightarrow$ `kitchen`
-    * `device_type` (*Choice* across lights, climate, locks, blinds): $\rightarrow$ `lights`
-    * `action` (*Choice* turn on, turn off, dim): $\rightarrow$ `turn_off`
-    * `is_conversational_fallback` (*Noul*): Is this an open-ended general knowledge query ("who was Alan Turing?")? $\rightarrow$ `0.01`
-* **Code Action:**
-  Local microcontrollers switch the physical light relay in less than a fraction of a second. If `is_conversational_fallback` had crossed the threshold, code would have delegated the query to an LLM. Users experience instant physical responses without sacrificing conversational capabilities when needed.
-
----
-
-## 7. Forensic Analysis of Public Evaluations: The 711 Case Studies
-
-One of the greatest flaws in AI analysis is unquestioning acceptance of marketing claims. To evaluate decision models rigorously, we must audit the official benchmark published by TypeSafe on their evaluation dashboard ([evals.typesafe.ai](https://evals.typesafe.ai/)), comprising **711 empirical case studies** across four automated enterprise workflows.
+One of the greatest flaws in AI analysis is unquestioning acceptance of marketing claims. To evaluate decision models with technical discipline, we examine the official benchmark published by TypeSafe on their evaluation dashboard ([evals.typesafe.ai](https://evals.typesafe.ai/)), comprising **711 empirical case studies** across four automated enterprise workflows.
 
 ![Jev accuracy versus GPT Sol and Claude Opus 5 across 711 public evals.typesafe.ai cases.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-06-evals-711.png)
 
@@ -321,7 +284,7 @@ Every task ran inside an identical workflow harness where each model competed un
 
 Data inspected directly from SVG mark labels and JSON metadata reveals a nuanced engineering picture:
 
-| Workflow | Case Count | Jev (System One) | Top Competing Model (Workflow) | Forensic Engineering Analysis |
+| Workflow | Case Count | Jev (System One) | Top Competing Model (Workflow) | Performance Analysis |
 | :--- | :--- | :--- | :--- | :--- |
 | **Security Incidents** | 240 cases | **61.7%**<br>0.3 s / $0.0001 | **Claude Opus 5: 66.2%** (15.1 s / $0.0574)<br>GPT Sol: 62.5% (8.5 s / $0.0295) | Jev sits within 4.5 percentage points of Opus 5 while running **50x faster** and costing **570x less**. |
 | **Agent Trace Observability** | 117 cases | **71.6%**<br>0.5 s / $0.0003 | **GPT Sol: 76.6%** (40.3 s / $0.0575)<br>DeepSeek v4 Flash: 73.0% (51.7 s) | On agent log analysis, Jev virtually matches DeepSeek v4 Pro (71.6%), reducing evaluation time from 90 seconds to half a second. |
