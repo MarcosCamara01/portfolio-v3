@@ -1,4 +1,4 @@
-# Jev: Chat Was the Wrong Interface
+# Jev: chat was the wrong interface
 
 > *For four years, the tech industry tried to make enterprise software talk to chatbots. The real automation revolution does not generate words: it returns types, probabilities, milliseconds, and strict control.*
 
