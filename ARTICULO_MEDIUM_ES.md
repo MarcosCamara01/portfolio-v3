@@ -299,129 +299,8 @@ Proceden del consenso generado por el promedio de juicios emitidos por **GPT-6 A
 
 La conclusión de ingeniería es contundente: Jev no busca competir en inteligencia general con un modelo de frontera costoso; su propuesta de valor radica en que ofrece un **nivel de acuerdo estadístico notable con esos gigantes con una reducción de dos órdenes de magnitud en tiempo y tres órdenes de magnitud en coste financiero**.
 
----
 
-## 8. Blueprint de integración: código de producción y manejo de fallos
-
-Un modelo de infraestructura solo es útil si sus contratos de integración son robustos. A continuación se detalla cómo se integra este servicio en un entorno de producción real utilizando el SDK oficial de Python (`typesafe-sdk`, versión 0.6.0), demostrando cómo interactuar con el endpoint `POST https://api.typesafe.ai/v1/systemone` e implementar resiliencia operativa.
-
-```python
-from typesafe_sdk import (
-    Choice,
-    Noul,
-    Score,
-    TypeSafeAuthenticationError,
-    TypeSafeClient,
-    TypeSafeError,
-    TypeSafeInternalServerError,
-    TypeSafePermissionDeniedError,
-    TypeSafeRateLimitError,
-    TypeSafeUnprocessableEntityError,
-)
-
-# TypeSafeClient() reads TYPESAFE_API_KEY. Missing key raises TypeSafeError at init,
-# not an HTTP 401.
-try:
-    client = TypeSafeClient()
-except TypeSafeError as exc:
-    raise SystemExit(str(exc)) from exc
-
-incoming_state = {
-    "audit_event": {
-        "user_id": "usr_99812",
-        "action": "export_database_dump",
-        "ip_address": "194.26.29.112",
-        "geo_country": "RU",
-        "user_home_country": "ES",
-    },
-    "user_profile": {
-        "role": "junior_developer",
-        "mfa_active": True,
-        "past_violations": 0,
-    },
-    "policy_rules": (
-        "Exporting database dumps outside the user's home country "
-        "requires explicit Security authorization."
-    ),
-}
-
-THREAT_LEVELS = ["Benign", "Suspicious", "Critical incident"]
-
-try:
-    with client:
-        response = client.system_one(
-            state=incoming_state,
-            model="jev-latest",
-            questions={
-                "violates_policy": Noul(
-                    instructions=(
-                        "Comparing `audit_event` against `policy_rules`, "
-                        "does this action constitute a security violation?"
-                    ),
-                ),
-                "threat_level": Score(
-                    instructions="Operational risk severity",
-                    criteria=THREAT_LEVELS,
-                ),
-                "recommended_action": Choice(
-                    instructions="Immediate protocol action",
-                    criteria={
-                        "allow": "Allow execution without interruption",
-                        "challenge_mfa": "Require a secondary MFA challenge",
-                        "revoke_tokens": (
-                            "Terminate active sessions and freeze credentials"
-                        ),
-                    },
-                ),
-            },
-        )
-
-    violation = response.nouls["violates_policy"].noul
-    risk = response.scores["threat_level"].score
-    action = response.choices["recommended_action"].choice
-    confidence = response.choices["recommended_action"].confidence
-
-    print(f"Violation probability: {violation:.2f}")
-    print(f"Risk score: {risk:.2f} / {len(THREAT_LEVELS) - 1}")
-    print(f"Recommended action: {action} (confidence: {confidence:.2f})")
-
-    if violation > 0.85 and action == "revoke_tokens" and confidence > 0.80:
-        print("[AUTO-ACTION] Revoking credentials.")
-    elif violation > 0.85:
-        print("[ESCALATION] Route to security on-call.")
-    else:
-        print("[AUDIT] Event logged.")
-
-except TypeSafeAuthenticationError:
-    # HTTP 401: invalid or missing Bearer on the request.
-    print("Authentication failed. Check TYPESAFE_API_KEY.")
-except TypeSafePermissionDeniedError:
-    # HTTP 403.
-    print("Permission denied.")
-except TypeSafeUnprocessableEntityError as exc:
-    # HTTP 422: malformed questions or state.
-    print(f"Invalid request: {exc}")
-except TypeSafeRateLimitError as exc:
-    # HTTP 429 after the SDK's default retries (it already honors Retry-After).
-    wait_ms = exc.retry_after_ms
-    print(f"Rate limited after retries. retry_after_ms={wait_ms}")
-except TypeSafeInternalServerError as exc:
-    # 5xx after retries. Docs also list 529 Overloaded; the SDK maps it here.
-    print(f"Server error {exc.status}. request_id={exc.request_id}")
-```
-
-### Códigos de estado HTTP oficiales del protocolo
-Para clientes que hablen HTTP crudo (Go, Rust, Java), TypeSafe documenta estos errores. El SDK de Python ya reintenta `429` y `5xx` (incluido `529`) con backoff; el `except` de arriba solo corre cuando esos reintentos se agotan.
-
-* **`401 Unauthorized`:** API key ausente o inválida en el header `Authorization`. En el SDK: `TypeSafeAuthenticationError`. Si falta la variable de entorno *antes* de llamar, `TypeSafeClient()` lanza `TypeSafeError`.
-* **`403 Forbidden`:** acceso denegado. En el SDK: `TypeSafePermissionDeniedError`.
-* **`422 Unprocessable Entity`:** el JSON no pasa validación (falta `type`, un Score con menos de dos niveles, etc.). En el SDK: `TypeSafeUnprocessableEntityError`.
-* **`429 Too Many Requests`:** límite de tasa. Reintentar con backoff; el SDK lee `Retry-After` / `retry-after-ms`.
-* **`529 Overloaded`:** saturación transitoria del cluster. Misma receta de backoff; tras agotar reintentos llega como `TypeSafeInternalServerError` con `status == 529`.
-
----
-
-## 9. Baño de realidad: límites, riesgos y cuándo NO usar este enfoque
+## 8. Baño de realidad: límites, riesgos y cuándo NO usar este enfoque
 
 Un análisis técnico creíble no puede caer en el entusiasmo ciego. Es indispensable trazar con total nitidez las fronteras de lo que esta tecnología **no puede hacer**:
 
@@ -437,7 +316,7 @@ Un análisis técnico creíble no puede caer en el entusiasmo ciego. Es indispen
 
 ---
 
-## 10. El futuro: la paradoja de Jevons y construir herramientas, no dioses
+## 9. El futuro: la paradoja de Jevons y construir herramientas, no dioses
 
 ¿Por qué este modelo fundacional ha sido bautizado como **Jev**?
 
