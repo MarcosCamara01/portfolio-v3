@@ -38,7 +38,8 @@ When a backend engineering team attempts to embed a conventional large language 
 
 To understand why LLMs are the wrong primitive for backend routing and decision-making, one must inspect how graphics processing units (GPUs) actually execute tensor operations:
 
-### 1. Prefill vs. Decode: The Memory-Bandwidth Tax
+**Prefill vs. Decode: The Memory-Bandwidth Tax**
+
 Every inference pass in a generative transformer is split into two radically different operational phases:
 * **Prefill Phase (Context processing):** The GPU ingests the entire input prompt in a single massive matrix multiplication. Thousands of tensor operations execute in parallel, saturating the GPU's *Tensor Cores*. This phase is compute-bound and exceptionally fast: processing 2,000 tokens of context takes only a few dozen milliseconds.
 * **Decode Phase (Autoregressive generation):** To produce an answer, the model is forced to predict one token at a time, conditioning each token on all preceding ones. Here, the underlying physics flips: to compute a single token, the GPU must transfer **hundreds of gigabytes of model weights from high-bandwidth memory (VRAM) into the arithmetic compute registers**. 
@@ -46,17 +47,20 @@ Because the GPU is processing a single token vector at a time, the compute cores
 
 This physical disparity explains why cloud providers charge 3x to 5x more for output tokens than input tokens: generating words is physically far more inefficient for silicon than reading them.
 
-### 2. The KV Cache Bottleneck
+**The KV Cache Bottleneck**
+
 At each step of the sequential decode loop, the attention mechanism must recall the Key and Value states of all preceding tokens. To prevent re-calculating them, they are cached in GPU memory inside the **KV Cache**.
 
 As an enterprise system scales to hundreds of concurrent calls or processes long document histories, the KV Cache consumes tens of gigabytes of VRAM per active tenant. If a server runs out of VRAM for the KV Cache, it must evict sessions or drop requests. It is an architecture fundamentally hostile to massive concurrency and deterministic low-latency execution.
 
-### 3. The Latency of the "Hot-Path" vs. Human Time
+**The Latency of the "Hot-Path" vs. Human Time**
+
 A human using a chat interface happily tolerates waiting 4, 8, or 15 seconds because humans read at biological speed while words stream across a screen.
 
 For a software backend, an 8-second freeze in the execution thread is an operational disaster. Modern microservice architectures demand p95 response times below **150–200 milliseconds**. Introducing a multi-second generative call into the middle of a transactional pipeline blocks application threads, exhausts database connection pools, and triggers cascading distributed timeouts.
 
-### 4. The Illusion of "JSON Mode" and Constrained Decoding
+**The Illusion of "JSON Mode" and Constrained Decoding**
+
 To prevent models from writing conversational prose when code needs structured data, the industry invented *JSON Mode*, *Function Calling*, and grammar-constrained decoding (such as CFG/BNF masks).
 
 While these techniques successfully force the model's token sampler to adhere to syntactic JSON rules (closing brackets and quotation marks properly), **they do not alter the underlying physics**: the model still runs the expensive sequential token-by-token decode loop, the application still pays full price for every generated output token, and end-to-end latency remains measured in seconds. Worse: if the model changes its semantic interpretation midway through generation, it can produce syntactically valid JSON that is semantically catastrophic.
@@ -75,27 +79,30 @@ This category has been formalized by TypeSafe AI—founded by Diogo Almeida, for
 
 *Typed questions share one forward pass. There is no decode loop; the typed answer arrives in 70 to 500 ms.*
 
-### The Kahneman Analogy: System 1 vs. System 2
+**The Kahneman Analogy: System 1 vs. System 2**
+
 The terminology draws directly on the cognitive taxonomy popularized by Nobel laureate Daniel Kahneman in *Thinking, Fast and Slow*:
 * **System 2 (Slow, deliberative, compute-heavy thought):** The natural domain of traditional LLMs and reasoning models (such as OpenAI o1/o3 or Claude with extended thinking). It excels at deep deductive multi-step reasoning, writing novel software, deriving mathematical proofs, and composing nuanced prose.
 * **System 1 (Fast, intuitive, perceptual judgment):** The instantaneous snap assessment made by an experienced professional. When a senior systems engineer glances at a server log, they do not deliberate for ten minutes to determine whether a line represents a critical database corruption or a benign warning. Their biological neural network performs perceptual classification in milliseconds based on recognized patterns.
 
 A System One model replicates this capability: **it ingests ambiguous contextual state and projects structured determinations in a single parallel forward pass, without generating a single token of text.**
 
-### Why Output Tokens Are "Too Cheap to Meter"
+**Why Output Tokens Are "Too Cheap to Meter"**
+
 By eliminating the autoregressive decode loop:
 1. **No Decode Loop Exists:** The model computes context representation tensors once and immediately branches into parallel classification and projection heads.
 2. **Zero Persistent KV Cache:** GPU memory is released instantly after the forward pass, enabling massive request concurrency impossible on standard LLM inference nodes.
 3. **Zero Output Token Billing:** Because the hardware never spends seconds stalled on memory-bandwidth bottlenecks, returning structured decisions requires negligible marginal work. TypeSafe prices input at **$0.042 per million tokens** with **free output tokens**. In their launch notes, TypeSafe candidly observes that long-term operation will be required to prove pricing sustainability against potential early subsidies, though they expect intelligence delivery costs to trend downward over time.
 
-### The Strict Input/Output (I/O) Contract
+**The Strict Input/Output (I/O) Contract**
+
 Unlike conversational endpoints that simulate a persona, a System One model operates with an explicit function signature:
 
 * **State (`state`):** The unstructured or structured material being evaluated. It can be a plain string, an array of event logs, or an arbitrary JSON object (a bank statement, an ERP purchase order, an audit record).
 * **Questions (`questions`):** A dictionary of custom keys where each entry defines an atomic question with an explicit type and evaluation criteria.
 * **Answers (`answers`):** A dictionary echoing the exact same keys, where each value is a guaranteed mathematical structure with mathematically zero possibility of schema breakage or invented keys.
 
-### The Three Universal Primitives
+**The Three Universal Primitives**
 
 Instead of asking the model to invent arbitrary JSON structures, computation is constrained to three composable mathematical primitives:
 
@@ -121,7 +128,8 @@ To understand why conventional LLMs fail at unattended automation, one must insp
 
 *RLHF rewards confident tone and sycophancy. RLCD penalizes overconfidence and pays for honest uncertainty.*
 
-### The Pathologies of RLHF
+**The Pathologies of RLHF**
+
 Almost all conversational models (including ChatGPT and Claude) are post-trained using **RLHF** (*Reinforcement Learning from Human Feedback*). This process fine-tunes model weights to maximize the score awarded by human contractors rating which response they prefer to read.
 
 While RLHF creates pleasant, helpful assistants, it introduces destructive pathologies when consumed by software programs:
@@ -130,7 +138,8 @@ While RLHF creates pleasant, helpful assistants, it introduces destructive patho
 3. **Mode Dropping:** Optimizing for average human preference causes the model to collapse its probabilistic diversity toward a narrow set of agreeable conversational styles, suppressing valid alternative answers.
 4. **Distorted Softmax Distributions:** Following RLHF, the raw logits of a transformer lose their rigorous statistical meaning. A nominal 99% probability in a commercial LLM decoder rarely correlates with a 99% real-world empirical accuracy.
 
-### What is RLCD (*Reinforcement Learning for Calibrated Decisions*)?
+**What is RLCD (*Reinforcement Learning for Calibrated Decisions*)?**
+
 Decision models discard human conversational preference in favor of **statistical calibration**.
 
 While TypeSafe has not yet published a formal paper detailing the exact mathematical loss function of RLCD, the industry standard framework for evaluating calibration is the **Expected Calibration Error (ECE)** and reliability diagrams. Within this framework, a model is defined as perfectly calibrated when:
@@ -157,7 +166,8 @@ else:
     escalate_to_human_investigator(user_id, risk_score=fraud_prob)
 ```
 
-### Probability vs. Confidence
+**Probability vs. Confidence**
+
 A common point of confusion among engineers is the distinction between winning probability and the confidence score:
 * **Probability** is the mathematical mass assigned to a specific label in the output vector.
 * **Confidence (`confidence`)** is a synthetic scalar metric (bounded in $[0, 1]$) that measures the concentration (or inverse entropy) of the entire distribution.
@@ -176,14 +186,16 @@ Integrating decision models into enterprise architectures is not about swapping 
 
 *Four engineering patterns: parallel questions, application weighting, calibrated confidence boundaries, and intent routing.*
 
-### Pattern 1: Speculative Fan-Out
+**Pattern 1: Speculative Fan-Out**
+
 In conversational pipelines, engineers routinely fall into the trap of sequential roundtrips: first querying an LLM to check if a ticket is a bug; if yes, making a second call to determine the component; if database, making a third call to assess severity. Each hop multiplies latency and cost.
 
 With decision models, adding extra questions to a single request shares the GPU state forward pass and barely alters latency. The **Speculative Fan-Out** pattern sends **all conceivable questions in a single initial request**, including questions that only matter under specific conditions:
 
 In official empirical benchmarks published by TypeSafe (evaluating a 13-question regulatory compliance check over the GDPR text using `jev-1.12`), **batching 13 analytical questions into a single request proved 12.2x cheaper and 10.0x faster** than executing 13 sequential calls over the document (~54,000 characters), yielding identical classification probabilities. Deterministic code simply inspects the top-level answer and discards irrelevant speculative branches.
 
-### Pattern 2: Composite Scoring
+**Pattern 2: Composite Scoring**
+
 Asking an AI model in a single prompt to *"rate lead quality from 1 to 100"* is an antipattern: it hides complex multi-dimensional criteria inside an un-auditable black box.
 
 The **Composite Scoring** pattern decomposes an ambiguous multi-factor assessment into atomic, independent questions, delegating mathematical weighting to the host application code:
@@ -208,13 +220,15 @@ if quality >= 0.75:
 
 **The operational advantage is immense:** if executive leadership decides tomorrow that commercial bias should carry more weight than source citations, the engineering team modifies a single floating-point multiplier in code (`0.25 -> 0.40`) and deploys via a standard git commit in milliseconds. The `0.75` gate sits on the same 0–1 scale as the normalized primitives. There is no need to re-train models, re-engineer natural language prompts, or pray that an LLM interprets English instructions consistently.
 
-### Pattern 3: Confidence-Gated Escalation
+**Pattern 3: Confidence-Gated Escalation**
+
 This pattern establishes dynamic application safety boundaries: activation thresholds are proportional to the severity and reversibility of the triggered action. Official documentation illustrates practical reference tiers such as `0.60` and `0.85` (or `0.50` and `0.90` depending on domain risk), emphasizing that thresholds should be validated against proprietary application data:
 
 * **Low-risk read operations (e.g., displaying balance, suggesting FAQ links):** Operate with modest confidence thresholds (`confidence > 0.60`). If the model makes an occasional error, the impact is minor and easily remediated.
 * **Irreversible or destructive actions (e.g., executing a bank transfer, terminating a production cluster):** Demand strict thresholds (`confidence > 0.85`). Any score falling below that line halts automated execution, enforcing two-factor confirmation or human specialist review.
 
-### Pattern 4: Intent Routing
+**Pattern 4: Intent Routing**
+
 Not every user action requires heavyweight reasoning. The canonical **Intent Routing** pattern positions a System One model at the architecture's ingress to classify immediately which downstream system should fulfill the request:
 
 1. **Deterministic logic:** Narrow or simple transactional requests route directly to code or database queries without calling generative models.
@@ -231,7 +245,7 @@ To contrast the concrete impact of this architecture against conventional genera
 
 ---
 
-### Case 1: Triage and Resolution in Fintech / E-Commerce
+**Case 1: Triage and Resolution in Fintech / E-Commerce**
 
 * **The Problem Today:** A customer submits an inquiry requesting a refund for duplicate charges. Keyword rules easily confuse past grievances with active requests, while a generative LLM takes 5 to 12 seconds to generate JSON, choking server concurrency during peak loads.
 * **With a Decision Model:**
@@ -246,7 +260,7 @@ To contrast the concrete impact of this architecture against conventional genera
 
 ---
 
-### Case 2: Perimeter Semantic Firewall (Guardrails)
+**Case 2: Perimeter Semantic Firewall (Guardrails)**
 
 * **The Problem Today:** To prevent prompt injection attacks (*jailbreaks*) or credential leaks, applications place another generative LLM in front as an inspector. This doubles inference bills and adds several seconds of latency before the user receives the first word.
 * **With a Decision Model:**
@@ -260,7 +274,7 @@ To contrast the concrete impact of this architecture against conventional genera
 
 ---
 
-### Case 3: Semantic Validation and Limits on Invoices (ERP)
+**Case 3: Semantic Validation and Limits on Invoices (ERP)**
 
 * **The Problem Today:** Reconciling complex vendor invoices against purchase orders in SQL databases. Generative LLMs suffer numeric hallucinations on dense tabular data, while deep reasoning models are cost-prohibitive at enterprise scale.
 * **With a Decision Model:**
@@ -294,7 +308,8 @@ Data inspected directly from SVG mark labels and JSON metadata reveals a nuanced
 | **Customer Service** | 204 cases | **76.0%**<br>0.4 s / $0.0001 | **GPT Sol: 78.3%** (10.1 s / $0.0323)<br>DeepSeek v4 Flash: 76.8% (34.6 s) | Near-tie with frontier models, outperforming Opus 5 (72.4%) and Sonnet 5 (69.3%) in raw classification accuracy. |
 | **Global Average (Equal Task Weights)** | **711 cases (4 tasks)** | **67.8%**<br>0.4 s / $0.0004 | **GPT Sol: 74.1%** (23.3 s / $0.0836) | Jev dominates the Pareto efficiency curve, but **does not lead in absolute accuracy**. The dashboard reports an unweighted mean across the four workflows rather than weighting by case count. |
 
-### Methodological Caveat on Reference Labels
+**Methodological Caveat on Reference Labels**
+
 An essential methodological factor must be disclosed: **the "correct" labels in this benchmark do not stem from a human expert ground-truth dataset.**
 
 They represent consensus generated by averaging decisions from **GPT-6 Astra and Claude Fable 5.1 set to high thinking**. Therefore, this benchmark does not measure absolute truth, but rather **Jev's statistical agreement with the smartest and most expensive frontier LLMs on the planet**.

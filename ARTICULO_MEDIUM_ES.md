@@ -38,7 +38,8 @@ Para cualquier equipo de ingeniería que haya intentado incrustar un modelo de l
 
 Para comprender por qué los LLMs son la herramienta equivocada para el enrutamiento y la toma de decisiones en código, es imprescindible examinar cómo ejecutan la computación las unidades de procesamiento gráfico (GPUs):
 
-### 1. Prefill vs. Decode: el peaje del ancho de banda de memoria
+**Prefill vs. Decode: el peaje del ancho de banda de memoria**
+
 Toda inferencia en un transformador generativo se divide en dos fases radicalmente distintas:
 * **Fase de Prefill (Procesamiento del contexto):** La GPU ingiere la totalidad del prompt de entrada en un único cálculo masivo. Miles de multiplicaciones matriciales se ejecutan en paralelo, saturando los *Tensor Cores*. Esta fase es intensiva en cómputo (*compute-bound*) y extremadamente eficiente: procesar 2.000 tokens de contexto lleva apenas unas decenas de milisegundos.
 * **Fase de Decode (Generación autorregresiva):** Para emitir la respuesta, el modelo se ve obligado a predecir un único token cada vez, condicionando el siguiente token a todos los anteriores. Aquí la física cambia: para calcular un miserable token, la GPU debe transferir **la totalidad de los cientos de gigabytes de parámetros del modelo desde la memoria VRAM de alta velocidad hasta los registros de cálculo de los núcleos**. 
@@ -46,17 +47,20 @@ Como la GPU procesa un único vector a la vez, los núcleos de cómputo pasan la
 
 Este desequilibrio explica por qué los proveedores de nube tarjan los tokens de salida entre 3 y 5 veces más caros que los de entrada: generar palabras es físicamente mucho más ineficiente para el silicio que leerlas.
 
-### 2. La tiranía de la memoria y la caché KV
+**La tiranía de la memoria y la caché KV**
+
 En cada paso del bucle de decodificación, el mecanismo de atención necesita recordar las claves y valores (*Keys* y *Values*) de todos los tokens precedentes. Para evitar recalcularlos, se almacenan en la GPU en una estructura llamada **KV Cache**. 
 
 A medida que un sistema empresarial escala a cientos de llamadas concurrentes o mantiene historiales largos, la caché KV devora decenas de gigabytes de memoria VRAM por usuario activo. Si el servidor se queda sin memoria para la caché KV, debe expulsar sesiones o rechazar peticiones. Es una arquitectura inherentemente hostil al rendimiento concurrente y a la baja latencia.
 
-### 3. La latencia del "Hot-Path" frente al tiempo humano
+**La latencia del "Hot-Path" frente al tiempo humano**
+
 Un humano que chatea tolera esperar 4, 8 o 15 segundos porque lee a velocidad humana mientras el texto fluye en pantalla. 
 
 Para un backend de software, una pausa de 8 segundos en el hilo principal de ejecución es una catástrofe de infraestructura. Las arquitecturas modernas de microservicios exigen latencias en el percentil 95 (p95) inferiores a **150–200 milisegundos**. Introducir una llamada generativa de diez segundos en mitad de un pipeline transaccional bloquea workers de Node.js o Python, agota los grupos de conexiones a bases de datos y multiplica exponencialmente la probabilidad de que se disparen *timeouts* distribuidos.
 
-### 4. La ilusión de "JSON Mode" y la decodificación restringida
+**La ilusión de "JSON Mode" y la decodificación restringida**
+
 Para evitar que el modelo responda con literatura cuando el código necesita datos, la industria ideó el *JSON Mode*, las llamadas a funciones (*Function Calling*) y las gramáticas BNF (*constrained decoding*).
 
 Estas técnicas fuerzan al decodificador a muestrear únicamente tokens que cumplan una sintaxis formal (cerrando llaves y comillas cuando corresponde). Pero **no alteran en absoluto la física subyacente**: el modelo sigue ejecutando el costoso bucle de decodificación secuencial token a token, la aplicación sigue pagando el recargo abusivo de los tokens de salida generados, y la latencia end-to-end se mantiene en el orden de los segundos. Peor aún: si el modelo "cambia de opinión" a mitad de la frase, puede generar un JSON sintácticamente perfecto pero semánticamente inservible.
@@ -75,27 +79,30 @@ Esta categoría ha sido formalizada por TypeSafe AI —empresa fundada por Diogo
 
 *Estado más preguntas tipadas entran una sola vez. La GPU no entra en el bucle de decode; la salida llega tipada en 70 a 500 ms.*
 
-### La analogía de Daniel Kahneman: Sistema 1 vs. Sistema 2
+**La analogía de Daniel Kahneman: Sistema 1 vs. Sistema 2**
+
 El nombre no es casualidad; rescata la dicotomía cognitiva articulada por el premio Nobel Daniel Kahneman en su célebre tratado *Thinking, Fast and Slow*:
 * **Sistema 2 (Pensamiento lento, deliberativo y computacionalmente denso):** Es el territorio natural de los LLMs tradicionales y los modelos de razonamiento (como OpenAI o1/o3 o Claude con *extended thinking*). Evalúa deducciones lógicas complejas, escribe código original, deriva teoremas matemáticos y produce prosa reflexiva paso a paso.
 * **Sistema 1 (Juicio intuitivo, rápido y perceptual):** Es el juicio inmediato que realiza un profesional experimentado. Cuando un ingeniero sénior otea un log de servidor, no necesita reflexionar durante diez minutos para reconocer si una traza es un error crítico de base de datos o una advertencia inocua. Su red neuronal biológica emite un juicio casi instantáneo en fracciones de segundo basándose en patrones adquiridos.
 
 Un modelo System One replica esta segunda facultad: **ingiere un estado contextual ambiguo y proyecta determinaciones estructuradas en una sola pasada hacia adelante (*forward pass*), sin generar una sola palabra de texto.**
 
-### Por qué los tokens de salida son "demasiado baratos para medirlos"
+**Por qué los tokens de salida son "demasiado baratos para medirlos"**
+
 Al erradicar por completo la fase de decodificación autorregresiva token a token:
 1. **No existe bucle de Decode:** El modelo calcula los tensores de representación del estado una sola vez y bifurca el cálculo hacia cabezas de clasificación y proyección estadística en paralelo.
 2. **No hay consumo persistente de KV Cache:** La memoria de la GPU queda libre inmediatamente tras el forward pass, permitiendo densidades de concurrencia inalcanzables para un servidor de LLM convencional.
 3. **Tarifa sin coste de salida:** Como el hardware no pasa segundos atascado en el cuello de botella del ancho de banda de memoria, el coste computacional de devolver las respuestas estructuradas es marginal. TypeSafe fija su precio de entrada en **$0.042 por millón de tokens** y establece los tokens de salida como **gratuitos en catálogo**. La propia compañía matiza en su lanzamiento que solo el largo plazo demostrará la sostenibilidad de esta estructura de precios frente a posibles subsidios tempranos, si bien proyectan que los costes de inferencia sigan una curva descendente.
 
-### El contrato estricto de Entrada y Salida (I/O)
+**El contrato estricto de Entrada y Salida (I/O)**
+
 A diferencia de los endpoints conversacionales que exigen simular un diálogo persona-máquina, el contrato de un modelo System One opera como una firma de función fuertemente tipada:
 
 * **Entrada (`state`):** El contexto no estructurado o semiestructurado sobre el que se juzga. Puede ser un string de texto plano, un array de mensajes o un objeto JSON arbitrario (un extracto bancario, una orden de compra, un árbol de eventos de auditoría).
 * **Entrada (`questions`):** Un mapa de identificadores arbitrarios donde cada clave apunta a una pregunta atómica dotada de un tipo explícito y criterios formales.
 * **Salida (`answers`):** Un mapa que reproduce exactamente los mismos identificadores proporcionados, donde cada valor es una estructura matemática garantizada sin posibilidad física de emitir errores de sintaxis o campos inventados.
 
-### Las tres primitivas universales
+**Las tres primitivas universales**
 
 En lugar de delegar en el modelo la tarea de inventar estructuras arbitrarias, la computación se reduce a tres primitivas matemáticas composables:
 
@@ -121,7 +128,8 @@ Para entender por qué los modelos de lenguaje actuales son constitutivamente in
 
 *RLHF premia el tono seguro y la adulación. RLCD castiga la sobreconfianza y paga la incertidumbre honesta.*
 
-### La patología de RLHF
+**La patología de RLHF**
+
 Casi todos los modelos conversacionales actuales (incluidos ChatGPT y Claude) se post-entrenan mediante **RLHF** (*Reinforcement Learning from Human Feedback*). Este método ajusta los pesos de la red para que sus salidas obtengan la máxima puntuación por parte de evaluadores humanos contratados para calificar qué respuesta prefieren leer.
 
 Este objetivo produce efectos extraordinarios en chatbots, pero introduce anomalías destructivas cuando el consumidor de la respuesta es un programa informático:
@@ -130,7 +138,8 @@ Este objetivo produce efectos extraordinarios en chatbots, pero introduce anomal
 3. **Pérdida de modos (*Mode Dropping*):** Al optimizar la preferencia humana promedio, el modelo colapsa su distribución hacia un subconjunto estrecho de estilos elocuentes, aplastando las probabilidades de opciones alternativas legítimas.
 4. **La función Softmax está distorsionada:** Tras someterse a RLHF, los logits de salida de un transformador pierden su significado estadístico estricto. Una probabilidad nominal del 99% en el decoder de un LLM comercial rara vez se corresponde con una tasa de acierto del 99% en el mundo real.
 
-### Qué es RLCD (*Reinforcement Learning for Calibrated Decisions*)
+**Qué es RLCD (*Reinforcement Learning for Calibrated Decisions*)**
+
 El paradigma de los modelos de decisión descarta la preferencia humana en favor de la **calibración estadística**.
 
 Aunque TypeSafe no ha publicado aún un paper formal con la función de pérdida matemática exacta de RLCD, el marco estándar de la disciplina para evaluar la calibración es el **ECE** (*Expected Calibration Error*) y los diagramas de fiabilidad (*reliability diagrams*). En este marco, un modelo se considera perfectamente calibrado si:
@@ -157,7 +166,8 @@ else:
     escalar_a_analisis_forense(user_id, scoring=probabilidad_fraude)
 ```
 
-### La diferencia entre Probabilidad y Confianza (*Confidence*)
+**La diferencia entre Probabilidad y Confianza (*Confidence*)**
+
 Un error común entre desarrolladores principiantes es confundir la probabilidad del ganador con el índice de confianza:
 * La **probabilidad** es la masa asignada a una opción concreta dentro del vector de salida.
 * La **confianza (`confidence`)** es un estadístico sintético escalar (acotado entre 0 y 1) que mide la concentración de la distribución completa (su entropía).
@@ -176,14 +186,16 @@ Integrar modelos de decisión en sistemas reales no consiste en reemplazar un pr
 
 *Cuatro bancos de trabajo: preguntas en paralelo, ponderación en código, umbrales de riesgo y enrutamiento por intención.*
 
-### Patrón 1: Abanico Especulativo (*Speculative Fan-Out*)
+**Patrón 1: Abanico Especulativo (*Speculative Fan-Out*)**
+
 En las arquitecturas conversacionales tradicionales, los desarrolladores caen en la trampa del encadenamiento secuencial: primero llaman al LLM para saber si un ticket es un bug; si es un bug, hacen una segunda llamada para saber el componente; si el componente es la base de datos, hacen una tercera llamada para estimar la severidad. Cada paso suma latencia y coste.
 
 En los modelos de decisión, añadir preguntas adicionales a un request comparte el procesamiento del estado en la GPU y apenas altera el tiempo de respuesta. El patrón de **Abanico Especulativo** consiste en enviar **todas las preguntas concebibles en una única llamada inicial**, incluyendo aquellas que solo serán relevantes si se cumplen ciertas condiciones:
 
 En las pruebas empíricas oficiales publicadas por TypeSafe (cookbook de preguntas paralelas sobre la regulación GDPR evaluadas con `jev-1.12`), **agrupar 13 preguntas analíticas en una única llamada compartida resultó ser 12.2 veces más barato y 10.0 veces más rápido** que ejecutar las mismas 13 evaluaciones de forma secuencial sobre el documento (~54.000 caracteres), manteniendo exactamente las mismas probabilidades de respuesta. El código local simplemente lee la respuesta de primer nivel y descarta las ramas especulativas que no apliquen.
 
-### Patrón 2: Puntuación Compuesta (*Composite Scoring*)
+**Patrón 2: Puntuación Compuesta (*Composite Scoring*)**
+
 Pedirle a una inteligencia artificial en un solo prompt *"califica del 1 al 100 la calidad de este lead comercial"* es una pésima práctica de ingeniería: introduce sesgos incontrolables y oscurece el criterio del modelo en una caja negra opaca.
 
 El patrón de **Composite Scoring** descompone un juicio multifactorial ambiguo en factores atómicos independientes evaluados mediante primitivas tipadas, delegando la ponderación matemática al código anfitrión:
@@ -208,13 +220,15 @@ if quality >= 0.75:
 
 **La ventaja operativa es colosal:** si el comité de dirección de la empresa decide mañana que la ausencia de sesgo comercial debe pesar más que las fuentes, el equipo de ingeniería modifica un coeficiente de punto flotante en el código (`0.25 -> 0.40`) y lo despliega mediante un commit ordinario en milisegundos. El umbral `0.75` vive en la misma escala 0–1 que las primitivas ya normalizadas. No hace falta reentrenar modelos, alterar prompts literarios ni rezar para que un LLM interprete bien las nuevas instrucciones redactadas en inglés.
 
-### Patrón 3: Enrutamiento Graduado por Incertidumbre (*Confidence-Gated Escalation*)
+**Patrón 3: Enrutamiento Graduado por Incertidumbre (*Confidence-Gated Escalation*)**
+
 Este patrón materializa el cortafuegos de seguridad de la aplicación: el umbral de activación no es estático, sino proporcional a la gravedad y reversibilidad del efecto secundario que desencadenará la acción. En la documentación oficial se ilustran umbrales como `0.60` y `0.85` (o `0.50` y `0.90` según el contexto de decisión), recomendando calibrarlos empíricamente con los propios datos de negocio:
 
 * **Operaciones de bajo riesgo y lectura (ej: mostrar saldo o sugerir un artículo de ayuda):** Operan con umbrales de confianza moderados (`confidence > 0.60`). Si el modelo comete un error puntual, el impacto es leve y fácilmente subsanable.
 * **Operaciones irreversibles o destructivas (ej: ejecutar una transferencia bancaria o suspender un servidor de producción):** Exigen umbrales estrictos (`confidence > 0.85`). Cualquier resultado que caiga por debajo de esa línea roja detiene la ejecución automática y solicita confirmación o mediación de un operador humano.
 
-### Patrón 4: Enrutamiento por Intención (*Intent Routing*)
+**Patrón 4: Enrutamiento por Intención (*Intent Routing*)**
+
 No todas las peticiones exigen la misma maquinaria computacional. El patrón canónico de **Intent Routing** sitúa al modelo System One en la puerta de entrada de la arquitectura para clasificar de inmediato qué subsistema debe resolver la tarea:
 
 1. **Lógica determinista:** Consultas cerradas o solicitudes transaccionales simples se desvían directamente a código o a un endpoint SQL sin tocar modelos generativos.
@@ -231,7 +245,7 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
 
 ---
 
-### Caso 1: Triaje y resolución en Fintech y E-commerce
+**Caso 1: Triaje y resolución en Fintech y E-commerce**
 
 * **El problema actual:** Un usuario solicita por chat la devolución de un cobro duplicado. Las reglas por palabras clave confunden fácilmente quejas pasadas con peticiones activas, mientras que un LLM generativo tarda entre 5 y 12 segundos en estructurar un JSON, saturando la concurrencia en picos de carga.
 * **Con un Modelo de Decisión:**
@@ -246,7 +260,7 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
 
 ---
 
-### Caso 2: Cortafuegos semántico perimetral (Guardrails)
+**Caso 2: Cortafuegos semántico perimetral (Guardrails)**
 
 * **El problema actual:** Para evitar ataques de inyección de prompt (*jailbreaks*) o filtración de credenciales, muchas arquitecturas sitúan otro LLM generativo como inspector previo. Esto duplica la factura y suma segundos de espera antes de que el usuario vea la primera palabra.
 * **Con un Modelo de Decisión:**
@@ -260,7 +274,7 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
 
 ---
 
-### Caso 3: Validación semántica y límites en facturas (ERP)
+**Caso 3: Validación semántica y límites en facturas (ERP)**
 
 * **El problema actual:** Cotejar facturas complejas de proveedores contra órdenes de compra en bases de datos. Los LLMs generativos sufren inconsistencias numéricas y alucinaciones en tablas densas, mientras que los modelos de razonamiento profundo resultan prohibitivos a gran escala.
 * **Con un Modelo de Decisión:**
@@ -294,7 +308,8 @@ Los datos extraídos directamente de las etiquetas SVG y metadatos JSON del port
 | **Atención al Cliente** | 204 casos | **76.0%**<br>0.4 s / $0.0001 | **GPT Sol: 78.3%** (10.1 s / $0.0323)<br>DeepSeek v4 Flash: 76.8% (34.6 s) | Prácticamente empate técnico con los modelos de frontera más caros, superando a Opus 5 (72.4%) y a Sonnet 5 (69.3%) en precisión pura. |
 | **Media Global (Pesos Iguales)** | **711 casos (4 tareas)** | **67.8%**<br>0.4 s / $0.0004 | **GPT Sol: 74.1%** (23.3 s / $0.0836) | Jev domina holgadamente la frontera de eficiencia (Pareto), pero **no lidera la precisión absoluta**. La media oficial promedia las 4 tareas con el mismo peso (no ponderada por volumen de casos). |
 
-### La advertencia metodológica sobre las etiquetas de referencia
+**La advertencia metodológica sobre las etiquetas de referencia**
+
 Hay un factor metodológico fundamental que debe mencionarse para mantener la honestidad intelectual: **las etiquetas de "acierto" en este benchmark no proceden de un dataset con verdad terreno (*ground truth*) validada manualmente por humanos expertos.** 
 
 Proceden del consenso generado por el promedio de juicios emitidos por **GPT-6 Astra y Claude Fable 5.1 configurados en su modo máximo de razonamiento (*high thinking*)**. Por tanto, lo que mide este benchmark no es la corrección empírica absoluta ante la realidad, sino el **grado de acuerdo estadístico de Jev con los modelos generativos más inteligentes y caros del planeta**.
