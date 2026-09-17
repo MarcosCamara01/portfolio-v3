@@ -67,7 +67,7 @@ El recorte de gramática y el recorte de candidatos no son el mismo truco. El pr
 
 La respuesta técnica a este callejón sin salida no consiste en construir LLMs ligeramente más rápidos o inventar parsers más complejos. Consiste en abandonar por completo la decodificación de texto y diseñar una clase de modelos concebida exclusivamente para tomar **decisiones nativas de máquina**.
 
-Esta categoría ha sido formalizada por TypeSafe AI —empresa fundada por Diogo Almeida, investigador procedente de OpenAI y autor primario del trabajo fundacional de InstructGPT (arXiv:2203.02155)— bajo el concepto de **Modelos System One**, cuyo primer lanzamiento insignia es el modelo **Jev**.
+Esta categoría ha sido formalizada por TypeSafe AI —empresa fundada por Diogo Almeida, investigador procedente de OpenAI y uno de los autores primarios del trabajo fundacional de InstructGPT (arXiv:2203.02155)— bajo el concepto de **Modelos System One**, cuyo primer lanzamiento insignia es el modelo **Jev**.
 
 ![Arquitectura System One: un único forward pass en GPU con cabezas paralelas Noul, Choice y Score.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-03-system-one.png)
 
@@ -84,7 +84,7 @@ Un modelo System One replica esta segunda facultad: **ingiere un estado contextu
 Al erradicar por completo la fase de decodificación autorregresiva token a token:
 1. **No existe bucle de Decode:** El modelo calcula los tensores de representación del estado una sola vez y bifurca el cálculo hacia cabezas de clasificación y proyección estadística en paralelo.
 2. **No hay consumo persistente de KV Cache:** La memoria de la GPU queda libre inmediatamente tras el forward pass, permitiendo densidades de concurrencia inalcanzables para un servidor de LLM convencional.
-3. **Economía de coste cero:** Como el hardware no pasa segundos atascado en el cuello de botella del ancho de banda de memoria, el coste computacional de devolver las respuestas es marginal. Por eso TypeSafe fija su precio de entrada en **$0.042 por millón de tokens** ($42 por cada mil millones) y establece que **los tokens de salida son gratuitos de forma permanente** ("too cheap to meter").
+3. **Tarifa sin coste de salida:** Como el hardware no pasa segundos atascado en el cuello de botella del ancho de banda de memoria, el coste computacional de devolver las respuestas estructuradas es marginal. TypeSafe fija su precio de entrada en **$0.042 por millón de tokens** y establece los tokens de salida como **gratuitos en catálogo**. La propia compañía matiza en su lanzamiento que solo el largo plazo demostrará la sostenibilidad de esta estructura de precios frente a posibles subsidios tempranos, si bien proyectan que los costes de inferencia sigan una curva descendente.
 
 ### El contrato estricto de Entrada y Salida (I/O)
 A diferencia de los endpoints conversacionales que exigen simular un diálogo persona-máquina, el contrato de un modelo System One opera como una firma de función fuertemente tipada:
@@ -170,16 +170,16 @@ Para un sistema empresarial, **un "no estoy seguro" calibrado es infinitamente m
 
 Integrar modelos de decisión en sistemas reales no consiste en reemplazar un prompt por otro, sino en estructurar flujos de código según patrones arquitectónicos formales documentados en los manuales de ingeniería de este nuevo paradigma:
 
-![Los cuatro patrones System One: Speculative Fan-Out, Composite Scoring, Confidence-Gated y SDE Cascade.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-05-cuatro-patrones.png)
+![Los cuatro patrones System One: Speculative Fan-Out, Composite Scoring, Confidence-Gated y Intent Routing.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-05-cuatro-patrones.png)
 
-*Cuatro bancos de trabajo: preguntas en paralelo, ponderación en código, umbrales de riesgo y un filtro del 95% antes del LLM.*
+*Cuatro bancos de trabajo: preguntas en paralelo, ponderación en código, umbrales de riesgo y enrutamiento por intención.*
 
 ### Patrón 1: Abanico Especulativo (*Speculative Fan-Out*)
 En las arquitecturas conversacionales tradicionales, los desarrolladores caen en la trampa del encadenamiento secuencial: primero llaman al LLM para saber si un ticket es un bug; si es un bug, hacen una segunda llamada para saber el componente; si el componente es la base de datos, hacen una tercera llamada para estimar la severidad. Cada paso suma latencia y coste.
 
 En los modelos de decisión, añadir preguntas adicionales a un request comparte el procesamiento del estado en la GPU y apenas altera el tiempo de respuesta. El patrón de **Abanico Especulativo** consiste en enviar **todas las preguntas concebibles en una única llamada inicial**, incluyendo aquellas que solo serán relevantes si se cumplen ciertas condiciones:
 
-En las pruebas empíricas oficiales publicadas por TypeSafe (cookbook de preguntas paralelas sobre la regulación GDPR), **agrupar 13 preguntas analíticas en una única llamada compartida resultó ser 11.5 veces más barato y 9.6 veces más rápido** que ejecutar las mismas 13 evaluaciones de forma secuencial, manteniendo exactamente las mismas probabilidades de respuesta. El código local simplemente lee la respuesta de primer nivel y descarta las respuestas especulativas que no apliquen.
+En las pruebas empíricas oficiales publicadas por TypeSafe (cookbook de preguntas paralelas sobre la regulación GDPR evaluadas con `jev-1.12`), **agrupar 13 preguntas analíticas en una única llamada compartida resultó ser 12.2 veces más barato y 10.0 veces más rápido** que ejecutar las mismas 13 evaluaciones de forma secuencial sobre el documento (~54.000 caracteres), manteniendo exactamente las mismas probabilidades de respuesta. El código local simplemente lee la respuesta de primer nivel y descarta las ramas especulativas que no apliquen.
 
 ### Patrón 2: Puntuación Compuesta (*Composite Scoring*)
 Pedirle a una inteligencia artificial en un solo prompt *"califica del 1 al 100 la calidad de este lead comercial"* es una pésima práctica de ingeniería: introduce sesgos incontrolables y oscurece el criterio del modelo en una caja negra opaca.
@@ -207,49 +207,50 @@ if quality >= 0.75:
 **La ventaja operativa es colosal:** si el comité de dirección de la empresa decide mañana que la ausencia de sesgo comercial debe pesar más que las fuentes, el equipo de ingeniería modifica un coeficiente de punto flotante en el código (`0.25 -> 0.40`) y lo despliega mediante un commit ordinario en milisegundos. El umbral `0.75` vive en la misma escala 0–1 que las primitivas ya normalizadas. No hace falta reentrenar modelos, alterar prompts literarios ni rezar para que un LLM interprete bien las nuevas instrucciones redactadas en inglés.
 
 ### Patrón 3: Enrutamiento Graduado por Incertidumbre (*Confidence-Gated Escalation*)
-Este patrón materializa el cortafuegos de seguridad de la aplicación: el umbral de activación no es estático, sino proporcional a la gravedad y reversibilidad del efecto secundario que desencadenará la acción.
+Este patrón materializa el cortafuegos de seguridad de la aplicación: el umbral de activación no es estático, sino proporcional a la gravedad y reversibilidad del efecto secundario que desencadenará la acción. En la documentación oficial se ilustran umbrales como `0.60` y `0.85` (o `0.50` y `0.90` según el contexto de decisión), recomendando calibrarlos empíricamente con los propios datos de negocio:
 
-* **Operaciones de bajo riesgo y lectura (ej: mostrar saldo o sugerir un artículo de ayuda):** Requieren umbrales de confianza moderados (`confidence > 0.55`). Si el modelo comete un error puntual, el impacto es despreciable y fácilmente subsanable por el usuario.
-* **Operaciones irreversibles o destructivas (ej: ejecutar una transferencia bancaria de 10.000 € o suspender un servidor de producción):** Exigen umbrales estrictos (`confidence > 0.92`). Cualquier resultado que caiga por debajo de esa línea roja detiene la ejecución automática y solicita confirmación en dos pasos o mediación de un operador humano.
+* **Operaciones de bajo riesgo y lectura (ej: mostrar saldo o sugerir un artículo de ayuda):** Operan con umbrales de confianza moderados (`confidence > 0.60`). Si el modelo comete un error puntual, el impacto es leve y fácilmente subsanable.
+* **Operaciones irreversibles o destructivas (ej: ejecutar una transferencia bancaria o suspender un servidor de producción):** Exigen umbrales estrictos (`confidence > 0.85`). Cualquier resultado que caiga por debajo de esa línea roja detiene la ejecución automática y solicita confirmación o mediación de un operador humano.
 
-### Patrón 4: Cascada de Extracción y Clasificación (*SDE Cascade*)
-No todos los problemas son puramente de Sistema 1 o puramente de Sistema 2. La arquitectura más eficiente en costes para grandes volúmenes de tráfico es la **Cascada**:
-1. El 100% de los eventos entrantes pasa primero por el modelo System One (latencia: ~100 ms, coste: fracciones de céntimo).
-2. El modelo resuelve de forma autónoma el 80%–90% de los casos evidentes con alta confianza.
-3. El 10%–20% residual con baja confianza o alta complejidad se deriva a un modelo de razonamiento pesado (Sistema 2) o a un humano.
+### Patrón 4: Enrutamiento por Intención (*Intent Routing*)
+No todas las peticiones exigen la misma maquinaria computacional. El patrón canónico de **Intent Routing** sitúa al modelo System One en la puerta de entrada de la arquitectura para clasificar de inmediato qué subsistema debe resolver la tarea:
 
-Este diseño permite que una organización disfrute de la calidad de razonamiento de los modelos más caros del planeta en los casos límite, pero con la factura y la latencia global de un sistema ligero de microsegundos.
+1. **Lógica determinista:** Consultas cerradas o solicitudes transaccionales simples se desvían directamente a código o a un endpoint SQL sin tocar modelos generativos.
+2. **Modelos generativos especializados (Sistema 2):** Consultas que exigen redacción de texto libre, empatía o razonamiento abierto se derivan al LLM adecuado con un contexto ya depurado.
+3. **Escalada humana:** Casos ambiguos o con conflicto de políticas pasan directamente a un panel de soporte.
 
----
-
-## 6. Casos de uso reales: dónde encaja este paradigma
-
-Para contrastar el impacto práctico de esta arquitectura frente a las soluciones generativas convencionales, examinemos cinco escenarios reales de producción.
+*(Nota técnica: para casos específicos de extracción de datos masiva, TypeSafe documenta también en sus cookbooks patrones complementarios como la cascada estructurada SDE, donde un modelo pequeño como `gpt-5.4-mini` extrae datos preliminares, Jev verifica las afirmaciones mediante Nouls por campo y, solo si la probabilidad de fallo es alta, se escala a un modelo de razonamiento profundo como `gpt-5.5`).*
 
 ---
 
-### Caso 1: Triaje y resolución autónoma en Fintech y E-commerce
+## 6. Escenarios arquitectónicos: dónde encaja este paradigma
+
+Para contrastar el impacto práctico de esta arquitectura frente a las soluciones generativas convencionales, examinemos cinco escenarios ilustrativos de diseño. *(Nota metodológica: las probabilidades y esquemas presentados a continuación son configuraciones ilustrativas de ingeniería, siguiendo el criterio documentado por TypeSafe en sus guías de conceptos).*
+
+---
+
+### Caso 1: Triaje y resolución en Fintech y E-commerce
 
 * **El problema actual:** Un usuario envía el siguiente mensaje: *"Me han cobrado dos veces la suscripción mensual en la tarjeta de crédito y necesito el dinero para pagar el alquiler hoy mismo"*.
   * Las reglas clásicas de palabras clave ("cobro", "duplicado") confunden fácilmente quejas históricas con peticiones activas.
-  * Los LLMs generativos tardan entre 5 y 12 segundos en razonar la respuesta y estructurar un JSON. En campañas de alto volumen (Black Friday, caídas de servicio), el coste en tokens es insostenible y la infraestructura sufre saturación.
+  * Los LLMs generativos tardan entre 5 y 12 segundos en razonar la respuesta y estructurar un JSON. En picos de alta carga, el coste en tokens se dispara y la infraestructura sufre saturación.
 * **Con un Modelo de Decisión:**
   * **Estado (`state`):** Estructura JSON que combina el texto del mensaje del cliente, los metadatos de los últimos tres cargos en la pasarela Stripe y la política contractual de devoluciones.
-  * **Preguntas en paralelo (evaluadas simultáneamente en ~120 ms):**
-    * `refund_requested` (*Noul*): ¿El cliente solicita explícitamente la devolución del dinero? $\rightarrow$ Probabilidad: `0.99`
-    * `duplicate_confirmed` (*Noul*): Contrastando el texto con el extracto de pagos, ¿constan dos cargos con idéntico importe en menos de 24 horas? $\rightarrow$ Probabilidad: `0.96`
-    * `urgency_level` (*Score*): Nivel de urgencia percibido en una rúbrica de 3 niveles (`Baja`, `Moderada`, `Crítica`) $\rightarrow$ Puntuación continua: `2.45`
-    * `policy_compliance` (*Noul*): ¿El incidente cumple las condiciones de reembolso directo sin mediación? $\rightarrow$ Probabilidad: `0.98`
+  * **Preguntas en paralelo:**
+    * `refund_requested` (*Noul*): ¿El cliente solicita explícitamente la devolución del dinero? $\rightarrow$ Probabilidad ilustrativa: `0.99`
+    * `duplicate_confirmed` (*Noul*): Contrastando el texto con el extracto de pagos, ¿constan dos cargos con idéntico importe en menos de 24 horas? $\rightarrow$ `0.96`
+    * `urgency_level` (*Score*): Nivel de urgencia percibido en una rúbrica de 3 niveles (`Baja`, `Moderada`, `Crítica`) $\rightarrow$ `2.45`
+    * `policy_compliance` (*Noul*): ¿El incidente cumple las condiciones de reembolso directo sin mediación? $\rightarrow$ `0.98`
 * **Acción en código:**
-  Dado que tanto la solicitud de devolución como la conformidad con la política superan el umbral del 90%, el backend ejecuta inmediatamente la llamada al endpoint `/v1/refunds` de Stripe. El cliente recibe la confirmación de la devolución en **menos de 300 milisegundos**. Si el índice de certeza hubiese sido inferior a 0.70, el código habría derivado el ticket a la bandeja de un especialista financiero.
+  Dado que tanto la solicitud de devolución como la conformidad con la política superan el umbral del 90%, el backend ejecuta inmediatamente la llamada al endpoint `/v1/refunds` de Stripe en una fracción de segundo. Si el índice de certeza hubiese caído por debajo del umbral de seguridad, el código habría derivado el ticket a la bandeja de un especialista financiero.
 
 ---
 
-### Caso 2: Ciberseguridad y triaje de alertas en tiempo real (SOC / DevOps)
+### Caso 2: Ciberseguridad y triaje de eventos (SOC / DevOps)
 
-* **El problema actual:** Un centro de operaciones de seguridad corporativo (SOC) procesa una media de 40.000 eventos de telemetría y alertas de cortafuegos por segundo. El 95% son falsos positivos provocados por escaneos rutinarios o scripts automatizados.
+* **El problema actual:** Un centro de operaciones de seguridad corporativo procesa un volumen masivo de eventos de telemetría y alertas de cortafuegos donde la inmensa mayoría resultan ser falsos positivos o escaneos rutinarios.
   * La plantilla de analistas humanos sufre un colapso crónico por fatiga de alertas.
-  * Conectar un LLM generativo en streaming sobre ese caudal es impensable: costaría millones de dólares al mes en consumo de API y violaría cualquier límite de concurrencia.
+  * Conectar un LLM generativo en streaming sobre ese caudal es inviable técnica y financieramente.
 * **Con un Modelo de Decisión:**
   * **Estado (`state`):** Registro de auditoría del sistema operativo (comando Bash ejecutado, binario invocador, árbol de procesos padres y privilegios del usuario).
   * **Preguntas en paralelo:**
@@ -257,28 +258,28 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
     * `threat_severity` (*Score*): Grado de peligrosidad de la cadena en rúbrica ordinal (0 = benigno, 1 = anómalo, 2 = exploit crítico) $\rightarrow$ `1.88`
     * `containment_protocol` (*Choice*): Selección de protocolo (`log_and_pass`, `notify_slack`, `quarantine_host`) $\rightarrow$ `quarantine_host` (confianza: `0.91`)
 * **Acción en código:**
-  Al detectar `threat_severity > 1.8` y `containment_protocol == "quarantine_host"` con confianza superior al 85%, el demonio de seguridad corta el tráfico de red de la máquina comprometida a nivel de iptables en **menos de 90 milisegundos**, neutralizando un posible movimiento lateral antes de que el atacante establezca persistencia.
+  Al detectar `threat_severity > 1.8` y `containment_protocol == "quarantine_host"` con alta confianza, el demonio de seguridad aísla la máquina comprometida a nivel de cortafuegos de forma inmediata, neutralizando un posible movimiento lateral antes de que el atacante establezca persistencia.
 
 ---
 
 ### Caso 3: Cortafuegos semántico y guardrails para LLMs generativos
 
 * **El problema actual:** Para impedir que usuarios maliciosos ejecuten ataques de inyección de prompt (*jailbreaks*) o fuercen a un bot corporativo a revelar contraseñas o soltar improperios, muchas arquitecturas sitúan **otro LLM generativo por delante** que ejerce de inspector o policía de contenidos.
-  * **Consecuencia:** La latencia percibida por el usuario se duplica (de 3 segundos pasa a 7 u 8) y la factura de inferencia se multiplica exactamente por dos.
+  * **Consecuencia:** La latencia percibida por el usuario se multiplica y la factura de inferencia se duplica.
 * **Con un Modelo de Decisión:**
   * **Estado (`state`):** El prompt en bruto enviado por el usuario a través de la interfaz web antes de alcanzar el modelo conversacional.
-  * **Preguntas en paralelo (resueltas en ~80 ms a $0.042 por millón de tokens):**
+  * **Preguntas en paralelo:**
     * `is_prompt_injection` (*Noul*): ¿El usuario utiliza técnicas de ingeniería social o marcadores para sobreescribir las instrucciones del sistema? $\rightarrow$ `0.98`
     * `contains_credentials` (*Noul*): ¿El texto incluye claves privadas, tokens JWT o números de tarjetas de crédito? $\rightarrow$ `0.01`
     * `intent` (*Choice*): Intención de la consulta (`legitimate_task`, `jailbreak_probe`, `toxic_abuse`) $\rightarrow$ `jailbreak_probe` (confianza: `0.96`)
 * **Acción en código:**
-  Si `is_prompt_injection > 0.85`, el proxy inverso HTTP interrumpe la conexión de inmediato y responde con un código de estado `400 Bad Request` en menos de una décima de segundo. El modelo conversacional principal nunca llega a ser invocado, ahorrando presupuesto y protegiendo el sistema.
+  Si `is_prompt_injection > 0.85`, el proxy inverso HTTP interrumpe la conexión de inmediato y responde con un código de estado `400 Bad Request`. El modelo conversacional principal nunca llega a ser invocado, ahorrando presupuesto y protegiendo el sistema.
 
 ---
 
-### Caso 4: Map-Reduce semántico de facturas y albaranes en sistemas ERP
+### Caso 4: Clasificación y validación de facturas en sistemas ERP
 
-* **El problema actual:** Un grupo multinacional recibe mensualmente 150.000 facturas de proveedores en formato PDF. Cada documento debe cotejarse contra la orden de compra interna emitida por compras y el albarán de recepción de material sellado en almacén.
+* **El problema actual:** En entornos corporativos que reciben miles de facturas y albaranes de proveedores, cada documento debe cotejarse contra la orden de compra interna y la recepción de almacén.
   * Los LLMs generativos sufren inconsistencias numéricas y alucinaciones de cifras cuando se les fuerza a procesar tablas extensas y complejas.
   * Procesar millones de páginas con modelos de frontera con ventanas de contexto extendidas arruina el margen del departamento de operaciones.
 * **Con un Modelo de Decisión:**
@@ -288,23 +289,23 @@ Para contrastar el impacto práctico de esta arquitectura frente a las solucione
     * `unauthorized_items_present` (*Noul*): ¿Existen conceptos facturados que no constaban en la orden de compra aprobada? $\rightarrow$ `0.03`
     * `discrepancy_category` (*Choice*): Naturaleza de la discrepancia detectada (`none`, `tax_error`, `price_variance`, `quantity_variance`) $\rightarrow$ `none` (confianza: `0.95`)
 * **Acción en código:**
-  El sistema ERP programa automáticamente el pago para el **82% de las facturas** que registran una confianza superior al 95%. El 18% restante se desvía a la bandeja de contabilidad con la discrepancia ya clasificada de forma precisa, reduciendo en cuatro quintas partes la carga operativa manual.
+  El sistema ERP programa automáticamente el pago para aquellas facturas que registran una confianza superior al umbral configurado por finanzas, derivando a revisión humana exclusivamente los casos con discrepancias tipadas o baja certeza estadística.
 
 ---
 
-### Caso 5: Domótica, IoT y asistentes de voz (Abanico Especulativo)
+### Caso 5: Domótica, IoT e interfaces de voz (Abanico Especulativo)
 
 * **El problema actual:** En interfaces controladas por voz (vehículos conectados, domótica industrial, asistentes domésticos), si el sistema tarda tres segundos en procesar un comando físico elemental como apagar una luz, la experiencia de usuario se percibe como defectuosa o averiada.
   * Los pipelines conversacionales encadenan múltiples llamadas consecutivas (clasificar intención $\rightarrow$ extraer entidad $\rightarrow$ verificar dispositivo), acumulando latencias inaceptables.
 * **Con un Modelo de Decisión (*Speculative Fan-Out*):**
-  * Sobre la transcripción de audio del usuario (*"Apaga las luces de la cocina y pon el termostato a 21 grados"*), el hub dispara **todas las preguntas concebibles en una sola llamada paralela de 100 ms**:
+  * Sobre la transcripción de audio del usuario (*"Apaga las luces de la cocina y pon el termostato a 21 grados"*), el hub dispara **todas las preguntas concebibles en una sola llamada paralela**:
     * `is_hardware_command` (*Noul*): ¿El enunciado representa una orden física sobre el entorno? $\rightarrow$ `0.99`
     * `target_room` (*Choice* con 30 estancias registradas): $\rightarrow$ `kitchen`
     * `device_type` (*Choice* entre luces, climatización, persianas, cerraduras): $\rightarrow$ `lights`
     * `action` (*Choice* encender, apagar, graduar): $\rightarrow$ `turn_off`
     * `is_conversational_fallback` (*Noul*): ¿La frase es una consulta enciclopédica o de charla informal ("¿quién fue Alan Turing?")? $\rightarrow$ `0.01`
 * **Acción en código:**
-  El microcontrolador procesa los tensores y conmuta el relé físico de las luces en **menos de 150 milisegundos**. Si `is_conversational_fallback` hubiera superado el umbral, el sistema habría derivado la petición al LLM conversacional. El usuario obtiene una respuesta física instantánea para las órdenes cotidianas sin renunciar a la riqueza conversacional cuando la situación lo requiere.
+  El microcontrolador procesa los tensores y conmuta el relé físico de las luces en menos de una décima de segundo. Si `is_conversational_fallback` hubiera superado el umbral, el sistema habría derivado la petición al LLM conversacional. El usuario obtiene una respuesta física inmediata para las órdenes cotidianas sin renunciar a la riqueza conversacional cuando la situación lo requiere.
 
 ---
 
@@ -326,14 +327,14 @@ Los datos extraídos directamente de las etiquetas SVG y metadatos JSON del port
 | **Observabilidad de Trazas** | 117 casos | **71.6%**<br>0.5 s / $0.0003 | **GPT Sol: 76.6%** (40.3 s / $0.0575)<br>DeepSeek v4 Flash: 73.0% (51.7 s) | En análisis de logs de agentes, Jev empata prácticamente con DeepSeek v4 Pro (71.6%) reduciendo el tiempo de 90 segundos a medio segundo. |
 | **Procesamiento de Facturas** | 150 casos | **61.8%**<br>0.5 s / $0.0011 | **GPT Sol: 79.1%** (34.3 s / $0.2152)<br>Claude Opus 5: 78.4% (92.1 s / $0.4856) | **El talón de Aquiles de Jev:** Brecha de más de 17 puntos porcentuales frente a Sol. Documentos con tablas densas, deducciones contables y razonamiento numérico secuencial evidencian los límites de los modelos sin decodificación de razonamiento profundo. |
 | **Atención al Cliente** | 204 casos | **76.0%**<br>0.4 s / $0.0001 | **GPT Sol: 78.3%** (10.1 s / $0.0323)<br>DeepSeek v4 Flash: 76.8% (34.6 s) | Prácticamente empate técnico con los modelos de frontera más caros, superando a Opus 5 (72.4%) y a Sonnet 5 (69.3%) en precisión pura. |
-| **Promedio Ponderado Global** | **711 casos** | **67.8%**<br>0.4 s / $0.0004 | **GPT Sol: 74.1%** (23.3 s / $0.0836) | Jev domina holgadamente la frontera de eficiencia (Pareto), pero **no lidera la precisión absoluta**. |
+| **Media Global (Pesos Iguales)** | **711 casos (4 tareas)** | **67.8%**<br>0.4 s / $0.0004 | **GPT Sol: 74.1%** (23.3 s / $0.0836) | Jev domina holgadamente la frontera de eficiencia (Pareto), pero **no lidera la precisión absoluta**. La media oficial promedia las 4 tareas con el mismo peso (no ponderada por volumen de casos). |
 
 ### La advertencia metodológica sobre las etiquetas de referencia
 Hay un factor metodológico fundamental que debe mencionarse para mantener la honestidad intelectual: **las etiquetas de "acierto" en este benchmark no proceden de un dataset con verdad terreno (*ground truth*) validada manualmente por humanos expertos.** 
 
 Proceden del consenso generado por el promedio de juicios emitidos por **GPT-6 Astra y Claude Fable 5.1 configurados en su modo máximo de razonamiento (*high thinking*)**. Por tanto, lo que mide este benchmark no es la corrección empírica absoluta ante la realidad, sino el **grado de acuerdo estadístico de Jev con los modelos generativos más inteligentes y caros del planeta**.
 
-La conclusión de ingeniería es contundente: Jev no es superior en inteligencia pura a un modelo de frontera de 200 dólares la hora; su propuesta de valor radica en que ofrece un **90% del discernimiento de esos gigantes con una reducción de dos órdenes de magnitud en tiempo y tres órdenes de magnitud en coste financiero**.
+La conclusión de ingeniería es contundente: Jev no busca competir en inteligencia general con un modelo de frontera costoso; su propuesta de valor radica en que ofrece un **nivel de acuerdo estadístico notable con esos gigantes con una reducción de dos órdenes de magnitud en tiempo y tres órdenes de magnitud en coste financiero**.
 
 ---
 

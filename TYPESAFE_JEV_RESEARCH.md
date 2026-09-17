@@ -90,7 +90,7 @@ Precio / velocidad (fuentes primarias):
 | Tweet / seed | **20–200x** faster, **40–400x** cheaper | Tweet + note | Rango de marketing; no es el mismo que 40–200x del blog. |
 | Homepage hero | **193.6x Faster, 444.6x Cheaper** + demo Cost **$0.000081** / **0.114s** vs LLM **$0.013880** / **8.566s** | Homepage; blog: “This is where the claims of 193.6x faster, 444.6x cheaper on our home page comes from, and we expect that these are **on the higher end of real world gains**.” | El asterisco dice “based on workflows for System One tasks (proof)” → [evals.typesafe.ai](https://evals.typesafe.ai/). |
 | Docs how-to-build | “Most queries complete in about **100 ms**.” | how-to-build | Aproximación, no p95. |
-| Cookbook paralelo | 13 preguntas en 1 call: **11.5x cheaper, 9.6x faster** vs 13 calls | [parallel questions](https://docs.typesafe.ai/cookbooks/parallel_questions.md) | Jev vs Jev (batching), no vs LLM. |
+| Cookbook paralelo | 13 preguntas en 1 call: **12.2x cheaper, 10.0x faster** vs 13 calls (`jev-1.12`) | [parallel questions](https://docs.typesafe.ai/cookbooks/parallel_questions.md) | Jev vs Jev (batching), no vs LLM. Primitives.md aún cita 11.5x / 9.6x. |
 | Doom | ~10 queries/s, **~$7/hour** (el ingeniero “worried”) | Blog Fun Demos | Anecdótico. |
 
 The Register cita GPT-5.6 Terra **$2.00 / MTok in, $12 / MTok out** vs Jev $0.042 / 0. Eso es prensa citando list prices; no re-verificar OpenAI aquí.

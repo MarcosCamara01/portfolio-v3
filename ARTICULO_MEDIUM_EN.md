@@ -67,7 +67,7 @@ Grammar masking and candidate slicing are different tricks. The first still emit
 
 The technical solution to this architectural dead-end is not building slightly faster LLMs or inventing more complex regex parsers. It requires abandoning open-ended text decoding entirely and designing a model class built exclusively for **machine-native decisions**.
 
-This category has been formalized by TypeSafe AI—founded by Diogo Almeida, former OpenAI researcher and primary author on the foundational InstructGPT research (arXiv:2203.02155)—under the moniker **System One Models**, with **Jev** as their initial flagship release.
+This category has been formalized by TypeSafe AI—founded by Diogo Almeida, former OpenAI researcher and one of the primary authors on the foundational InstructGPT research (arXiv:2203.02155)—under the moniker **System One Models**, with **Jev** as their initial flagship release.
 
 ![System One architecture: a single GPU forward pass with parallel Noul, Choice, and Score heads.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-03-system-one.png)
 
@@ -84,7 +84,7 @@ A System One model replicates this capability: **it ingests ambiguous contextual
 By eliminating the autoregressive decode loop:
 1. **No Decode Loop Exists:** The model computes context representation tensors once and immediately branches into parallel classification and projection heads.
 2. **Zero Persistent KV Cache:** GPU memory is released instantly after the forward pass, enabling massive request concurrency impossible on standard LLM inference nodes.
-3. **Zero Marginal Output Cost:** Because the hardware never spends seconds stalled on memory-bandwidth bottlenecks, returning the answer requires negligible GPU work. TypeSafe prices input at **$0.042 per million tokens** ($42 per billion) and makes **output tokens permanently free** ("too cheap to meter").
+3. **Zero Output Token Billing:** Because the hardware never spends seconds stalled on memory-bandwidth bottlenecks, returning structured decisions requires negligible marginal work. TypeSafe prices input at **$0.042 per million tokens** with **free output tokens**. In their launch notes, TypeSafe candidly observes that long-term operation will be required to prove pricing sustainability against potential early subsidies, though they expect intelligence delivery costs to trend downward over time.
 
 ### The Strict Input/Output (I/O) Contract
 Unlike conversational endpoints that simulate a persona, a System One model operates with an explicit function signature:
@@ -170,16 +170,16 @@ For enterprise software, **a calibrated "I don't know" is infinitely more valuab
 
 Integrating decision models into enterprise architectures is not about swapping prompt strings; it involves structuring application workflows around four formal architectural patterns:
 
-![The four System One patterns: Speculative Fan-Out, Composite Scoring, Confidence-Gated, and SDE Cascade.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-05-four-patterns.png)
+![The four System One patterns: Speculative Fan-Out, Composite Scoring, Confidence-Gated, and Intent Routing.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-05-four-patterns.png)
 
-*Four benches: parallel questions, weights in code, risk thresholds, and a 95% filter before the LLM.*
+*Four engineering patterns: parallel questions, application weighting, calibrated confidence boundaries, and intent routing.*
 
 ### Pattern 1: Speculative Fan-Out
 In conversational pipelines, engineers routinely fall into the trap of sequential roundtrips: first querying an LLM to check if a ticket is a bug; if yes, making a second call to determine the component; if database, making a third call to assess severity. Each hop multiplies latency and cost.
 
 With decision models, adding extra questions to a single request shares the GPU state forward pass and barely alters latency. The **Speculative Fan-Out** pattern sends **all conceivable questions in a single initial request**, including questions that only matter under specific conditions:
 
-In official empirical benchmarks published by TypeSafe (evaluating a 13-question regulatory compliance check over the GDPR text), **batching 13 analytical questions into a single request proved 11.5x cheaper and 9.6x faster** than executing 13 sequential calls, yielding identical classification probabilities. Deterministic code simply inspects the top-level answer and discards irrelevant speculative branches.
+In official empirical benchmarks published by TypeSafe (evaluating a 13-question regulatory compliance check over the GDPR text using `jev-1.12`), **batching 13 analytical questions into a single request proved 12.2x cheaper and 10.0x faster** than executing 13 sequential calls over the document (~54,000 characters), yielding identical classification probabilities. Deterministic code simply inspects the top-level answer and discards irrelevant speculative branches.
 
 ### Pattern 2: Composite Scoring
 Asking an AI model in a single prompt to *"rate lead quality from 1 to 100"* is an antipattern: it hides complex multi-dimensional criteria inside an un-auditable black box.
@@ -207,57 +207,58 @@ if quality >= 0.75:
 **The operational advantage is immense:** if executive leadership decides tomorrow that commercial bias should carry more weight than source citations, the engineering team modifies a single floating-point multiplier in code (`0.25 -> 0.40`) and deploys via a standard git commit in milliseconds. The `0.75` gate sits on the same 0–1 scale as the normalized primitives. There is no need to re-train models, re-engineer natural language prompts, or pray that an LLM interprets English instructions consistently.
 
 ### Pattern 3: Confidence-Gated Escalation
-This pattern establishes dynamic application safety boundaries: activation thresholds are proportional to the severity and reversibility of the triggered action.
+This pattern establishes dynamic application safety boundaries: activation thresholds are proportional to the severity and reversibility of the triggered action. Official documentation illustrates practical reference tiers such as `0.60` and `0.85` (or `0.50` and `0.90` depending on domain risk), emphasizing that thresholds should be validated against proprietary application data:
 
-* **Low-risk read operations (e.g., displaying balance, suggesting FAQ links):** Require modest confidence thresholds (`confidence > 0.55`). If the model makes an occasional error, the impact is negligible and easily corrected by the user.
-* **Irreversible or destructive actions (e.g., executing a $10,000 wire transfer, terminating a production cluster):** Require strict thresholds (`confidence > 0.92`). Any score falling below that line halts automated execution, enforcing two-factor confirmation or human specialist review.
+* **Low-risk read operations (e.g., displaying balance, suggesting FAQ links):** Operate with modest confidence thresholds (`confidence > 0.60`). If the model makes an occasional error, the impact is minor and easily remediated.
+* **Irreversible or destructive actions (e.g., executing a bank transfer, terminating a production cluster):** Demand strict thresholds (`confidence > 0.85`). Any score falling below that line halts automated execution, enforcing two-factor confirmation or human specialist review.
 
-### Pattern 4: Structured Data Extraction Cascade (SDE Cascade)
-Real-world systems rarely present pure System 1 or pure System 2 workloads. The most cost-effective architecture for massive traffic volumes is the **Cascade**:
-1. 100% of incoming events hit the System One decision model first (latency: ~100 ms, cost: fractions of a cent).
-2. The model autonomously resolves 80%–90% of straightforward cases with high confidence.
-3. The remaining 10%–20% marked with low confidence or high complexity are routed to a heavy reasoning model (System 2) or a human operator.
+### Pattern 4: Intent Routing
+Not every user action requires heavyweight reasoning. The canonical **Intent Routing** pattern positions a System One model at the architecture's ingress to classify immediately which downstream system should fulfill the request:
 
-This design gives organizations the reasoning quality of the most expensive models on Earth for edge cases, but with the global bill and latency profile of a sub-second microservice.
+1. **Deterministic logic:** Narrow or simple transactional requests route directly to code or database queries without calling generative models.
+2. **Specialist generative models (System 2):** Queries requiring open prose, empathy, or complex synthesis route to a dedicated LLM with pre-filtered context.
+3. **Human escalation:** Borderline cases with conflicting policies escalate directly to customer support.
 
----
-
-## 6. Real-World Use Cases: Where Decision Models Fit
-
-To contrast the concrete impact of this architecture against conventional generative approaches, consider five real-world production scenarios.
+*(Technical note: for high-volume structured data extraction, TypeSafe also documents cookbook patterns like the SDE cascade, where a smaller model such as `gpt-5.4-mini` extracts fields, Jev verifies field validity with Nouls, and uncertain extractions escalate to a frontier reasoning model like `gpt-5.5`).*
 
 ---
 
-### Case 1: Automated Triage and Resolution in Fintech / E-Commerce
+## 6. Architectural Scenarios: Where Decision Models Fit
+
+To contrast the concrete impact of this architecture against conventional generative approaches, consider five illustrative design scenarios. *(Methodological note: all schemas, scores, and probabilities below are illustrative engineering examples, matching the convention documented in TypeSafe's conceptual reference).*
+
+---
+
+### Case 1: Triage and Resolution in Fintech / E-Commerce
 
 * **The Problem Today:** A customer submits an inquiry: *"I was charged twice for order A-104 and need this refunded immediately to cover rent today."*
   * Keyword matching rules confuse historical complaints with active requests.
   * Generative LLMs take 5 to 12 seconds to generate JSON. During traffic spikes (Black Friday, outages), token costs skyrocket and servers hit concurrency ceilings.
 * **With a Decision Model:**
-  * **State (`state`):** A JSON object containing the customer's message, metadata from the last three Stripe charges, and company refund policy terms.
-  * **Parallel Questions (computed simultaneously in ~120 ms):**
-    * `refund_requested` (*Noul*): Does the user explicitly ask for a refund? $\rightarrow$ Probability: `0.99`
-    * `duplicate_confirmed` (*Noul*): Comparing the text against the ledger, do records show two identical captured charges within 24 hours? $\rightarrow$ Probability: `0.96`
-    * `urgency_level` (*Score*): Perceived customer urgency on a 3-level rubric (`Low`, `Moderate`, `Critical`) $\rightarrow$ Continuous score: `2.45`
-    * `policy_compliance` (*Noul*): Does this case meet criteria for instant automated refund? $\rightarrow$ Probability: `0.98`
+  * **State (`state`):** A JSON object containing the customer's message, metadata from recent Stripe charges, and company refund policy terms.
+  * **Parallel Questions:**
+    * `refund_requested` (*Noul*): Does the user explicitly ask for a refund? $\rightarrow$ Illustrative probability: `0.99`
+    * `duplicate_confirmed` (*Noul*): Comparing text against ledger history, are there duplicate charges within 24 hours? $\rightarrow$ `0.96`
+    * `urgency_level` (*Score*): Customer urgency on a 3-level rubric (`Low`, `Moderate`, `Critical`) $\rightarrow$ `2.45`
+    * `policy_compliance` (*Noul*): Does this case meet criteria for instant automated refund? $\rightarrow$ `0.98`
 * **Code Action:**
-  Because both refund intent and policy compliance exceed the 0.90 threshold, the backend calls Stripe's `/v1/refunds` API directly. The customer receives refund confirmation in **under 300 milliseconds**. If confidence had fallen below 0.70, code would have routed the ticket to a billing specialist.
+  Because both refund intent and policy compliance exceed the 0.90 threshold, the backend calls Stripe's `/v1/refunds` API directly in a fraction of a second. If confidence had fallen below the safety threshold, code would have routed the ticket to a billing specialist.
 
 ---
 
 ### Case 2: Real-Time Cybersecurity and Alert Triage (SOC / DevOps)
 
-* **The Problem Today:** An enterprise Security Operations Center (SOC) ingests 40,000 firewall and telemetry events per second. Over 95% are benign false positives from automated scans or background tasks.
+* **The Problem Today:** An enterprise Security Operations Center (SOC) ingests high volumes of telemetry and firewall events where the vast majority represent benign automated scans or routine cron jobs.
   * Human security analysts suffer chronic alert fatigue.
-  * Streaming logs through a generative LLM is technically impossible: it would cost millions of dollars a month and blow past cloud provider rate limits.
+  * Streaming logs through a generative LLM is technically and financially impossible.
 * **With a Decision Model:**
-  * **State (`state`):** Operating system audit log entries, the invoking binary, parent process execution trees, and authenticated user role profiles.
+  * **State (`state`):** Operating system audit log entries, invoking binary, parent process execution trees, and user role profiles.
   * **Parallel Questions:**
     * `is_scheduled_maintenance` (*Noul*): Does the command match an approved infrastructure change window? $\rightarrow$ `0.02`
     * `threat_severity` (*Score*): Risk level on an ordinal rubric (0 = benign, 1 = anomalous, 2 = critical exploit) $\rightarrow$ `1.88`
     * `containment_protocol` (*Choice*): Protocol action (`log_and_pass`, `notify_slack`, `quarantine_host`) $\rightarrow$ `quarantine_host` (confidence: `0.91`)
 * **Code Action:**
-  Detecting `threat_severity > 1.8` and `containment_protocol == "quarantine_host"` with confidence above 85%, the security daemon drops network packets for the compromised host via iptables in **under 90 milliseconds**, neutralizing lateral movement before an attacker establishes persistence.
+  Detecting `threat_severity > 1.8` and `containment_protocol == "quarantine_host"` with high confidence, security automation isolates the host at the firewall layer immediately, neutralizing lateral movement before an attacker establishes persistence.
 
 ---
 
@@ -267,18 +268,18 @@ To contrast the concrete impact of this architecture against conventional genera
   * **Consequence:** Perceived user latency doubles (from 3 seconds to 7 or 8) and inference bills double exactly.
 * **With a Decision Model:**
   * **State (`state`):** The raw user prompt before it ever touches the primary conversational model.
-  * **Parallel Questions (resolved in ~80 ms at $0.042 per million input tokens):**
+  * **Parallel Questions:**
     * `is_prompt_injection` (*Noul*): Does the input attempt to override developer system instructions? $\rightarrow$ `0.98`
     * `contains_credentials` (*Noul*): Does the text contain private keys, JWT tokens, or credit card numbers? $\rightarrow$ `0.01`
     * `intent` (*Choice*): Query intent (`legitimate_task`, `jailbreak_probe`, `toxic_abuse`) $\rightarrow$ `jailbreak_probe` (confidence: `0.96`)
 * **Code Action:**
-  If `is_prompt_injection > 0.85`, the reverse proxy rejects the connection immediately, returning an HTTP `400 Bad Request` in under a tenth of a second. The expensive downstream model is never invoked, saving budget and securing the perimeter.
+  If `is_prompt_injection > 0.85`, the reverse proxy rejects the connection immediately, returning an HTTP `400 Bad Request` in a fraction of a second. The expensive downstream model is never invoked, saving budget and securing the perimeter.
 
 ---
 
-### Case 4: Semantic Map-Reduce over Invoices and Purchase Orders (ERP)
+### Case 4: Semantic Validation of Invoices in ERP Systems
 
-* **The Problem Today:** An enterprise receives 150,000 vendor PDF invoices each month. Each bill must be reconciled against the approved corporate purchase order (PO) and warehouse goods-received notes.
+* **The Problem Today:** Accounts payable departments handle vendor PDF invoices that must reconcile with purchase orders and goods receipt notes.
   * Generative LLMs suffer numeric hallucinations when asked to reconcile dense tables in natural language.
   * Ingesting millions of pages through frontier reasoning models with massive context windows destroys business margins.
 * **With a Decision Model:**
@@ -288,7 +289,7 @@ To contrast the concrete impact of this architecture against conventional genera
     * `unauthorized_items_present` (*Noul*): Are there line items billed that were omitted from the approved purchase order? $\rightarrow$ `0.03`
     * `discrepancy_category` (*Choice*): Detected discrepancy (`none`, `tax_error`, `price_variance`, `quantity_variance`) $\rightarrow$ `none` (confidence: `0.95`)
 * **Code Action:**
-  The ERP system schedules automated payment for the **82% of invoices** scoring confidence above 0.95. The remaining 18% route to accounts payable with exact pre-classified discrepancy tags, slashing manual operational workloads by four-fifths.
+  The ERP system schedules automated settlement for invoices matching high confidence thresholds, routing to human review only items with classified discrepancies or low statistical certainty.
 
 ---
 
@@ -297,14 +298,14 @@ To contrast the concrete impact of this architecture against conventional genera
 * **The Problem Today:** In voice-controlled systems (connected vehicles, industrial IoT, smart home hubs), if an assistant takes three seconds to execute a simple physical command like toggling a light, the interface feels completely broken.
   * Conversational pipelines chain multiple sequential requests (classify intent $\rightarrow$ extract entity $\rightarrow$ verify device), compounding latency.
 * **With a Decision Model (*Speculative Fan-Out*):**
-  * On the raw speech-to-text transcript (*"Turn off the kitchen lights and set the thermostat to 70"*), the hub fires **all conceivable questions in a single 100 ms parallel call**:
+  * On the raw speech-to-text transcript (*"Turn off the kitchen lights and set the thermostat to 70"*), the hub fires **all conceivable questions in a single parallel call**:
     * `is_hardware_command` (*Noul*): Does the utterance command a physical device? $\rightarrow$ `0.99`
     * `target_room` (*Choice* across 30 zones): $\rightarrow$ `kitchen`
     * `device_type` (*Choice* across lights, climate, locks, blinds): $\rightarrow$ `lights`
     * `action` (*Choice* turn on, turn off, dim): $\rightarrow$ `turn_off`
     * `is_conversational_fallback` (*Noul*): Is this an open-ended general knowledge query ("who was Alan Turing?")? $\rightarrow$ `0.01`
 * **Code Action:**
-  Local microcontrollers switch the physical light relay in **under 150 milliseconds**. If `is_conversational_fallback` had crossed the threshold, code would have delegated the query to an LLM. Users experience instant physical responses without sacrificing conversational capabilities when needed.
+  Local microcontrollers switch the physical light relay in less than a fraction of a second. If `is_conversational_fallback` had crossed the threshold, code would have delegated the query to an LLM. Users experience instant physical responses without sacrificing conversational capabilities when needed.
 
 ---
 
@@ -326,14 +327,14 @@ Data inspected directly from SVG mark labels and JSON metadata reveals a nuanced
 | **Agent Trace Observability** | 117 cases | **71.6%**<br>0.5 s / $0.0003 | **GPT Sol: 76.6%** (40.3 s / $0.0575)<br>DeepSeek v4 Flash: 73.0% (51.7 s) | On agent log analysis, Jev virtually matches DeepSeek v4 Pro (71.6%), reducing evaluation time from 90 seconds to half a second. |
 | **Invoice Processing** | 150 cases | **61.8%**<br>0.5 s / $0.0011 | **GPT Sol: 79.1%** (34.3 s / $0.2152)<br>Claude Opus 5: 78.4% (92.1 s / $0.4856) | **Jev's Achilles Heel:** A massive 17.3 percentage point gap behind Sol. Documents with dense tables, spatial deduction, and sequential numeric logic expose the limits of models without multi-step decode reasoning. |
 | **Customer Service** | 204 cases | **76.0%**<br>0.4 s / $0.0001 | **GPT Sol: 78.3%** (10.1 s / $0.0323)<br>DeepSeek v4 Flash: 76.8% (34.6 s) | Near-tie with frontier models, outperforming Opus 5 (72.4%) and Sonnet 5 (69.3%) in raw classification accuracy. |
-| **Global Weighted Average** | **711 cases** | **67.8%**<br>0.4 s / $0.0004 | **GPT Sol: 74.1%** (23.3 s / $0.0836) | Jev dominates the Pareto efficiency curve, but **does not lead in absolute accuracy**. |
+| **Global Average (Equal Task Weights)** | **711 cases (4 tasks)** | **67.8%**<br>0.4 s / $0.0004 | **GPT Sol: 74.1%** (23.3 s / $0.0836) | Jev dominates the Pareto efficiency curve, but **does not lead in absolute accuracy**. The dashboard reports an unweighted mean across the four workflows rather than weighting by case count. |
 
 ### Methodological Caveat on Reference Labels
 An essential methodological factor must be disclosed: **the "correct" labels in this benchmark do not stem from a human expert ground-truth dataset.**
 
 They represent consensus generated by averaging decisions from **GPT-6 Astra and Claude Fable 5.1 set to high thinking**. Therefore, this benchmark does not measure absolute truth, but rather **Jev's statistical agreement with the smartest and most expensive frontier LLMs on the planet**.
 
-The engineering takeaway is clear: Jev does not surpass a $200/hr frontier model in raw intelligence; its value proposition is delivering **90% of their judgment at a two-order-of-magnitude reduction in latency and a three-order-of-magnitude reduction in cost**.
+The engineering takeaway is clear: Jev is not designed to compete on open-ended general intelligence with expensive frontier models; its core value proposition is delivering **strong statistical agreement with frontier reasoning at a two-order-of-magnitude reduction in latency and a three-order-of-magnitude reduction in cost**.
 
 ---
 
