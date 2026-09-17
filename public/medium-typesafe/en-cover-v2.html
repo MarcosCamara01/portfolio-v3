@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #141820;
+        --mute: #5a6270;
+        --signal: #e24a12;
+        --field: #f4f6f8;
+        --line: #d5dae2;
+        --paper: #ffffff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { background: var(--paper); }
+      .cover {
+        width: 1400px;
+        height: 788px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        font-family: "Bricolage Grotesque", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        color: var(--ink);
+      }
+      .pane {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 72px 80px;
+        min-width: 0;
+      }
+      .left {
+        background: var(--ink);
+        color: #c8ccd4;
+      }
+      .right {
+        background: var(--paper);
+      }
+      .kicker {
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 16px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 28px;
+      }
+      .left .kicker { color: #8b93a1; }
+      .right .kicker { color: var(--signal); }
+      .num {
+        font-size: 168px;
+        font-weight: 700;
+        letter-spacing: -0.07em;
+        line-height: 0.88;
+      }
+      .left .num {
+        color: #6b7280;
+        text-decoration: line-through;
+        text-decoration-thickness: 8px;
+        text-decoration-color: var(--signal);
+      }
+      .right .num { color: var(--ink); }
+      .unit {
+        font-family: "Azeret Mono", ui-monospace, monospace;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        margin-top: 8px;
+      }
+      .left .unit { color: #8b93a1; }
+      .right .unit { color: var(--mute); }
+      .claim {
+        margin-top: 40px;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        max-width: 12ch;
+      }
+      .left .claim { color: #e8eaee; }
+      .right .claim { color: var(--signal); }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <section class="pane left">
+        <div class="kicker">Chatbot</div>
+        <div class="num">8s</div>
+        <div class="unit">one JSON reply</div>
+        <div class="claim">If it writes, it’s too slow.</div>
+      </section>
+      <section class="pane right">
+        <div class="kicker">Jev</div>
+        <div class="num">70ms</div>
+        <div class="unit">typed decision</div>
+        <div class="claim">No decode. No paragraph.</div>
+      </section>
+    </div>
+  </body>
+</html>
