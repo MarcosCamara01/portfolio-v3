@@ -18,6 +18,7 @@
   h2 { font-size: 24px; margin-top: 2.4em; }
   h3 { font-size: 18px; margin-top: 1.8em; }
   img { max-width: 100%; height: auto; display: block; margin: 1.5em 0 0.4em; }
+  h1 + p img { margin-top: 0.4em; }
   blockquote { margin: 0 0 1.5em; padding: 0; border: 0; font-style: italic; color: #5A6270; }
   pre, code { font-family: ui-monospace, "Azeret Mono", monospace; font-size: 14px; }
   pre { background: #F4F6F8; padding: 16px; overflow-x: auto; border-radius: 4px; }
@@ -29,6 +30,7 @@
 </head>
 <body>
 <h1>Jev: chat was the wrong interface</h1>
+<p><img alt="Chat waffle on the left; Jev returns noul, choice, and score on the right." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-cover.png" /></p>
 <blockquote>
 <p><em>For four years, the tech industry tried to make enterprise software talk to chatbots. The real automation revolution does not generate words: it returns types, probabilities, milliseconds, and strict control.</em></p>
 </blockquote>
@@ -46,7 +48,7 @@
 <hr />
 <h2>2. Hardware Physics: Why LLMs Break the Traditional Backend</h2>
 <p>When a backend engineering team attempts to embed a conventional large language model (an autoregressive LLM such as GPT-4, Claude, or Llama) into the transactional core of a production application, they immediately run into hard physical bottlenecks imposed by GPU silicon.</p>
-<p><img alt="JSON Mode writes the schema token by token; one prefill shares the KV cache and each field slices logits to valid options." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-02-prefill-decode.png" /></p>
+<p><img alt="JSON Mode writes the schema token by token; one prefill shares the KV cache and each field slices logits to valid options." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-02-prefill-decode.png" /></p>
 <p><em>Top: JSON Mode still pays for decode. Bottom: one prefill, then softmax over that field’s tokens only. Editorial version of <a href="https://x.com/NielsRogge/status/2100239244501430438">Niels Rogge’s explanation</a>; not an official TypeSafe diagram. Probabilities are illustrative.</em></p>
 <p>To understand why LLMs are the wrong primitive for backend routing and decision-making, one must inspect how graphics processing units (GPUs) actually execute tensor operations:</p>
 <h3>1. Prefill vs. Decode: The Memory-Bandwidth Tax</h3>
@@ -69,7 +71,7 @@ Because the GPU is processing a single token vector at a time, the compute cores
 <h2>3. The Paradigm Shift: What is a "Decision Model" (System One)?</h2>
 <p>The technical solution to this architectural dead-end is not building slightly faster LLMs or inventing more complex regex parsers. It requires abandoning open-ended text decoding entirely and designing a model class built exclusively for <strong>machine-native decisions</strong>.</p>
 <p>This category has been formalized by TypeSafe AI—founded by Diogo Almeida, former OpenAI researcher and one of the primary authors on the foundational InstructGPT research (arXiv:2203.02155)—under the moniker <strong>System One Models</strong>, with <strong>Jev</strong> as their initial flagship release.</p>
-<p><img alt="System One architecture: a single GPU forward pass with parallel Noul, Choice, and Score heads." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-03-system-one.png" /></p>
+<p><img alt="System One architecture: a single GPU forward pass with parallel Noul, Choice, and Score heads." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-03-system-one.png" /></p>
 <p><em>Typed questions share one forward pass. There is no decode loop; the typed answer arrives in 70 to 500 ms.</em></p>
 <h3>The Kahneman Analogy: System 1 vs. System 2</h3>
 <p>The terminology draws directly on the cognitive taxonomy popularized by Nobel laureate Daniel Kahneman in <em>Thinking, Fast and Slow</em>:<br />
@@ -126,7 +128,7 @@ Because the GPU is processing a single token vector at a time, the compute cores
 <hr />
 <h2>4. RLCD vs. RLHF: Calibration and Honest Uncertainty</h2>
 <p>To understand why conventional LLMs fail at unattended automation, one must inspect the optimization objective used to train them.</p>
-<p><img alt="Training divergence: RLHF maximizes human preference; RLCD minimizes calibration error." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-04-rlhf-rlcd.png" /></p>
+<p><img alt="Training divergence: RLHF maximizes human preference; RLCD minimizes calibration error." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-04-rlhf-rlcd.png" /></p>
 <p><em>RLHF rewards confident tone and sycophancy. RLCD penalizes overconfidence and pays for honest uncertainty.</em></p>
 <h3>The Pathologies of RLHF</h3>
 <p>Almost all conversational models (including ChatGPT and Claude) are post-trained using <strong>RLHF</strong> (<em>Reinforcement Learning from Human Feedback</em>). This process fine-tunes model weights to maximize the score awarded by human contractors rating which response they prefer to read.</p>
@@ -165,7 +167,7 @@ else:
 <hr />
 <h2>5. The Four Canonical Production Design Patterns</h2>
 <p>Integrating decision models into enterprise architectures is not about swapping prompt strings; it involves structuring application workflows around four formal architectural patterns:</p>
-<p><img alt="The four System One patterns: Speculative Fan-Out, Composite Scoring, Confidence-Gated, and Intent Routing." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-05-four-patterns.png" /></p>
+<p><img alt="The four System One patterns: Speculative Fan-Out, Composite Scoring, Confidence-Gated, and Intent Routing." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-05-four-patterns.png" /></p>
 <p><em>Four engineering patterns: parallel questions, application weighting, calibrated confidence boundaries, and intent routing.</em></p>
 <h3>Pattern 1: Speculative Fan-Out</h3>
 <p>In conversational pipelines, engineers routinely fall into the trap of sequential roundtrips: first querying an LLM to check if a ticket is a bug; if yes, making a second call to determine the component; if database, making a third call to assess severity. Each hop multiplies latency and cost.</p>
@@ -257,7 +259,7 @@ if quality &gt;= 0.75:
 <hr />
 <h2>7. What the 711 Public Evals Reveal (and What They Hide)</h2>
 <p>One of the greatest flaws in AI analysis is unquestioning acceptance of marketing claims. To evaluate decision models with technical discipline, we examine the official benchmark published by TypeSafe on their evaluation dashboard (<a href="https://evals.typesafe.ai/">evals.typesafe.ai</a>), comprising <strong>711 empirical case studies</strong> across four automated enterprise workflows.</p>
-<p><img alt="Jev accuracy versus GPT Sol and Claude Opus 5 across 711 public evals.typesafe.ai cases." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-06-evals-711.png" /></p>
+<p><img alt="Jev accuracy versus GPT Sol and Claude Opus 5 across 711 public evals.typesafe.ai cases." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-06-evals-711.png" /></p>
 <p><em>Jev tracks frontier models on three workflows. The Achilles heel is invoices: 61.8% versus Sol at 79.1%.</em></p>
 <p>Every task ran inside an identical workflow harness where each model competed under the exact same programmatic rules. To enable LLMs to compete, TypeSafe engineered an official adapter (<a href="https://github.com/typesafe-ai/system-one-adapter-python">system-one-adapter-python</a>) wrapping OpenAI and Anthropic APIs with strict structured outputs and probability normalization.</p>
 <p>Data inspected directly from SVG mark labels and JSON metadata reveals a nuanced engineering picture:</p>
@@ -315,7 +317,7 @@ if quality &gt;= 0.75:
 <p>The engineering takeaway is clear: Jev is not designed to compete on open-ended general intelligence with expensive frontier models; its core value proposition is delivering <strong>strong statistical agreement with frontier reasoning at a two-order-of-magnitude reduction in latency and a three-order-of-magnitude reduction in cost</strong>.</p>
 <h2>8. Reality Check: Limitations, Risks, and When NOT to Use This Approach</h2>
 <p>A rigorous engineering review must clearly state what this technology <strong>cannot do</strong>:</p>
-<p><img alt="Architectural decision matrix: when to use a generative LLM, a reasoning model, or a decision model." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-07-decision-matrix.png" /></p>
+<p><img alt="Architectural decision matrix: when to use a generative LLM, a reasoning model, or a decision model." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-07-decision-matrix.png" /></p>
 <p><em>If you need prose, use an LLM. If you need a multi-step proof, use a reasoning model. If you need to classify in the backend, use System One.</em></p>
 <ol>
 <li><strong>Complete Inability to Generate Text:</strong> System One models lack an open vocabulary decoder. They cannot draft summaries, reply to emails, generate TypeScript functions, or engage in conversational dialogue.</li>
@@ -329,7 +331,7 @@ if quality &gt;= 0.75:
 <p>Why was this foundation model named <strong>Jev</strong>?</p>
 <p>The name pays direct tribute to William Stanley Jevons, the nineteenth-century British economist and logician. In his 1865 treatise <em>The Coal Question</em>, Jevons articulated a paradox that baffled Victorian industrial planners: following James Watt's invention of the modern steam engine—which consumed coal far more efficiently than older Newcomen engines—Britain's national coal consumption did not decrease: <strong>it skyrocketed exponentially</strong>.</p>
 <p>By dramatically lowering the cost of mechanical power per unit of work, the steam engine made steam power economically viable across thousands of textile mills, steamships, locomotives, and mines that could never before afford coal.</p>
-<p><img alt="Jevons paradox in AI: cheaper semantic judgment explodes demand for intelligent computation." src="https://cdn.jsdelivr.net/gh/MarcosCamara01/portfolio-v3@877455ed76868c06c919422ba04a5a8b78a61426/public/medium-typesafe/en-08-jevons-paradox.png" /></p>
+<p><img alt="Jevons paradox in AI: cheaper semantic judgment explodes demand for intelligent computation." src="https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-08-jevons-paradox.png" /></p>
 <p><em>When a decision drops from cents and fifteen seconds to $0.042 per million tokens and 100 ms, the entire backend becomes a candidate.</em></p>
 <p>Modern artificial intelligence is reaching its own <strong>Jevons Paradox</strong>:</p>
 <ul>

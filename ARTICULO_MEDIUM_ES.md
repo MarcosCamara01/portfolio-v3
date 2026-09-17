@@ -1,5 +1,7 @@
 # Jev: el chat fue la interfaz equivocada
 
+![A la izquierda el chat se enrolla; a la derecha Jev devuelve noul, choice y score.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-cover.png)
+
 > *Durante cuatro años intentamos que el software empresarial hablara con chatbots. La verdadera revolución de la automatización no genera palabras: devuelve tipos, probabilidades, milisegundos y control estricto.*
 
 ---

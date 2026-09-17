@@ -1,5 +1,7 @@
 # Jev: chat was the wrong interface
 
+![Chat waffle on the left; Jev returns noul, choice, and score on the right.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-cover.png)
+
 > *For four years, the tech industry tried to make enterprise software talk to chatbots. The real automation revolution does not generate words: it returns types, probabilities, milliseconds, and strict control.*
 
 ---
