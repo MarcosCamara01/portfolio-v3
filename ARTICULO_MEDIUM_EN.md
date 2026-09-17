@@ -1,4 +1,4 @@
-# Why Chat Was the Wrong Interface for Software Automation (and What Decision Models Change)
+# Jev: Chat Was the Wrong Interface
 
 > *For four years, the tech industry tried to make enterprise software talk to chatbots. The real automation revolution does not generate words: it returns types, probabilities, milliseconds, and strict control.*
 

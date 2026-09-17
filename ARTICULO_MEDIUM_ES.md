@@ -1,4 +1,4 @@
-# Por qué el chat fue la interfaz equivocada para automatizar el mundo (y qué cambia con los modelos de decisión)
+# Jev: el chat fue la interfaz equivocada
 
 > *Durante cuatro años intentamos que el software empresarial hablara con chatbots. La verdadera revolución de la automatización no genera palabras: devuelve tipos, probabilidades, milisegundos y control estricto.*
 
