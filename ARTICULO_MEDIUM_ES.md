@@ -30,9 +30,9 @@ Cuando un proceso empresarial necesita el criterio de una inteligencia artificia
 
 Para cualquier equipo de ingeniería que haya intentado incrustar un modelo de lenguaje convencional (un LLM autoregresivo como GPT-4, Claude o Llama) en el núcleo transaccional de una aplicación de producción, la experiencia se convierte rápidamente en una guerra de trincheras contra la física misma del hardware.
 
-![Cuello de botella autorregresivo: fase de Prefill paralela frente a Decode secuencial token a token.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-02-prefill-decode.png)
+![JSON Mode escribe el esquema token a token; un prefill comparte la KV cache y cada campo recorta logits a las opciones válidas.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/es-02-prefill-decode.png)
 
-*El Prefill satura los Tensor Cores. El Decode vuelve a leer la VRAM para cada token y tarda de 3 a 30 segundos en devolver un string frágil.*
+*Arriba, JSON Mode sigue pagando el decode. Abajo, un prefill y softmax solo sobre los tokens del campo. Versión editorial de la [explicación de Niels Rogge](https://x.com/NielsRogge/status/2100239244501430438); no es un diagrama oficial de TypeSafe. Las cifras son ilustrativas.*
 
 Para comprender por qué los LLMs son la herramienta equivocada para el enrutamiento y la toma de decisiones en código, es imprescindible examinar cómo ejecutan la computación las unidades de procesamiento gráfico (GPUs):
 
@@ -58,6 +58,8 @@ Para un backend de software, una pausa de 8 segundos en el hilo principal de eje
 Para evitar que el modelo responda con literatura cuando el código necesita datos, la industria ideó el *JSON Mode*, las llamadas a funciones (*Function Calling*) y las gramáticas BNF (*constrained decoding*).
 
 Estas técnicas fuerzan al decodificador a muestrear únicamente tokens que cumplan una sintaxis formal (cerrando llaves y comillas cuando corresponde). Pero **no alteran en absoluto la física subyacente**: el modelo sigue ejecutando el costoso bucle de decodificación secuencial token a token, la aplicación sigue pagando el recargo abusivo de los tokens de salida generados, y la latencia end-to-end se mantiene en el orden de los segundos. Peor aún: si el modelo "cambia de opinión" a mitad de la frase, puede generar un JSON sintácticamente perfecto pero semánticamente inservible.
+
+El recorte de gramática y el recorte de candidatos no son el mismo truco. El primero sigue generando `{`, `"risk"` y `:`. [Niels Rogge reconstruye el segundo](https://x.com/NielsRogge/status/2100239244501430438) sobre un decoder abierto: prefill del contexto y del esquema una sola vez, KV cache reutilizada, y por cada campo un softmax solo sobre los tokens que ese campo admite. El programa ensambla el JSON. TypeSafe no ha publicado que Jev sea ese modelo; el patrón es el que cuadra con un sampler paralelo y con un esquema que el modelo no puede romper.
 
 ---
 

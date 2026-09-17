@@ -30,9 +30,9 @@ When a software process requires the judgment of artificial intelligence, it doe
 
 When a backend engineering team attempts to embed a conventional large language model (an autoregressive LLM such as GPT-4, Claude, or Llama) into the transactional core of a production application, they immediately run into hard physical bottlenecks imposed by GPU silicon.
 
-![The autoregressive bottleneck: parallel Prefill versus sequential token-by-token Decode.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-02-prefill-decode.png)
+![JSON Mode writes the schema token by token; one prefill shares the KV cache and each field slices logits to valid options.](https://raw.githubusercontent.com/MarcosCamara01/portfolio-v3/cursor/typesafe-jev-research-a7bf/public/medium-typesafe/en-02-prefill-decode.png)
 
-*Prefill saturates the Tensor Cores. Decode rereads VRAM for every token and spends 3 to 30 seconds emitting a brittle string.*
+*Top: JSON Mode still pays for decode. Bottom: one prefill, then softmax over that field’s tokens only. Editorial version of [Niels Rogge’s explanation](https://x.com/NielsRogge/status/2100239244501430438); not an official TypeSafe diagram. Probabilities are illustrative.*
 
 To understand why LLMs are the wrong primitive for backend routing and decision-making, one must inspect how graphics processing units (GPUs) actually execute tensor operations:
 
@@ -58,6 +58,8 @@ For a software backend, an 8-second freeze in the execution thread is an operati
 To prevent models from writing conversational prose when code needs structured data, the industry invented *JSON Mode*, *Function Calling*, and grammar-constrained decoding (such as CFG/BNF masks).
 
 While these techniques successfully force the model's token sampler to adhere to syntactic JSON rules (closing brackets and quotation marks properly), **they do not alter the underlying physics**: the model still runs the expensive sequential token-by-token decode loop, the application still pays full price for every generated output token, and end-to-end latency remains measured in seconds. Worse: if the model changes its semantic interpretation midway through generation, it can produce syntactically valid JSON that is semantically catastrophic.
+
+Grammar masking and candidate slicing are different tricks. The first still emits `{`, `"risk"`, and `:`. [Niels Rogge reconstructs the second](https://x.com/NielsRogge/status/2100239244501430438) on an open decoder: prefill context and schema once, reuse the KV cache, and for each field run softmax only over that field’s legal tokens. Application code assembles the JSON. TypeSafe has not said Jev is that model; the pattern is what fits a parallel sampler and a schema the model cannot break.
 
 ---
 
