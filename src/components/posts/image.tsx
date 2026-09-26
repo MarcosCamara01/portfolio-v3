@@ -66,14 +66,8 @@ export async function Image({
       const factor = dividedBy / 100;
 
       return (
-        <span className="my-5 flex flex-col items-center">
-          <NextImage
-            className="rounded"
-            width={width * factor}
-            height={height * factor}
-            alt={alt ?? ''}
-            src={src}
-          />
+        <span className="mt-8 flex flex-col items-center">
+          <NextImage width={width * factor} height={height * factor} alt={alt ?? ''} src={src} />
 
           {alt && <Caption>{alt}</Caption>}
         </span>
