@@ -1,95 +1,88 @@
-/** COMPONENTS */
-import Link from 'next/link';
-/** ICONS */
-import { FiFolder, FiGithub } from 'react-icons/fi';
-import { FaCodeFork, FaStar } from 'react-icons/fa6';
+import Image from 'next/image';
+import { SectionTitle } from '../blog/section-title';
+import { ArrowUpRight, GitHub } from '../common/icons';
+import { StarCount } from './star-count';
 
-const GITHUB_REPO = 'MarcosCamara01/ecommerce-template';
-const GITHUB_URL = `https://github.com/${GITHUB_REPO}`;
+const PROJECT = {
+  title: 'Ecommerce Template',
+  repo: 'MarcosCamara01/ecommerce-template',
+  demo: 'https://ecommerce-template-mpc.vercel.app',
+  description:
+    'Open-source storefront built with Next.js 16, TypeScript and Tailwind. Stripe checkout, auth, cart and wishlist.',
+  stack: ['Next.js', 'TypeScript', 'Stripe', 'MongoDB', 'Tailwind'],
+  image: '/images/projects/ecommerce_template.png',
+  fallbackStars: 232,
+};
 
-async function getGitHubStats() {
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-    },
-    next: {
-      revalidate: 3600,
-    },
-  });
-
-  if (!res.ok) {
-    return { stars: 0, forks: 0 };
+async function getStars() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${PROJECT.repo}`, {
+      next: { revalidate: 60 * 60 * 24 },
+    });
+    if (!res.ok) return PROJECT.fallbackStars;
+    const data: { stargazers_count?: number } = await res.json();
+    return data.stargazers_count ?? PROJECT.fallbackStars;
+  } catch {
+    return PROJECT.fallbackStars;
   }
-
-  const data = await res.json();
-  return {
-    stars: data.stargazers_count,
-    forks: data.forks_count,
-  };
 }
 
-export async function FeaturedProject() {
-  const stats = await getGitHubStats();
+export const FeaturedProject = async () => {
+  const stars = await getStars();
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-foreground rounded flex items-center justify-center">
-            <FiFolder className="w-4 h-4 text-color-secondary" />
+    <section>
+      <SectionTitle>Projects</SectionTitle>
+      <article className="flex flex-col">
+        <a
+          href={PROJECT.demo}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-reveal="media"
+          className="shot block overflow-hidden"
+        >
+          <Image
+            src={PROJECT.image}
+            alt="Ecommerce Template storefront: dark header with search and a grid of clothing products"
+            width={1903}
+            height={1080}
+            sizes="(min-width: 704px) 672px, 100vw"
+            className="h-[190px] w-full object-cover md:h-[300px]"
+          />
+        </a>
+
+        <div className="flex flex-col gap-3 py-4 md:py-5">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="display text-[30px] leading-[0.95] md:text-[40px]">{PROJECT.title}</h3>
+            <StarCount value={stars} />
           </div>
-          <h2 className="text-xl font-medium text-color-primary">Featured Project</h2>
-        </div>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-      <Link
-        href={GITHUB_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block bg-foreground rounded-lg p-6 will-change-transform duration-200 ease-out"
-      >
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-color-primary">
-                Next.js E-commerce Template
-              </h3>
-              <FiGithub className="w-4 h-4 text-color-secondary" />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              A modern, full-featured e-commerce template built with Next.js 14, Server Components,
-              Supabase and Stripe. Features include authentication, product management, shopping
-              cart, and admin dashboard.
-            </p>
-          </div>
+          <p className="text-base leading-normal text-sub">{PROJECT.description}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.04em]">
+            {PROJECT.stack.join(' · ')}
+          </p>
         </div>
 
-        <div className="flex items-center gap-6 text-sm font-mono text-gray-500 dark:text-gray-400 mb-6">
-          <div className="flex items-center gap-2">
-            <FaStar className="w-4 h-4 text-color-secondary" />
-            <span>{stats.stars} stars</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <FaCodeFork className="w-4 h-4 text-color-secondary" />
-            <span>{stats.forks} forks</span>
-          </div>
+        <div className="label flex flex-wrap gap-2">
+          <a
+            href={PROJECT.demo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-fill press inline-flex items-center gap-2.5 bg-inv px-4 py-3.5 text-inv-ink"
+          >
+            <span>Live demo</span>
+            <ArrowUpRight className="btn-arrow" />
+          </a>
+          <a
+            href={`https://github.com/${PROJECT.repo}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-line press inline-flex items-center gap-2 px-3 py-3.5"
+          >
+            <GitHub />
+            <span>Source code</span>
+          </a>
         </div>
-
-        <div className="grid grid-cols-3 gap-4 text-xs font-mono">
-          <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">Next.js</div>
-            <div className="text-gray-600 dark:text-gray-400">TypeScript</div>
-          </div>
-          <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">Node.js</div>
-            <div className="text-gray-600 dark:text-gray-400">Supabase</div>
-          </div>
-          <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">Tailwind CSS</div>
-            <div className="text-gray-600 dark:text-gray-400">NextAuth</div>
-          </div>
-        </div>
-      </Link>
+      </article>
     </section>
   );
-}
+};

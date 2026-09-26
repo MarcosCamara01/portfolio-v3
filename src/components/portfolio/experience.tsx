@@ -1,62 +1,44 @@
-/** COMPONENTS */
-import Link from 'next/link';
-import { P } from '../posts/p';
-/** ICONS */
-import { FiBriefcase, FiCode } from 'react-icons/fi';
+import { SectionTitle } from '../blog/section-title';
 
-export const Experience = () => {
-  return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-foreground rounded flex items-center justify-center">
-            <FiBriefcase className="w-4 h-4 text-color-secondary" />
-          </div>
-          <h2 className="text-xl font-medium text-color-primary">Experience</h2>
-        </div>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-      <Link
-        href="https://togga.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block bg-foreground rounded-lg p-6 will-change-transform duration-200 ease-out"
-      >
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-color-primary mb-1">
-              Full Stack Developer · Togga
-            </h3>
-            <p className="text-xs font-mono text-gray-500 dark:text-gray-400">2024 - Present</p>
-          </div>
-          <div className="w-10 h-10 bg-background rounded flex items-center justify-center">
-            <FiCode className="w-5 h-5 text-color-secondary" />
-          </div>
-        </div>
+const JOBS = [
+  {
+    when: '2024 — Now',
+    what: 'Togga · Full-stack engineer',
+    description:
+      'Legal AI chat on the Vercel AI SDK: streaming responses and tool calling over legal documents. React, Next.js, Supabase, Stripe.',
+  },
+  {
+    when: '2023 — 2024',
+    what: 'Freelance developer',
+    description: 'End-to-end products for a range of clients.',
+  },
+  {
+    when: 'Ongoing',
+    what: 'Software Engineering + AI',
+    description: 'Studies, alongside work.',
+  },
+];
 
-        <P className="mb-6 text-sm text-muted-foreground">
-          Part of the team developing a product to optimize legal practice, covering the full
-          development cycle and using the latest technologies. Among other things, I work on the
-          legal AI chat with the Vercel AI SDK, implementing streaming responses and tool calling
-          over legal documents. I apply advanced knowledge in React, Next.js, Supabase, Stripe and
-          BetterAuth.
-        </P>
-
-        <div className="grid grid-cols-3 gap-4 text-xs font-mono">
-          <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">AI SDK</div>
-            <div className="text-gray-600 dark:text-gray-400">Next.js</div>
+export const Experience = () => (
+  <section>
+    <SectionTitle>Work</SectionTitle>
+    <ul data-reveal="list">
+      {JOBS.map((job) => (
+        <li
+          key={job.what}
+          className="flex flex-col gap-1 border-t border-soft py-3.5 md:grid md:grid-cols-[120px_minmax(0,1fr)] md:gap-4 md:py-4"
+        >
+          <span className="label md:pt-[3px] md:text-[15px] md:normal-case md:tracking-normal">
+            {job.when}
+          </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-lg font-bold md:text-xl">{job.what}</span>
+            <span className="text-[15px] leading-normal text-sub md:leading-[1.55]">
+              {job.description}
+            </span>
           </div>
-          <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">React</div>
-            <div className="text-gray-600 dark:text-gray-400">TypeScript</div>
-          </div>
-          <div className="space-y-3">
-            <div className="text-gray-600 dark:text-gray-400">Supabase</div>
-            <div className="text-gray-600 dark:text-gray-400">PostgreSQL</div>
-          </div>
-        </div>
-      </Link>
-    </section>
-  );
-};
+        </li>
+      ))}
+    </ul>
+  </section>
+);
