@@ -6,8 +6,8 @@ import type { Post } from '@/get-posts';
 import { postHref } from '@/lib/post-href';
 import { ArrowLeft, ArrowRight } from '@/components/common/icons';
 import { formatFull, isoDate } from '@/components/blog/format';
-import { AUTHOR, JsonLd } from '@/components/common/json-ld';
-import { SITE_URL } from '@/lib/site';
+import { JsonLd } from '@/components/common/json-ld';
+import { AUTHOR, SITE_URL } from '@/lib/site';
 import { splitNumber } from '@/components/posts/utils';
 
 function useCurrentPost(posts: Post[]) {

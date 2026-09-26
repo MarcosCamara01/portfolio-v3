@@ -11,7 +11,7 @@ export function splitNumber(title: string) {
 function Anchor({ id }: { id: string }) {
   return (
     <>
-      <a id={id} className="absolute -top-5" />
+      <span id={id} className="absolute -top-5" />
       <a
         href={`#${id}`}
         aria-label="Link to this section"
