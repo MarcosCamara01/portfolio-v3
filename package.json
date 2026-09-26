@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lighthouse": "NEXT_DIST_DIR=.next-lighthouse next build && npx --yes @lhci/cli@0.15.1 autorun"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.0.1",

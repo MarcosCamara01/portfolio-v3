@@ -10,6 +10,8 @@ const withMDX = require('@next/mdx')({
 module.exports = withMDX({
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   reactStrictMode: true,
+  // `npm run lighthouse` builds into its own folder so it can run next to `next dev`.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   images: {
     remotePatterns: [
       {
