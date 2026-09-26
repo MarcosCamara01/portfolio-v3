@@ -4,84 +4,517 @@
 
 @layer base {
   :root {
-    --background: #fcfcfc;
-    --foreground: #e5e7eb;
+    /* B4 Heavy Type tokens (see DESIGN.md) */
+    --page: #f2f2f0;
+    --ink: #111111;
+    --sub: #454545;
+    --soft: #c9c9c4;
+    --surface: #ffffff;
+    --inv: #111111;
+    --inv-ink: #f2f2f0;
+    --inv-signal: #ff6a55;
+    --signal: #d42a14;
+    --on-signal: #ffffff;
+    --code: #111111;
+    --code-ink: #f2f2f0;
 
-    --text-primary: #1f2937;
-    --text-secondary: #76abae;
+    /* Legacy names still read by shadcn/ui pieces and embeds */
+    --background: var(--page);
+    --foreground: var(--surface);
+    --text-primary: var(--ink);
+    --text-secondary: var(--sub);
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-
+    --card-foreground: 0 0% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
-
-    --radius: 0.5rem;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 7%;
+    --primary-foreground: 60 7% 95%;
+    --secondary: 60 5% 90%;
+    --secondary-foreground: 0 0% 7%;
+    --muted: 60 5% 90%;
+    --muted-foreground: 0 0% 27%;
+    --accent: 60 5% 90%;
+    --accent-foreground: 0 0% 7%;
+    --destructive: 8 82% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 5% 78%;
+    --input: 60 5% 78%;
+    --ring: 0 0% 7%;
+    --radius: 0rem;
   }
 
   .dark {
-    --background: #222831;
-    --foreground: #31363f;
+    --page: #0e0e0d;
+    --ink: #f2f2f0;
+    --sub: #b4b4ae;
+    --soft: #3a3a37;
+    --surface: #1a1a18;
+    --inv: #f2f2f0;
+    --inv-ink: #111111;
+    --inv-signal: #c0260f;
+    --signal: #ff5a40;
+    --on-signal: #111111;
+    --code: #1a1a18;
+    --code-ink: #f2f2f0;
 
-    --text-primary: #f3f4f6;
-    --text-secondary: #76abae;
-
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-
-    --border: 215 27.9% 20%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+    --card: 60 4% 10%;
+    --card-foreground: 60 7% 95%;
+    --popover: 60 4% 10%;
+    --popover-foreground: 60 7% 95%;
+    --primary: 60 7% 95%;
+    --primary-foreground: 0 0% 7%;
+    --secondary: 60 3% 22%;
+    --secondary-foreground: 60 7% 95%;
+    --muted: 60 3% 22%;
+    --muted-foreground: 60 4% 69%;
+    --accent: 60 3% 22%;
+    --accent-foreground: 60 7% 95%;
+    --destructive: 9 100% 63%;
+    --destructive-foreground: 0 0% 7%;
+    --border: 60 3% 22%;
+    --input: 60 3% 22%;
+    --ring: 60 7% 95%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-soft;
   }
 
   html {
-    @apply scroll-pt-24;
+    @apply scroll-pt-8;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-background text-color-primary max-w-2xl m-auto;
+    @apply bg-page text-ink font-sans antialiased;
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--on-signal);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Condensed uppercase display type. Archivo is variable on `wdth`, which the
+     hero title plays with. */
+  .display {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 900;
+    font-stretch: 62%;
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
+  }
+
+  .label {
+    @apply text-[13px] font-bold uppercase tracking-[0.04em];
+  }
+
+  /* Article blockquotes: the first one is the lede, later ones are pull quotes. */
+  .prose-b4 > blockquote {
+    margin: 28px 0 8px;
+    padding: 18px;
+    background: var(--inv);
+    color: var(--inv-ink);
+    font-family: var(--font-display), sans-serif;
+    font-weight: 900;
+    font-stretch: 62%;
+    text-transform: uppercase;
+    font-size: 28px;
+    line-height: 1;
+  }
+  .prose-b4 > blockquote > p::before {
+    content: '“';
+  }
+  .prose-b4 > blockquote > p::after {
+    content: '”';
+  }
+  .prose-b4 > blockquote:first-child {
+    margin: 36px 0 8px;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-family: var(--font-sans), sans-serif;
+    font-weight: 600;
+    font-stretch: normal;
+    text-transform: none;
+    font-size: 19px;
+    line-height: 1.4;
+  }
+  .prose-b4 > blockquote:first-child > p::before,
+  .prose-b4 > blockquote:first-child > p::after {
+    content: none;
+  }
+  @media (min-width: 768px) {
+    .prose-b4 > blockquote {
+      padding: 24px;
+      font-size: 36px;
+    }
+    .prose-b4 > blockquote:first-child {
+      padding: 0;
+      font-size: 22px;
+    }
+  }
+
+  /* Buttons that press down like a key. */
+  .press {
+    transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .press:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  /* Link underline: 2px signal bar that leaves to the right and returns from the left. */
+  .link {
+    background: linear-gradient(var(--signal), var(--signal)) 100% 100% / 100% 2px no-repeat;
+  }
+
+  /* Rows: a signal line draws underneath, the text shifts and an arrow arrives. */
+  .row {
+    position: relative;
+  }
+  .row::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 2px;
+    background: var(--signal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 500ms var(--ease-out-expo);
+  }
+  .row-body {
+    transition: transform 450ms var(--ease-out-expo);
+  }
+  .row-arrow {
+    opacity: 0;
+    translate: -10px 0;
+    transition:
+      opacity 250ms,
+      translate 450ms var(--ease-out-expo);
+  }
+  .row-arrow-static {
+    transition: translate 450ms var(--ease-out-expo);
+  }
+
+  /* Latest block: a signal bar grows along its foot. */
+  .latest {
+    position: relative;
+  }
+  .latest::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 4px;
+    background: var(--inv-signal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 600ms var(--ease-out-expo);
+  }
+  .latest-arrow {
+    transition: translate 450ms var(--ease-out-expo);
+  }
+
+  /* Primary button: signal floods up from the bottom. */
+  .btn-fill {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .btn-fill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--signal);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 420ms var(--ease-out-expo);
+  }
+  .btn-arrow {
+    transition: translate 420ms var(--ease-out-expo);
+  }
+  .btn-line > span {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
+    transition: background-size 420ms var(--ease-out-expo);
+  }
+
+  .shot img {
+    transition:
+      transform 900ms var(--ease-out-expo),
+      object-position 4s ease;
+  }
+
+  /* Split titles: letters sit in line masks tall enough for the Á accent. */
+  .split-title {
+    cursor: default;
+  }
+  .split-line {
+    display: block;
+    overflow: hidden;
+    padding-top: 0.3em;
+    margin-top: -0.3em;
+  }
+  .split-char,
+  .split-dot {
+    display: inline-block;
+    transition: font-stretch 450ms var(--ease-out-expo);
+  }
+}
+
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) {
+  .link:hover {
+    animation: link-wipe 600ms var(--ease-out-expo);
+  }
+  .row:hover::after,
+  .latest:hover::after {
+    transform: scaleX(1);
+  }
+  .row:hover .row-body {
+    transform: translateX(6px);
+  }
+  .row:hover .row-arrow {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .row:hover .row-arrow-static,
+  .latest:hover .latest-arrow {
+    translate: 6px 0;
+  }
+  .btn-fill:hover::before {
+    transform: scaleY(1);
+  }
+  .btn-fill:hover .btn-arrow {
+    translate: 2px -2px;
+  }
+  .btn-line:hover > span {
+    background-size: 100% 2px;
+  }
+  .shot:hover img {
+    transform: scale(1.02);
+    object-position: 0 100%;
+  }
+}
+
+/* Touch: the same feedback while the finger is down. */
+@media (hover: none) {
+  .row:active::after,
+  .latest:active::after {
+    transform: scaleX(1);
+    transition-duration: 250ms;
+  }
+  .row:active .row-body {
+    transform: translateX(6px);
+  }
+  .row:active .row-arrow {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .btn-fill:active::before {
+    transform: scaleY(1);
+    transition-duration: 200ms;
+  }
+}
+
+@keyframes link-wipe {
+  0% {
+    background-position: 100% 100%;
+    background-size: 100% 2px;
+  }
+  45% {
+    background-position: 100% 100%;
+    background-size: 0 2px;
+  }
+  46% {
+    background-position: 0 100%;
+    background-size: 0 2px;
+  }
+  100% {
+    background-position: 0 100%;
+    background-size: 100% 2px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Hero: letters rise out of their line masks one after another, the dot lands last. */
+  .split-char {
+    animation: char-rise 950ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i) * 38ms + 80ms);
+  }
+  .split-dot {
+    animation: dot-land 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--i) * 38ms + 380ms);
+    transform-origin: 50% 90%;
+  }
+  .hero-intro {
+    animation: fade-up 900ms var(--ease-out-expo) both;
+    animation-delay: 650ms;
+  }
+
+  /* Scroll entrances run once: <RevealObserver> hides below-the-fold elements with
+     [data-pending] and swaps it for [data-inview] when they scroll in. */
+  [data-reveal='title'] {
+    position: relative;
+    width: fit-content;
+  }
+  [data-reveal='title'][data-pending] {
+    -webkit-text-fill-color: transparent;
+  }
+  /* Text stays hidden only while the block covers it, then falls back to each
+     part's own colour (e.g. the red section number). */
+  [data-reveal='title'][data-inview] {
+    animation: title-hidden 440ms linear;
+  }
+  [data-reveal='title']::after {
+    content: '';
+    position: absolute;
+    inset: -0.04em -0.08em;
+    background: var(--signal);
+    transform: scaleX(0);
+    pointer-events: none;
+  }
+  [data-reveal='title'][data-inview]::after {
+    animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) both;
+  }
+
+  [data-reveal='list'][data-pending] > * {
+    opacity: 0;
+  }
+  [data-reveal='list'][data-inview] > * {
+    animation: fade-up 800ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+  }
+
+  [data-reveal='media'][data-pending] {
+    clip-path: inset(0 0 100% 0);
+  }
+  [data-reveal='media'][data-inview] {
+    animation: curtain 1100ms cubic-bezier(0.77, 0, 0.18, 1) both;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .read-progress {
+      display: block;
+      animation: read-progress linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+@keyframes char-rise {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes dot-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.9em);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0) scale(1.3, 0.72);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Title reveal: a signal block wipes across, the text is there when it leaves. */
+@keyframes title-block {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  48% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  52% {
+    transform: scaleX(1);
+    transform-origin: right;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right;
+  }
+}
+
+@keyframes title-hidden {
+  from,
+  to {
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@keyframes curtain {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes read-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Theme switch (see ThemeToggle): a short cross-fade between the old and new
+   theme, while the toggle icon turns half a revolution on its own layer. Light and
+   dark invert each other, so halfway through text and background meet in the same
+   grey; a steep curve keeps that moment to a few frames. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.8, 0, 0.2, 1);
+}
+.theme-icon {
+  view-transition-name: theme-icon;
+}
+::view-transition-group(theme-icon) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
   }
 }
