@@ -3,11 +3,11 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
-// Scroll entrances for `[data-reveal]` elements. Nothing is hidden in the server
-// HTML: after hydration, elements still below the fold get `data-pending` (hidden,
-// off-screen so nothing flashes) and switch to `data-inview` when they scroll in.
-// Anything already on screen is left alone; titles there run the same reveal
-// straight from CSS at load (see globals.css), so there is no flash while hydrating.
+// Scroll entrances for `[data-reveal]` elements. After hydration, elements still
+// below the fold get `data-pending` (hidden, off-screen so nothing flashes) and
+// switch to `data-inview` when they scroll in.
+// Anything already on screen is left alone and runs the same entrance straight
+// from CSS at load (see globals.css), so there is no flash while hydrating.
 export function RevealObserver() {
   const pathname = usePathname();
 
@@ -19,9 +19,6 @@ export function RevealObserver() {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           const el = entry.target as HTMLElement;
-          [...el.children].forEach((child, i) =>
-            (child as HTMLElement).style.setProperty('--i', String(i))
-          );
           delete el.dataset.pending;
           el.dataset.inview = '';
           observer.unobserve(el);

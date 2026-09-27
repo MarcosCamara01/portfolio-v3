@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const DURATION = 1200;
+// As long as the screenshot's curtain, which it sits next to.
+const DURATION = 1000;
 
 // Counts up from zero the first time the badge scrolls into view.
 export function StarCount({ value }: { value: number }) {

@@ -105,7 +105,7 @@ Sections are separated by space, not rules. The only lines are 1px `soft` rows. 
 One big moment, then quiet craft. Everything works with a finger as well as a mouse, and collapses under `prefers-reduced-motion`.
 
 - Hero (the big moment): letters rise one by one out of line masks (tall enough for the Á accent), the red dot lands last with a small squash. Afterwards the letter nearest the pointer widens on Archivo's `wdth` axis and its neighbours follow; on touch, dragging a finger across the name does the same. `SplitTitle` is reused for "WRITING." on /blog.
-- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in. Anything already on screen at load is never hidden (LCP); titles there run the same wipe from CSS at load, after the hero lands.
+- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in. Anything already on screen at load runs the same entrance from CSS on the load sequence (no JS, no flash); the hero title is never hidden, so LCP is unaffected.
 - Articles have no scroll entrances: the text is for reading. Only the reading-progress bar moves.
 - Project screenshot: curtain reveal when it enters; on hover it pans down slowly.
 - Rows: a 2px red line draws underneath, the title shifts 6px and an arrow arrives. Latest block: a red bar grows along its foot.
@@ -113,7 +113,17 @@ One big moment, then quiet craft. Everything works with a finger as well as a mo
 - Links: the red underline leaves to the right and returns from the left.
 - Star badge counts up the first time it is seen. Theme toggle: soft cross-fade via the View Transitions API. Blog chips: the active block slides between chips. Article: reading-progress bar tied to scroll.
 
-Entrances only hide content once JS is running (`html.js`), so the page is readable without it.
+### Timing
+
+One scale for the whole site (defined at the top of the motion rules in `globals.css`):
+
+- Press 120ms. Hover exit 250ms, hover entry 350ms (lines, arrows, fills); bigger surfaces 450–700ms. Touch feedback 200ms, so it lands while the finger is down.
+- Entrances 600–800ms; wipes and curtains 800–1000ms. `ease-out-expo` for things that arrive or follow the pointer, an ease-in-out for wipes that cover and uncover.
+- Staggers: 35ms per letter, 60ms per list item.
+- Load sequence: letters from 0ms → intro text 450ms → dot ~720ms → on-screen section titles 750ms (text shows at ~1130ms) → on-screen lists 1100ms.
+- Scroll reveal: the title's text shows when the block fully covers it (384ms into 800ms); its list starts at 250ms.
+
+Without JS, below-the-fold content is never hidden, and on-screen entrances end on their own.
 
 ## Delivery
 

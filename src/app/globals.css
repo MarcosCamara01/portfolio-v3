@@ -189,20 +189,20 @@
     background: var(--signal);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 500ms var(--ease-out-expo);
+    transition: transform var(--t-exit) var(--ease-out-expo);
   }
   .row-body {
-    transition: transform 450ms var(--ease-out-expo);
+    transition: transform var(--t-exit) var(--ease-out-expo);
   }
   .row-arrow {
     opacity: 0;
     translate: -10px 0;
     transition:
-      opacity 250ms,
-      translate 450ms var(--ease-out-expo);
+      opacity 150ms,
+      translate var(--t-exit) var(--ease-out-expo);
   }
   .row-arrow-static {
-    transition: translate 450ms var(--ease-out-expo);
+    transition: translate var(--t-exit) var(--ease-out-expo);
   }
 
   /* Latest block: a signal bar grows along its foot. */
@@ -217,10 +217,10 @@
     background: var(--inv-signal);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 600ms var(--ease-out-expo);
+    transition: transform var(--t-exit) var(--ease-out-expo);
   }
   .latest-arrow {
-    transition: translate 450ms var(--ease-out-expo);
+    transition: translate var(--t-exit) var(--ease-out-expo);
   }
 
   /* Primary button: signal floods up from the bottom. */
@@ -237,20 +237,21 @@
     background: var(--signal);
     transform: scaleY(0);
     transform-origin: bottom;
-    transition: transform 420ms var(--ease-out-expo);
+    transition: transform var(--t-exit) var(--ease-out-expo);
   }
   .btn-arrow {
-    transition: translate 420ms var(--ease-out-expo);
+    transition: translate var(--t-exit) var(--ease-out-expo);
   }
   .btn-line > span {
     background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
-    transition: background-size 420ms var(--ease-out-expo);
+    transition: background-size var(--t-exit) var(--ease-out-expo);
   }
 
+  /* Leaving, the screenshot scrolls back up quickly instead of retracing the pan. */
   .shot img {
     transition:
-      transform 900ms var(--ease-out-expo),
-      object-position 4s ease;
+      transform 600ms var(--ease-out-expo),
+      object-position 800ms var(--ease-out-expo);
   }
 
   /* Split titles: letters sit in line masks tall enough for the Á accent. */
@@ -266,61 +267,88 @@
   .split-char,
   .split-dot {
     display: inline-block;
-    transition: font-stretch 450ms var(--ease-out-expo);
+    transition: font-stretch 400ms var(--ease-out-expo);
   }
 }
 
+/* Motion scale, used everywhere:
+   - press feedback 120ms; hover exit 250ms; hover entry 350ms (lines, arrows,
+     fills); larger surfaces (latest bar, screenshot) 450-700ms.
+   - entrances 600-800ms, wipes and curtains 800-1000ms.
+   - ease-out-expo for anything that arrives or follows the pointer; ease-in-out
+     for wipes that cover and uncover.
+   - staggers: 35ms per letter, 60ms per list item. */
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-wipe: cubic-bezier(0.77, 0, 0.18, 1);
+  --t-exit: 250ms;
+  --t-hover: 350ms;
 }
 
 @media (hover: hover) {
   .link:hover {
-    animation: link-wipe 600ms var(--ease-out-expo);
+    animation: link-wipe 500ms var(--ease-out-expo);
   }
-  .row:hover::after,
+  .row:hover::after {
+    transform: scaleX(1);
+    transition-duration: 400ms;
+  }
   .latest:hover::after {
     transform: scaleX(1);
+    transition-duration: 450ms;
   }
   .row:hover .row-body {
     transform: translateX(6px);
+    transition-duration: var(--t-hover);
   }
   .row:hover .row-arrow {
     opacity: 1;
     translate: 0 0;
+    transition-duration: 200ms, var(--t-hover);
   }
   .row:hover .row-arrow-static,
   .latest:hover .latest-arrow {
     translate: 6px 0;
+    transition-duration: var(--t-hover);
   }
   .btn-fill:hover::before {
     transform: scaleY(1);
+    transition-duration: var(--t-hover);
   }
   .btn-fill:hover .btn-arrow {
     translate: 2px -2px;
+    transition-duration: var(--t-hover);
   }
   .btn-line:hover > span {
     background-size: 100% 2px;
+    transition-duration: var(--t-hover);
   }
+  /* Slow, linear-ish pan so the page reads as it scrolls past. */
   .shot:hover img {
     transform: scale(1.02);
     object-position: 0 100%;
+    transition:
+      transform 700ms var(--ease-out-expo),
+      object-position 3s cubic-bezier(0.45, 0, 0.55, 1);
   }
 }
 
 /* Touch: the same feedback while the finger is down. */
 @media (hover: none) {
+  /* Touch feedback has to land while the finger is still down: 200ms. */
   .row:active::after,
   .latest:active::after {
     transform: scaleX(1);
-    transition-duration: 250ms;
+    transition-duration: 200ms;
   }
   .row:active .row-body {
     transform: translateX(6px);
+    transition-duration: 200ms;
   }
   .row:active .row-arrow {
     opacity: 1;
     translate: 0 0;
+    transition-duration: 150ms, 200ms;
   }
   .btn-fill:active::before {
     transform: scaleY(1);
@@ -348,34 +376,38 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Hero: letters rise out of their line masks one after another, the dot lands last. */
+  /* Load sequence, one beat after another:
+       0ms     letters rise, 35ms apart (a 12-letter name is fully moving by ~450ms)
+       450ms   intro text fades up while the last letters settle
+       ~720ms  the dot lands (after the last letter, from its own index)
+       750ms   titles already on screen get their wipe; their text shows at ~1130ms
+       1100ms  lists already on screen follow, 60ms apart */
+  :root {
+    --cue-intro: 450ms;
+    --cue-sections: 750ms;
+    --cue-lists: 1100ms;
+  }
   .split-char {
-    animation: char-rise 950ms var(--ease-out-expo) both;
-    animation-delay: calc(var(--i) * 38ms + 80ms);
+    animation: char-rise 800ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i) * 35ms + 60ms);
   }
   .split-dot {
-    animation: dot-land 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    animation-delay: calc(var(--i) * 38ms + 380ms);
+    animation: dot-land 650ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--i) * 35ms + 300ms);
     transform-origin: 50% 90%;
   }
   .hero-intro {
-    animation: fade-up 900ms var(--ease-out-expo) both;
-    animation-delay: 650ms;
+    animation: fade-up 700ms var(--ease-out-expo) both;
+    animation-delay: var(--cue-intro);
   }
 
   /* Scroll entrances run once: <RevealObserver> hides below-the-fold elements with
-     [data-pending] and swaps it for [data-inview] when they scroll in. */
+     [data-pending] and swaps it for [data-inview] when they scroll in. Anything on
+     screen at load has neither attribute and runs the same entrance from CSS, on
+     the load sequence above, so nothing flashes before hydration. */
   [data-reveal='title'] {
     position: relative;
     width: fit-content;
-  }
-  [data-reveal='title'][data-pending] {
-    -webkit-text-fill-color: transparent;
-  }
-  /* Text stays hidden only while the block covers it, then falls back to each
-     part's own colour (e.g. the red section number). */
-  [data-reveal='title'][data-inview] {
-    animation: title-hidden 440ms linear;
   }
   [data-reveal='title']::after {
     content: '';
@@ -385,32 +417,57 @@
     transform: scaleX(0);
     pointer-events: none;
   }
-  [data-reveal='title'][data-inview]::after {
-    animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) both;
+  [data-reveal='title'][data-pending] {
+    -webkit-text-fill-color: transparent;
   }
-  /* Titles on screen at load (never marked pending or inview) run the same reveal
-     from the server HTML, after the hero has landed: text hidden until the block
-     covers it (700ms delay + 440ms), then uncovered. */
+  /* The block (800ms) fully covers the title at 48%, 384ms in: the text stays
+     hidden exactly that long, then falls back to each part's own colour. */
+  [data-reveal='title'][data-inview] {
+    animation: title-hidden 384ms linear;
+  }
+  [data-reveal='title'][data-inview]::after {
+    animation: title-block 800ms var(--ease-wipe) both;
+  }
   [data-reveal='title']:not([data-pending], [data-inview]) {
-    animation: title-hidden 1140ms linear;
+    animation: title-hidden calc(var(--cue-sections) + 384ms) linear;
   }
   [data-reveal='title']:not([data-pending], [data-inview])::after {
-    animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) 700ms both;
+    animation: title-block 800ms var(--ease-wipe) var(--cue-sections) both;
   }
 
+  [data-reveal='list'] > :nth-child(2) {
+    --i: 1;
+  }
+  [data-reveal='list'] > :nth-child(3) {
+    --i: 2;
+  }
+  [data-reveal='list'] > :nth-child(4) {
+    --i: 3;
+  }
+  [data-reveal='list'] > :nth-child(5) {
+    --i: 4;
+  }
+  [data-reveal='list'] > :nth-child(n + 6) {
+    --i: 5;
+  }
   [data-reveal='list'][data-pending] > * {
     opacity: 0;
   }
+  /* Items start while their section title is still under the block. */
   [data-reveal='list'][data-inview] > * {
-    animation: fade-up 800ms var(--ease-out-expo) both;
-    animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+    animation: fade-up 600ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 60ms + 250ms);
+  }
+  [data-reveal='list']:not([data-pending], [data-inview]) > * {
+    animation: fade-up 600ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 60ms + var(--cue-lists));
   }
 
   [data-reveal='media'][data-pending] {
     clip-path: inset(0 0 100% 0);
   }
   [data-reveal='media'][data-inview] {
-    animation: curtain 1100ms cubic-bezier(0.77, 0, 0.18, 1) both;
+    animation: curtain 1000ms var(--ease-wipe) both;
   }
 
   @supports (animation-timeline: scroll()) {
@@ -516,7 +573,7 @@
   view-transition-name: theme-icon;
 }
 ::view-transition-group(theme-icon) {
-  animation-duration: 320ms;
+  animation-duration: 300ms;
   animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
