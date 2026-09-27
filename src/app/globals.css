@@ -418,9 +418,11 @@
   }
 }
 
+/* Letters start a full line box plus the mask's 0.3em top padding below, so accents
+   that stick out above the box (the Á in Cámara) stay hidden until their letter rises. */
 @keyframes char-rise {
   from {
-    transform: translateY(105%);
+    transform: translateY(calc(100% + 0.35em));
   }
   to {
     transform: none;
