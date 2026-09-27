@@ -2,6 +2,8 @@ import Image from 'next/image';
 import { SectionTitle } from '../blog/section-title';
 import { ArrowUpRight, GitHub } from '../common/icons';
 import { StarCount } from './star-count';
+// Static import: hashed URL (cache busts on change), size and blur placeholder at build.
+import screenshot from './ecommerce-template.webp';
 
 const PROJECT = {
   title: 'Ecommerce Template',
@@ -10,7 +12,6 @@ const PROJECT = {
   description:
     'An open-source Next.js 16 storefront with a catalog, cart and wishlist. Stripe Checkout prices orders on the server, and the admin catalog stays in sync with Stripe.',
   stack: ['Next.js', 'TypeScript', 'Supabase', 'Drizzle', 'Better Auth', 'Stripe'],
-  image: '/images/projects/ecommerce-template-2026.png',
   fallbackStars: 232,
 };
 
@@ -42,10 +43,9 @@ export const FeaturedProject = async () => {
           className="shot block overflow-hidden"
         >
           <Image
-            src={PROJECT.image}
+            src={screenshot}
             alt="Ecommerce Template storefront: dark header with search and a grid of clothing products"
-            width={1903}
-            height={1080}
+            placeholder="blur"
             sizes="(min-width: 704px) 672px, 100vw"
             className="h-[190px] w-full object-cover md:h-[300px]"
           />
