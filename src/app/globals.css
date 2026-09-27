@@ -388,9 +388,13 @@
   [data-reveal='title'][data-inview]::after {
     animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) both;
   }
-  /* Titles already on screen at load: the block only passes over visible text,
-     after the hero has landed. */
-  [data-reveal='title'][data-sweep]::after {
+  /* Titles on screen at load (never marked pending or inview) run the same reveal
+     from the server HTML, after the hero has landed: text hidden until the block
+     covers it (700ms delay + 440ms), then uncovered. */
+  [data-reveal='title']:not([data-pending], [data-inview]) {
+    animation: title-hidden 1140ms linear;
+  }
+  [data-reveal='title']:not([data-pending], [data-inview])::after {
     animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) 700ms both;
   }
 

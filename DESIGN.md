@@ -105,7 +105,7 @@ Sections are separated by space, not rules. The only lines are 1px `soft` rows. 
 One big moment, then quiet craft. Everything works with a finger as well as a mouse, and collapses under `prefers-reduced-motion`.
 
 - Hero (the big moment): letters rise one by one out of line masks (tall enough for the Á accent), the red dot lands last with a small squash. Afterwards the letter nearest the pointer widens on Archivo's `wdth` axis and its neighbours follow; on touch, dragging a finger across the name does the same. `SplitTitle` is reused for "WRITING." on /blog.
-- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in. Anything already on screen at load is never hidden (LCP); titles there only get the block passing over the visible text (`data-sweep`).
+- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in. Anything already on screen at load is never hidden (LCP); titles there run the same wipe from CSS at load, after the hero lands.
 - Articles have no scroll entrances: the text is for reading. Only the reading-progress bar moves.
 - Project screenshot: curtain reveal when it enters; on hover it pans down slowly.
 - Rows: a 2px red line draws underneath, the title shifts 6px and an arrow arrives. Latest block: a red bar grows along its foot.

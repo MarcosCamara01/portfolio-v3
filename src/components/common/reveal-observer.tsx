@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 // Scroll entrances for `[data-reveal]` elements. Nothing is hidden in the server
 // HTML: after hydration, elements still below the fold get `data-pending` (hidden,
 // off-screen so nothing flashes) and switch to `data-inview` when they scroll in.
-// Anything already on screen stays visible, so it never delays first paint or LCP;
-// titles there still get the signal sweep (`data-sweep`), drawn over the text.
+// Anything already on screen is left alone; titles there run the same reveal
+// straight from CSS at load (see globals.css), so there is no flash while hydrating.
 export function RevealObserver() {
   const pathname = usePathname();
 
@@ -34,10 +34,7 @@ export function RevealObserver() {
     // Mode, route changes) and a pending element nobody watches would stay hidden.
     const fold = window.innerHeight;
     document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-inview])').forEach((el) => {
-      if (!('pending' in el.dataset) && el.getBoundingClientRect().top < fold) {
-        if (el.dataset.reveal === 'title') el.dataset.sweep = '';
-        return;
-      }
+      if (!('pending' in el.dataset) && el.getBoundingClientRect().top < fold) return;
       el.dataset.pending = '';
       observer.observe(el);
     });
