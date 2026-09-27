@@ -12,11 +12,6 @@ const JOBS = [
     what: 'Freelance developer',
     description: 'Built complete products for different clients.',
   },
-  {
-    when: 'Ongoing',
-    what: 'Software Engineering + AI',
-    description: 'Studying it alongside work.',
-  },
 ];
 
 export const Experience = () => (
