@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'Marcos Cámara — Software Engineer';
+export const alt = 'Marcos Cámara, full-stack developer';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -37,7 +37,7 @@ export default function Image() {
             color: '#a1a1aa',
           }}
         >
-          Software engineer · TypeScript, React &amp; Next.js
+          Full-stack developer · Next.js and AI agents
         </div>
       </div>
     ),

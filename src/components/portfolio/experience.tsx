@@ -3,19 +3,19 @@ import { SectionTitle } from '../blog/section-title';
 const JOBS = [
   {
     when: '2024 — Now',
-    what: 'Togga · Full-stack engineer',
+    what: 'Togga · Full-stack developer',
     description:
-      'The full development cycle of a product for legal practice: the AI chat on the Vercel AI SDK, plus payments, auth and the rest of the app. React, Next.js, Supabase, Stripe.',
+      'I work across the whole product for legal practice, from the AI chat on the Vercel AI SDK to payments and auth. React, Next.js, Supabase, Stripe.',
   },
   {
     when: '2023 — 2024',
     what: 'Freelance developer',
-    description: 'End-to-end products for a range of clients.',
+    description: 'Built complete products for different clients.',
   },
   {
     when: 'Ongoing',
     what: 'Software Engineering + AI',
-    description: 'Studies, alongside work.',
+    description: 'Studying it alongside work.',
   },
 ];
 

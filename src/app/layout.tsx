@@ -36,7 +36,7 @@ const mono = IBM_Plex_Mono({
 export const metadata = {
   title: { default: "Marcos Cámara's blog", template: '%s · Marcos Cámara' },
   description:
-    'Full-stack engineer in San Sebastián building software for legal practice at Togga. Writing on Next.js, durable agents and multi-model systems.',
+    'Marcos Cámara, full-stack developer at Togga. I write about Next.js and about building with AI agents and several models.',
   // Relative values resolve per route against metadataBase, so every page gets its
   // own canonical and og:url, and inherits its own title/description into og/twitter.
   alternates: { canonical: './' },

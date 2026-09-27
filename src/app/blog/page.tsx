@@ -4,7 +4,7 @@ import { SplitTitle } from '@/components/portfolio/split-title';
 
 export const metadata = {
   title: 'Writing',
-  description: 'Essays on Next.js, durable agents and multi-model systems.',
+  description: 'Articles on Next.js and on building with AI agents and several models.',
 };
 
 const Blog = async () => {
@@ -18,8 +18,8 @@ const Blog = async () => {
         className="mt-[18px] text-[clamp(64px,21.5vw,132px)] leading-[0.86] md:mt-6"
       />
       <p className="hero-intro max-w-[420px] pt-5 text-[17px] font-medium leading-[1.4] md:text-lg">
-        Essays on Next.js, durable agents and multi-model systems. {posts.length} posts since{' '}
-        {since}.
+        I write about Next.js and about building with AI agents and several models at once.{' '}
+        {posts.length} posts since {since}.
       </p>
 
       <PostList posts={posts} />

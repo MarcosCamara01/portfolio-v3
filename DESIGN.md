@@ -45,7 +45,7 @@ spacing:
 
 ## Overview
 
-Marcos Cámara is a San Sebastián engineer writing about Next.js, agents and multi-model systems. The site is a brutalist index: huge condensed uppercase type, a single red signal, and nothing decorative that type and space can do instead. Recruiters scan the home; engineers read long MDX essays.
+Marcos Cámara is a full-stack developer writing about Next.js, agents and multi-model systems. The site is a brutalist index: huge condensed uppercase type, a single red signal, and nothing decorative that type and space can do instead. Recruiters scan the home; engineers read long MDX essays.
 
 The canvas this was designed on is the "Marcos Cámara — B4 Heavy Type" design artifact (home, blog, article and system, light and dark, desktop and mobile).
 

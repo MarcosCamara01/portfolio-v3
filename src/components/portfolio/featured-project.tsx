@@ -8,7 +8,7 @@ const PROJECT = {
   repo: 'MarcosCamara01/ecommerce-template',
   demo: 'https://ecommerce-template-mpc.vercel.app',
   description:
-    'Open-source storefront on Next.js 16: catalog, cart and wishlist, Stripe Checkout priced on the server, and an admin catalog that stays in sync with Stripe.',
+    'An open-source Next.js 16 storefront with a catalog, cart and wishlist. Stripe Checkout prices orders on the server, and the admin catalog stays in sync with Stripe.',
   stack: ['Next.js', 'TypeScript', 'Supabase', 'Drizzle', 'Better Auth', 'Stripe'],
   image: '/images/projects/ecommerce-template-2026.png',
   fallbackStars: 232,
