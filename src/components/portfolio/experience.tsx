@@ -5,7 +5,7 @@ const JOBS = [
     when: '2024 — Now',
     what: 'Togga · Full-stack engineer',
     description:
-      'Legal AI chat on the Vercel AI SDK: streaming responses and tool calling over legal documents. React, Next.js, Supabase, Stripe.',
+      'The full development cycle of a product for legal practice: the AI chat on the Vercel AI SDK, plus payments, auth and the rest of the app. React, Next.js, Supabase, Stripe.',
   },
   {
     when: '2023 — 2024',

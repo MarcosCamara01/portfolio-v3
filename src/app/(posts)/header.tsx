@@ -107,7 +107,7 @@ export function ArticleFooter({ posts }: { posts: Post[] }) {
           Marcos Cámara<span className="text-signal">.</span>
         </span>
         <span className="text-[15px] leading-[1.55] text-sub">
-          Full-stack engineer building legal AI at Togga, San Sebastián.
+          Full-stack engineer at Togga, building software for legal practice. San Sebastián.
         </span>
       </div>
 
