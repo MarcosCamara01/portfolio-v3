@@ -105,13 +105,13 @@ Sections are separated by space, not rules. The only lines are 1px `soft` rows. 
 One big moment, then quiet craft. Everything works with a finger as well as a mouse, and collapses under `prefers-reduced-motion`.
 
 - Hero (the big moment): letters rise one by one out of line masks (tall enough for the Á accent), the red dot lands last with a small squash. Afterwards the letter nearest the pointer widens on Archivo's `wdth` axis and its neighbours follow; on touch, dragging a finger across the name does the same. `SplitTitle` is reused for "WRITING." on /blog.
-- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in.
+- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in. Anything already on screen at load is never hidden (LCP); titles there only get the block passing over the visible text (`data-sweep`).
 - Articles have no scroll entrances: the text is for reading. Only the reading-progress bar moves.
 - Project screenshot: curtain reveal when it enters; on hover it pans down slowly.
 - Rows: a 2px red line draws underneath, the title shifts 6px and an arrow arrives. Latest block: a red bar grows along its foot.
 - Primary button: red floods up from the bottom; secondary: underline draws under the label.
 - Links: the red underline leaves to the right and returns from the left.
-- Star badge counts up the first time it is seen. Theme toggle: circular reveal from the button. Blog chips: the active block slides between chips. Article: reading-progress bar tied to scroll.
+- Star badge counts up the first time it is seen. Theme toggle: soft cross-fade via the View Transitions API. Blog chips: the active block slides between chips. Article: reading-progress bar tied to scroll.
 
 Entrances only hide content once JS is running (`html.js`), so the page is readable without it.
 

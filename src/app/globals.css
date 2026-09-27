@@ -388,6 +388,11 @@
   [data-reveal='title'][data-inview]::after {
     animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) both;
   }
+  /* Titles already on screen at load: the block only passes over visible text,
+     after the hero has landed. */
+  [data-reveal='title'][data-sweep]::after {
+    animation: title-block 900ms cubic-bezier(0.77, 0, 0.18, 1) 700ms both;
+  }
 
   [data-reveal='list'][data-pending] > * {
     opacity: 0;
