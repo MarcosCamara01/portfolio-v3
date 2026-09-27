@@ -8,9 +8,9 @@ const PROJECT = {
   repo: 'MarcosCamara01/ecommerce-template',
   demo: 'https://ecommerce-template-mpc.vercel.app',
   description:
-    'Open-source storefront built with Next.js 16, TypeScript and Tailwind. Stripe checkout, auth, cart and wishlist.',
-  stack: ['Next.js', 'TypeScript', 'Stripe', 'MongoDB', 'Tailwind'],
-  image: '/images/projects/ecommerce_template.png',
+    'Open-source storefront on Next.js 16: catalog, cart and wishlist, Stripe Checkout priced on the server, and an admin catalog that stays in sync with Stripe.',
+  stack: ['Next.js', 'TypeScript', 'Supabase', 'Drizzle', 'Better Auth', 'Stripe'],
+  image: '/images/projects/ecommerce-template-2026.png',
   fallbackStars: 232,
 };
 
@@ -57,9 +57,14 @@ export const FeaturedProject = async () => {
             <StarCount value={stars} />
           </div>
           <p className="text-base leading-normal text-sub">{PROJECT.description}</p>
-          <p className="text-xs font-bold uppercase tracking-[0.04em]">
-            {PROJECT.stack.join(' · ')}
-          </p>
+          <ul className="flex flex-wrap gap-x-1.5 text-xs font-bold uppercase tracking-[0.04em]">
+            {PROJECT.stack.map((tech, i) => (
+              <li key={tech} className="whitespace-nowrap">
+                {tech}
+                {i < PROJECT.stack.length - 1 ? <span aria-hidden> ·</span> : null}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="label flex flex-wrap gap-2">
