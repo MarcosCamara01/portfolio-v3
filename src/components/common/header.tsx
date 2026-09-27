@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils';
 
 const Header = () => {
   const pathname = usePathname();
-  const onBlog = pathname !== '/';
+  // Posts live at /{year}/{slug}; anything else (home, 404) leaves Blog unmarked.
+  const onBlog = pathname === '/blog' || /^\/\d{4}\//.test(pathname);
 
   return (
     <header className="flex items-center justify-between pb-2.5">
