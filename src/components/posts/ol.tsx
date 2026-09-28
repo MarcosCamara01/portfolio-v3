@@ -1,3 +1,3 @@
 export function OL({ children }: { children: React.ReactNode }) {
-  return <ol className="my-5 list-decimal list-inside">{children}</ol>;
+  return <ol className="mt-5 [counter-reset:item]">{children}</ol>;
 }

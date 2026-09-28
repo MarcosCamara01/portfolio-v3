@@ -1,155 +1,130 @@
 ---
-version: alpha
+version: b4
 name: Marcos Cámara
-description: Personal engineering site and MDX blog. Cool stone field, harbour-orange accent, Bricolage Grotesque display with Inter body. Light is the default token set; dark values live in Themes.
+description: Personal engineering site and MDX blog. "B4 Heavy Type" — brutalist, one narrow column, condensed uppercase display type, warm off-white or near-black ground, one red signal. Light is the default token set; dark values live in Themes.
 colors:
-  primary: "#141820"
-  secondary: "#5A6270"
-  tertiary: "#E24A12"
-  neutral: "#F4F6F8"
-  surface: "#FFFFFF"
-  on-surface: "#141820"
-  border: "#D5DAE2"
-  error: "#B42318"
+  ink: '#111111'
+  sub: '#454545'
+  signal: '#D42A14'
+  on-signal: '#FFFFFF'
+  page: '#F2F2F0'
+  surface: '#FFFFFF'
+  soft: '#C9C9C4'
+  inv: '#111111'
+  inv-ink: '#F2F2F0'
+  inv-signal: '#FF6A55'
+  code: '#111111'
+  code-ink: '#F2F2F0'
 typography:
   display:
-    fontFamily: Bricolage Grotesque
-    fontSize: 40px
-    fontWeight: 600
-    lineHeight: 1.08
-    letterSpacing: -0.03em
-  headline:
-    fontFamily: Bricolage Grotesque
-    fontSize: 28px
-    fontWeight: 600
-    lineHeight: 1.15
-    letterSpacing: -0.02em
-  title:
-    fontFamily: Bricolage Grotesque
-    fontSize: 20px
-    fontWeight: 600
-    lineHeight: 1.25
-    letterSpacing: -0.015em
+    fontFamily: Archivo (variable, wdth 62)
+    fontWeight: 900
+    textTransform: uppercase
+    sizes: 'hero clamp(64px, 24.6vw, 168px) · page title 132/84 · article title 80/50 · h2 48/36 · article h2 40/30'
+    lineHeight: '0.91 hero desktop, 0.93 hero mobile (lowest that keeps the Á accent off the line above)'
   body:
-    fontFamily: Inter
-    fontSize: 16px
-    fontWeight: 400
-    lineHeight: 1.65
-  caption:
-    fontFamily: Azeret Mono
+    fontFamily: Work Sans
+    fontSize: '18px article, 15–16px UI'
+    lineHeight: 1.7
+  label:
+    fontFamily: Work Sans
     fontSize: 13px
-    fontWeight: 400
-    lineHeight: 1.4
-    letterSpacing: 0.01em
+    fontWeight: 700
+    textTransform: uppercase
+    letterSpacing: 0.04em
+  code:
+    fontFamily: IBM Plex Mono
+    fontSize: '13px / 12px mobile'
 rounded:
-  sm: 4px
-  md: 8px
-  full: 9999px
+  all: 0
 spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 32px
-  xl: 64px
-  gutter: 24px
-  page: 42rem
-components:
-  header:
-    backgroundColor: "{colors.neutral}"
-    textColor: "{colors.on-surface}"
-  hairline:
-    backgroundColor: "{colors.border}"
-    height: 1px
-  featured-card:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.on-surface}"
-    rounded: "{rounded.md}"
-    padding: 24px
-  featured-card-hover:
-    backgroundColor: "{colors.neutral}"
-    textColor: "{colors.on-surface}"
-  signal:
-    backgroundColor: "{colors.tertiary}"
-    height: 2px
-  error-text:
-    textColor: "{colors.error}"
+  column: 672px (max-w 704px with 16px gutters)
+  section: '112px desktop / 80px mobile between sections'
+  row: '16px vertical padding, 1px soft line between rows'
 ---
 
 ## Overview
 
-Marcos Cámara is a San Sebastián engineer writing about TypeScript, React, Next.js, and AI systems. Recruiters and other engineers scan the home, then read long MDX essays. The site should feel like a harbour workshop: cool stone, one hot signal colour, display type that carries the page. It is not a SaaS marketing kit and not a teal-on-charcoal developer template.
+Marcos Cámara is a full-stack developer writing about Next.js, agents and multi-model systems. The site is a brutalist index: huge condensed uppercase type, a single red signal, and nothing decorative that type and space can do instead. Recruiters scan the home; engineers read long MDX essays.
+
+The canvas this was designed on is the "Marcos Cámara — B4 Heavy Type" design artifact (home, blog, article and system, light and dark, desktop and mobile).
 
 ## Colors
 
-Cool stone and near-black ink do the reading. Harbour orange (`tertiary`) is the only saturated signal: links, the active theme control, a thin rule, a card edge. Never paint large fields with it. Do not reuse the previous muted teal `#76abae` or charcoal `#222831`.
+Ink and a warm off-white carry everything. Red (`signal`) marks: the dot after the name, section numbers, list markers, the star badge, the tag chip, link underlines and the reading progress bar. Never large fields.
 
-- **Primary (`#141820`):** Ink for display type and body.
-- **Secondary (`#5A6270`):** Dates and captions.
-- **Tertiary (`#E24A12`):** Harbour orange. Rules, underlines, a card edge. Never body or title fill (fails 4.5:1 on the page ground).
-- **Neutral (`#F4F6F8`):** Page ground in light.
-- **Surface (`#FFFFFF`):** Featured writing cards.
-- **Border (`#D5DAE2`):** Hairlines, not drop shadows.
+Inverted blocks (`inv` / `inv-ink`) are the one heavy surface: the latest-post block, the primary button, the active filter chip and article pull quotes. Inside them the signal switches to `inv-signal` so it keeps contrast.
+
+`surface` is a quiet fill for the article's "On this page" box, inline code and the more-posts nav. Projects sit on the page ground, not on a card.
 
 ## Themes
 
-System light/dark stays. Tokens above are light. Dark:
+System light/dark, toggled by one button. The new theme opens as a circle from the toggle (View Transitions API). Dark is not an inversion: the red lifts and inverted blocks become light.
 
-| Token | Dark |
-| --- | --- |
-| primary | `#ECEEF2` |
-| secondary | `#9AA3B2` |
-| tertiary | `#FF7A45` |
-| neutral | `#0E1116` |
-| surface | `#181C24` |
-| on-surface | `#ECEEF2` |
-| border | `#2A3140` |
-| error | `#FF6B5A` |
+| Token              | Dark                  |
+| ------------------ | --------------------- |
+| page               | `#0E0E0D`             |
+| ink                | `#F2F2F0`             |
+| sub                | `#B4B4AE`             |
+| soft               | `#3A3A37`             |
+| surface            | `#1A1A18`             |
+| inv / inv-ink      | `#F2F2F0` / `#111111` |
+| signal / on-signal | `#FF5A40` / `#111111` |
+| inv-signal         | `#C0260F`             |
+| code / code-ink    | `#1A1A18` / `#F2F2F0` |
 
-Keep body contrast at least 4.5:1 on the page ground in both modes.
+White on `signal` is about 5:1; keep body text at least 4.5:1 in both modes.
 
 ## Typography
 
-Inter stays for body and UI chrome. Display and section titles use Bricolage Grotesque so headlines are not Inter-at-a-larger-size. Azeret Mono is only for dates and code-adjacent meta. `text-wrap: balance` on titles; `text-pretty` on body. Display letter-spacing never tighter than `-0.04em`.
+- Display: Archivo at `wdth 62`, weight 900, uppercase. The width axis is part of the motion (below), so keep Archivo variable.
+- Body and UI: Work Sans. Labels are 13px bold uppercase with 0.04em tracking.
+- Code: IBM Plex Mono.
+- Hero line-height is fixed by measurement: at 0.86 the Á accent overlaps "MARCOS"; 0.91 (desktop) and 0.93 (mobile) are the tightest values without contact.
 
 ## Layout
 
-Keep the site on a centered `42rem` (`max-w-2xl`) column. Home and blog do not go full-bleed. Content is left-aligned. Vertical rhythm uses the 8px spacing scale; sections separate with `xl` (64px), not icon-in-a-square headers.
+One centered 672px column, 16px gutters on mobile. No sidebars, no full-bleed.
 
-Home, top to bottom: identity (name in display + one sentence) → experience as a timeline → three featured writing cards → two or three projects in a mixed-height bento that still fits the column.
+- Home: header (MPC · Blog · theme) → name + two-line intro → Work (year / role / one line) → Projects (Ecommerce Template: screenshot, ★ live stars, stack, Live demo + Source code) → Writing (latest block + three rows + All posts) → footer (© + GitHub, LinkedIn, X).
+- Blog: "WRITING." → intro with post count → topic chips → latest post block with dek → posts grouped by year with dek, tag and reading time.
+- Article: back link → date · minutes · tag → title → dek → "On this page" (from `## N. Title [#id]` headings) → body → author → All writing / previous post.
 
-Blog: three typographic featured cards stacked in the column (Vercel’s three-up grid does not fit `42rem`), then the remaining posts as a compact text list. No per-post photography.
-
-Article pages stay in the same column. The post title is display type; the body is Inter.
-
-## Elevation & Depth
-
-Flat. Hierarchy comes from type size, orange hairlines, and surface against neutral. No grey `rgba(0,0,0,.1)` card shadows. Ambient motion may add a light 3D tilt on featured cards; it must not replace contrast.
-
-## Shapes
-
-Small radii: `sm` on controls, `md` on featured cards. Do not keep the current sticky header’s large rounded-bottom chrome. Theme toggle and icon buttons may use `full`.
+Sections are separated by space, not rules. The only lines are 1px `soft` rows. No header or footer rule, no borders on cards, tags or code.
 
 ## Components
 
-- **Header:** Name or mark left, Blog + theme toggle right. Transparent over the page ground; a 1px bottom hairline on scroll is enough.
-- **Featured writing card:** Date in caption mono; title in `title` or `headline`; one-line dek in body. Hover may shift the surface token and a 1px tertiary edge. Three on `/blog` and three on home Writing.
-- **Experience:** Year + role + company as a left-aligned timeline. No icon tiles.
-- **Projects:** Two or three tiles of unequal height in one column (or a 2-up row only if both titles still wrap cleanly). Live demos allowed; empty bento cells are not.
-- **Footer:** Text links, not a row of unlabeled brand icons as the only affordance.
+- Section title: display 48/36, squeezes in on scroll.
+- Row: date column + title (+ dek, tag, minutes on /blog). Hover or press wipes an ink block across it.
+- Latest block: inverted, label in `inv-signal`, display title that widens on hover.
+- Buttons: primary is an inverted block; secondary is text with an icon. Icons are 2.5px square-cap strokes; GitHub uses its mark.
+- Article body: numbered H2s with the number in red; H3s smaller display; lists with 01/02 or ■ markers on soft rows; the first blockquote is a lede, later ones are inverted pull quotes; code blocks show language + Copy.
 
-## Do's and Don'ts
+## Motion
 
-- Do spend ambient motion on one orchestrated moment (home display type and featured-card tilt). Respect `prefers-reduced-motion` by cutting 3D and scroll-linked motion.
-- Don't fade-and-slide every section on enter.
-- Do leave Inter as body; don't set Inter on display headings.
-- Don't introduce a second accent, purple meshes, or cream+terracotta defaults.
-- Don't widen past `42rem` to imitate a magazine spread.
-- Don't require unique illustrations or OG art to ship the listing.
+One big moment, then quiet craft. Everything works with a finger as well as a mouse, and collapses under `prefers-reduced-motion`.
+
+- Hero (the big moment): letters rise one by one out of line masks (tall enough for the Á accent), the red dot lands last with a small squash. Afterwards the letter nearest the pointer widens on Archivo's `wdth` axis and its neighbours follow; on touch, dragging a finger across the name does the same. `SplitTitle` is reused for "WRITING." on /blog.
+- Home and /blog section headings: a red block wipes across and uncovers the title, once, when it enters the viewport (`RevealObserver` sets `data-inview`). Lists under them stagger in. Anything already on screen at load runs the same entrance from CSS on the load sequence (no JS, no flash); the hero title is never hidden, so LCP is unaffected.
+- Articles have no scroll entrances: the text is for reading. Only the reading-progress bar moves.
+- Project screenshot: curtain reveal when it enters; on hover it pans down slowly.
+- Rows: a 2px red line draws underneath, the title shifts 6px and an arrow arrives. Latest block: a red bar grows along its foot.
+- Primary button: red floods up from the bottom; secondary: underline draws under the label.
+- Links: the red underline leaves to the right and returns from the left.
+- Star badge counts up the first time it is seen. Theme toggle: soft cross-fade via the View Transitions API. Blog chips: the active block slides between chips. Article: reading-progress bar tied to scroll.
+
+### Timing
+
+One scale for the whole site (defined at the top of the motion rules in `globals.css`):
+
+- Press 120ms. Hover exit 250ms, hover entry 350ms (lines, arrows, fills); bigger surfaces 450–700ms. Touch feedback 200ms, so it lands while the finger is down.
+- Entrances 600–800ms; wipes and curtains 800–1000ms. `ease-out-expo` for things that arrive or follow the pointer, an ease-in-out for wipes that cover and uncover.
+- Staggers: 35ms per letter, 60ms per list item.
+- Load sequence: letters from 0ms → intro text 450ms → dot ~720ms → on-screen section titles 750ms (text shows at ~1130ms) → on-screen lists 1100ms.
+- Scroll reveal: the title's text shows when the block fully covers it (384ms into 800ms); its list starts at 250ms.
+
+Without JS, below-the-fold content is never hidden, and on-screen entrances end on their own.
 
 ## Delivery
 
-Implement in this order, as separate PRs: (1) tokens and chrome, (2) home, (3) `/blog`, (4) article pages, (5) motion and polish.
-
-Posts remain `src/app/(posts)/{year}/{slug}/page.mdx`. Do not migrate them to a database. Do not install Spec Kit.
-
-View counters are already gone. Redis is only for optional tweet caching.
+Posts remain `src/app/(posts)/{year}/{slug}/page.mdx`. Each post may export `tag` for the blog filter; `metadata.description` is used as the dek. Do not install Spec Kit.
