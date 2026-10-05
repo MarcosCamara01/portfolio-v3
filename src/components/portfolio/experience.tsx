@@ -5,7 +5,7 @@ const JOBS = [
     when: '2024 — Now',
     what: 'Togga · Full-stack developer',
     description:
-      'I work across the whole product for legal practice, from the AI chat on the Vercel AI SDK to payments and auth. React, Next.js, Supabase, Stripe.',
+      "Togga is a workspace for law firms, in beta with selected firms. I've worked across all of it: the legal AI chat on the Vercel AI SDK, video transcription, three.js in the canvas, the dashboard and payments. I also take on the big migrations, like Next.js 14 to 16 with every dependency.",
   },
   {
     when: '2023 — 2024',

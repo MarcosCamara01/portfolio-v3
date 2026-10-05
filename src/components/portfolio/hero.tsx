@@ -13,8 +13,8 @@ export function Hero() {
           Full-stack developer at Togga.
         </p>
         <p className="text-[15px] leading-[1.55] text-sub md:text-base">
-          I like owning a product from start to finish, and most of what I write here comes from
-          that: making Next.js apps fast and figuring out how AI agents behave in production.
+          I like building products end to end, which is what I do at Togga. Here I write about AI
+          agents, the models behind them and how they behave in production.
         </p>
       </div>
     </section>

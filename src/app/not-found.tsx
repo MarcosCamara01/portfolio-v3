@@ -14,7 +14,7 @@ export default function NotFound() {
         className="mt-[18px] text-[clamp(64px,21.5vw,132px)] leading-[0.86] md:mt-6"
       />
       <p className="hero-intro max-w-[420px] pt-5 text-[17px] font-medium leading-[1.4] md:text-lg">
-        There is nothing at this address. The page may have moved, or the link has a typo.
+        Nothing at this address. I either moved the page or never wrote it.
       </p>
 
       <div className="hero-intro label mt-8 flex flex-wrap gap-2">

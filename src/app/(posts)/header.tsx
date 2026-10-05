@@ -7,7 +7,8 @@ import { postHref } from '@/lib/post-href';
 import { ArrowLeft, ArrowRight } from '@/components/common/icons';
 import { formatFull, isoDate } from '@/components/blog/format';
 import { JsonLd } from '@/components/common/json-ld';
-import { AUTHOR, SITE_URL } from '@/lib/site';
+import { AUTHOR, SITE_URL, X_URL } from '@/lib/site';
+import { A } from '@/components/posts/a';
 import { splitNumber } from '@/components/posts/utils';
 
 function useCurrentPost(posts: Post[]) {
@@ -107,7 +108,8 @@ export function ArticleFooter({ posts }: { posts: Post[] }) {
           Marcos Cámara<span className="text-signal">.</span>
         </span>
         <span className="text-[15px] leading-[1.55] text-sub">
-          Full-stack developer at Togga, where I work on software for legal practice.
+          Full-stack developer at Togga, a workspace for law firms. If something in this post is
+          wrong or out of date, tell me on <A href={X_URL}>X</A> and I&apos;ll fix it.
         </span>
       </div>
 

@@ -86,7 +86,7 @@ White on `signal` is about 5:1; keep body text at least 4.5:1 in both modes.
 
 One centered 672px column, 16px gutters on mobile. No sidebars, no full-bleed.
 
-- Home: header (MPC · Blog · theme) → name + two-line intro → Work (year / role / one line) → Projects (Ecommerce Template: screenshot, ★ live stars, stack, Live demo + Source code) → Writing (latest block + three rows + All posts) → footer (© + GitHub, LinkedIn, X).
+- Home: header (MPC · Blog · theme) → name + two-line intro → Work (year / role / short description) → Projects (Ecommerce Template: screenshot, ★ live stars, stack, Live demo + Source code) → Writing (latest block + three rows + All posts) → footer (© + GitHub, LinkedIn, X).
 - Blog: "WRITING." → intro with post count → topic chips → latest post block with dek → posts grouped by year with dek, tag and reading time.
 - Article: back link → date · minutes · tag → title → dek → "On this page" (from `## N. Title [#id]` headings) → body → author → All writing / previous post.
 
