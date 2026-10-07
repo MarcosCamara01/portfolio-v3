@@ -5,7 +5,7 @@ const JOBS = [
     when: '2024 — Now',
     what: 'Togga · Full-stack developer',
     description:
-      "Togga is a workspace for law firms, in beta with selected firms. I've worked across all of it: the legal AI chat on the Vercel AI SDK, video transcription, three.js in the canvas, the dashboard and payments. I also take on the big migrations, like Next.js 14 to 16 with every dependency.",
+      'Togga is a workspace for law firms, now in beta. I work across the whole product, from the legal AI chat to the three.js canvas and payments.',
   },
   {
     when: '2023 — 2024',
