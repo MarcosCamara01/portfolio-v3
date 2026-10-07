@@ -1,4 +1,5 @@
 export const SITE_URL = 'https://www.marcoscamara.com';
+export const X_URL = 'https://twitter.com/marcoscamara01';
 
 // Author entity for JSON-LD structured data.
 export const AUTHOR = {
@@ -9,6 +10,6 @@ export const AUTHOR = {
   sameAs: [
     'https://github.com/MarcosCamara01',
     'https://www.linkedin.com/in/marcospenelascamara',
-    'https://twitter.com/marcoscamara01',
+    X_URL,
   ],
 };
