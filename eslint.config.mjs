@@ -4,7 +4,15 @@ import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 const config = [
   {
-    ignores: ['.next/**', 'node_modules/**', 'out/**', 'next-env.d.ts', '.claude/**'],
+    ignores: [
+      '.next/**',
+      '.next-lighthouse/**',
+      'node_modules/**',
+      'out/**',
+      'next-env.d.ts',
+      '.claude/**',
+      '.agents/**',
+    ],
   },
   ...nextCoreWebVitals,
   ...nextTypescript,
