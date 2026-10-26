@@ -13,48 +13,14 @@ module.exports = withMDX({
   // `npm run lighthouse` builds into its own folder so it can run next to `next dev`.
   distDir: process.env.NEXT_DIST_DIR || '.next',
   images: {
+    // List each remote image a post uses, not whole hosts: anyone can make /_next/image
+    // optimize any URL that matches here, and every new one is a billed transformation.
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'pbs.twimg.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'abs.twimg.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'm.media-amazon.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images-na.ssl-images-amazon.com',
-        port: '',
-        pathname: '/**',
-      },
       {
         protocol: 'https',
         hostname: 'cdn-images-1.medium.com',
         port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'media.licdn.com',
-        port: '',
-        pathname: '/**',
+        pathname: '/max/2000/1*KmHMETupo3tKwV6rxLlJ9g.png',
       },
     ],
   },
