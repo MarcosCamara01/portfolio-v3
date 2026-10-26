@@ -2,7 +2,7 @@
 name: review
 description: Review code, specs, or diffs in read-only mode with a strict bug-and-risk-first mindset. Use when the developer asks for a review, wants a final audit after a spec, requests "Linus Torvalds mode", or needs a post-implementation sanity check without editing files.
 argument-hint: "[feature-name or scope]"
-allowed-tools: Read, Glob, Grep, Bash, Agent
+allowed-tools: Read, Glob, Grep, Agent, Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git status:*), Bash(gh pr view:*), Bash(gh pr diff:*), Bash(gh issue view:*)
 ---
 
 # Review Mode
