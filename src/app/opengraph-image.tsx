@@ -20,45 +20,43 @@ export default async function Image() {
   const [archivo, workSans] = await Promise.all([font('og-archivo.ttf'), font('og-work-sans.ttf')]);
 
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '64px 80px 72px',
-          backgroundColor: PAGE,
-          color: INK,
-          fontFamily: 'Work Sans',
-        }}
-      >
-        <div style={{ display: 'flex', fontFamily: 'Archivo', fontSize: 40, letterSpacing: 1 }}>
-          MPC
-        </div>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '64px 80px 72px',
+        backgroundColor: PAGE,
+        color: INK,
+        fontFamily: 'Work Sans',
+      }}
+    >
+      <div style={{ display: 'flex', fontFamily: 'Archivo', fontSize: 40, letterSpacing: 1 }}>
+        MPC
+      </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              fontFamily: 'Archivo',
-              fontSize: 200,
-              lineHeight: 0.93,
-            }}
-          >
-            <span>MARCOS</span>
-            <span style={{ display: 'flex' }}>
-              CÁMARA<span style={{ color: SIGNAL }}>.</span>
-            </span>
-          </div>
-          <div style={{ display: 'flex', marginTop: 36, fontSize: 38, color: SUB }}>
-            Full-stack developer · Next.js and AI agents
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            fontFamily: 'Archivo',
+            fontSize: 200,
+            lineHeight: 0.93,
+          }}
+        >
+          <span>MARCOS</span>
+          <span style={{ display: 'flex' }}>
+            CÁMARA<span style={{ color: SIGNAL }}>.</span>
+          </span>
+        </div>
+        <div style={{ display: 'flex', marginTop: 36, fontSize: 38, color: SUB }}>
+          Full-stack developer · Next.js and AI agents
         </div>
       </div>
-    ),
+    </div>,
     {
       ...size,
       fonts: [
