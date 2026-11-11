@@ -47,7 +47,7 @@ export async function FeaturedProject() {
             alt="Ecommerce Template storefront: dark header with search and a grid of clothing products"
             placeholder="blur"
             sizes="(min-width: 704px) 672px, 100vw"
-            className="h-[190px] w-full object-cover md:h-[300px]"
+            className="h-auto min-h-full w-full object-cover"
           />
         </a>
 

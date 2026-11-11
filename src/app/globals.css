@@ -141,9 +141,34 @@
     transform: translateY(1px) scale(0.985);
   }
 
-  /* Link underline: 2px signal bar that leaves to the right and returns from the left. */
+  /* /blog chips: the active block is a clipped inverted copy of the row (see PostList);
+     animating the clip moves the block and recolours the labels in the same frames. */
+  .chip-overlay {
+    transition: clip-path 250ms var(--ease-wipe);
+  }
+  .chip {
+    transition:
+      transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      color 150ms ease;
+  }
+
+  /* "All writing" links: the arrow nudges back, mirroring "Previous post". */
+  .back-arrow {
+    transition: translate var(--t-exit) var(--ease-out-expo);
+  }
+
+  /* Link underline: a 2px signal bar that leaves to the right and returns from the left.
+     The background is bar · gap · bar, three links wide; sliding it is a transition, so
+     leaving mid-way reverses from wherever it is. */
   .link {
-    background: linear-gradient(var(--signal), var(--signal)) 100% 100% / 100% 2px no-repeat;
+    background: linear-gradient(
+        90deg,
+        var(--signal) 33.333%,
+        transparent 33.333% 66.667%,
+        var(--signal) 66.667%
+      )
+      100% 100% / 300% 2px no-repeat;
+    transition: background-position var(--t-exit) var(--ease-wipe);
   }
   .link:active {
     color: var(--signal);
@@ -223,20 +248,34 @@
     transition-duration: 200ms;
   }
 
-  /* Leaving, the screenshot scrolls back up quickly instead of retracing the pan. */
+  /* The screenshot renders at its natural height inside a fixed-height box and pans with
+     `translate`, which stays on the compositor. At rest it shows the centre crop; leaving,
+     it scrolls back up quickly instead of retracing the pan. */
+  .shot {
+    --shot-h: 190px;
+    height: var(--shot-h);
+  }
+  @media (min-width: 768px) {
+    .shot {
+      --shot-h: 300px;
+    }
+  }
   .shot img {
-    transition:
-      transform 600ms var(--ease-out-expo),
-      object-position 800ms var(--ease-out-expo);
+    translate: 0 calc((var(--shot-h) - 100%) / 2);
+    /* Whole pixels: a fractional offset resamples the screenshot and softens it. */
+    translate: 0 round(calc((var(--shot-h) - 100%) / 2), 1px);
+    transition: translate 800ms var(--ease-out-expo);
   }
 
   /* Split titles: letters sit in line masks tall enough for the Á accent. */
   .split-title {
+    position: relative; /* offsetParent for the letters SplitTitle measures */
     cursor: default;
   }
   .split-line {
     display: block;
     overflow: hidden;
+    white-space: nowrap; /* a widened line clips inside its mask, never wraps */
     padding-top: 0.3em;
     margin-top: -0.3em;
   }
@@ -263,11 +302,12 @@
 
 @media (hover: hover) and (pointer: fine) {
   .link:hover {
-    animation: link-wipe 500ms var(--ease-out-expo);
+    background-position: 0 100%;
+    transition-duration: var(--t-hover);
   }
   .row:hover::after {
     transform: scaleX(1);
-    transition-duration: 400ms;
+    transition-duration: var(--t-hover);
   }
   .latest:hover::after {
     transform: scaleX(1);
@@ -301,11 +341,16 @@
   }
   /* Slow pan so the page reads as it scrolls past. */
   .shot:hover img {
-    transform: scale(1.02);
-    object-position: 0 100%;
-    transition:
-      transform 700ms var(--ease-out-expo),
-      object-position 3s cubic-bezier(0.45, 0, 0.55, 1);
+    translate: 0 calc(var(--shot-h) - 100%);
+    translate: 0 round(calc(var(--shot-h) - 100%), 1px);
+    transition: translate 3s cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  .chip[aria-pressed='false']:hover {
+    color: var(--signal);
+  }
+  .back:hover .back-arrow {
+    translate: -6px 0;
+    transition-duration: var(--t-hover);
   }
 }
 
@@ -330,25 +375,6 @@
   transition-duration: 200ms;
 }
 
-@keyframes link-wipe {
-  0% {
-    background-position: 100% 100%;
-    background-size: 100% 2px;
-  }
-  45% {
-    background-position: 100% 100%;
-    background-size: 0 2px;
-  }
-  46% {
-    background-position: 0 100%;
-    background-size: 0 2px;
-  }
-  100% {
-    background-position: 0 100%;
-    background-size: 100% 2px;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   /* Load sequence, one beat after another:
        0ms     letters rise, 35ms apart (a 12-letter name is fully moving by ~450ms)
@@ -366,12 +392,12 @@
     animation-delay: calc(var(--i) * 35ms + 60ms);
   }
   .split-dot {
-    animation: dot-land 650ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: dot-land 650ms linear both;
     animation-delay: calc(var(--i) * 35ms + 300ms);
     transform-origin: 50% 90%;
   }
   .hero-intro {
-    animation: fade-up 700ms var(--ease-out-expo) both;
+    animation: fade-up 700ms var(--ease-out-expo) backwards;
     animation-delay: var(--cue-intro);
   }
 
@@ -389,6 +415,7 @@
     inset: -0.04em -0.08em;
     background: var(--signal);
     transform: scaleX(0);
+    transform-origin: left;
     pointer-events: none;
   }
   [data-reveal='title'][data-pending] {
@@ -429,19 +456,29 @@
   }
   /* Items start while their section title is still under the block. */
   [data-reveal='list'][data-inview] > * {
-    animation: fade-up 600ms var(--ease-out-expo) both;
+    animation: fade-up 600ms var(--ease-out-expo) backwards;
     animation-delay: calc(var(--i, 0) * 60ms + 250ms);
   }
   [data-reveal='list']:not([data-pending], [data-inview]) > * {
-    animation: fade-up 600ms var(--ease-out-expo) both;
+    animation: fade-up 600ms var(--ease-out-expo) backwards;
     animation-delay: calc(var(--i, 0) * 60ms + var(--cue-lists));
   }
 
   [data-reveal='media'][data-pending] {
     clip-path: inset(0 0 100% 0);
   }
+  /* On its title's beat, like the lists (RevealObserver reveals a section together). */
   [data-reveal='media'][data-inview] {
-    animation: curtain 1000ms var(--ease-wipe) both;
+    animation: curtain 1000ms var(--ease-wipe) 250ms both;
+  }
+
+  /* After the first client-side route change (RevealObserver sets data-entered), pages
+     arrive at rest: the entrance is the first page's moment, not every navigation's. */
+  html[data-entered] :is(.split-char, .split-dot, .hero-intro),
+  html[data-entered] [data-reveal],
+  html[data-entered] [data-reveal]::after,
+  html[data-entered] [data-reveal='list'] > * {
+    animation: none;
   }
 
   @supports (animation-timeline: scroll()) {
@@ -464,14 +501,24 @@
   }
 }
 
+/* The dot falls accelerating, squashes on contact and springs back: each phase gets its
+   own curve, so the squash happens on impact, not in the air. */
 @keyframes dot-land {
   0% {
     opacity: 0;
     transform: translateY(-0.9em);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0);
   }
-  55% {
+  15% {
     opacity: 1;
+  }
+  38% {
+    transform: translateY(0);
+    animation-timing-function: var(--ease-out-expo);
+  }
+  50% {
     transform: translateY(0) scale(1.3, 0.72);
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   100% {
     transform: none;
@@ -489,23 +536,19 @@
   }
 }
 
-/* Title reveal: a signal block wipes across, the text is there when it leaves. */
+/* Title reveal: a signal block wipes across, the text is there when it leaves. With the
+   origin fixed at the left, translateX(t) + scaleX(1 - t) keeps the right edge still while
+   the left edge leaves, so the whole wipe stays on the compositor. */
 @keyframes title-block {
   0% {
-    transform: scaleX(0);
-    transform-origin: left;
+    transform: translateX(0) scaleX(0);
   }
-  48% {
-    transform: scaleX(1);
-    transform-origin: left;
-  }
+  48%,
   52% {
-    transform: scaleX(1);
-    transform-origin: right;
+    transform: translateX(0) scaleX(1);
   }
   100% {
-    transform: scaleX(0);
-    transform-origin: right;
+    transform: translateX(100%) scaleX(0);
   }
 }
 
@@ -558,5 +601,24 @@
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
     transition-duration: 1ms !important;
+  }
+
+  /* Hover and press states still show, but nothing travels. */
+  .row:hover .row-body,
+  .row:active .row-body {
+    transform: none;
+  }
+  .row-arrow,
+  .row:hover .row-arrow,
+  .row:active .row-arrow,
+  .row:hover .row-arrow-static,
+  .latest:hover .latest-arrow,
+  .btn-fill:hover .btn-arrow,
+  .back:hover .back-arrow {
+    translate: none;
+  }
+  .shot:hover img {
+    translate: 0 calc((var(--shot-h) - 100%) / 2);
+    translate: 0 round(calc((var(--shot-h) - 100%) / 2), 1px);
   }
 }

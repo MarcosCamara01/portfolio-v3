@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import {
   AnimatePresence,
   LayoutGroup,
@@ -10,11 +10,13 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 import type { Post } from '@/lib/posts';
-import { PostRow } from './post-row';
+import { cn } from '@/lib/cn';
 import { formatDay } from '@/lib/dates';
+import { PostRow } from './post-row';
 import { LatestPost } from './latest-post';
 
 const ALL = 'All';
+const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
 export function PostList({ posts }: { posts: Post[] }) {
   const [active, setActive] = useState(ALL);
@@ -29,72 +31,110 @@ export function PostList({ posts }: { posts: Post[] }) {
   }, {});
   const ordered = Object.entries(years).sort(([a], [b]) => Number(b) - Number(a));
 
+  const groupRef = useRef<HTMLDivElement>(null);
+  // The active block is an inverted copy of the chip row, clipped to the active chip.
+  // Undefined until measured, so the server HTML and first paint mark the chip statically.
+  const [clip, setClip] = useState<string>();
+
+  useLayoutEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    const update = () => {
+      const chip = group.querySelector<HTMLElement>('button[aria-pressed="true"]');
+      if (!chip) return;
+      const { offsetTop: top, offsetLeft: left, offsetWidth: width, offsetHeight: height } = chip;
+      const right = group.offsetWidth - left - width;
+      const bottom = group.offsetHeight - top - height;
+      setClip(`inset(${top}px ${right}px ${bottom}px ${left}px)`);
+    };
+    update();
+    document.fonts.ready.then(update);
+    const observer = new ResizeObserver(update);
+    observer.observe(group);
+    return () => observer.disconnect();
+  }, [active]);
+
   const spring = reduced
     ? { duration: 0 }
     : { type: 'spring' as const, stiffness: 500, damping: 40 };
+  // Swaps are opacity only. The leaving block fades fast and out of flow (popLayout); the
+  // new one starts just before that ends, so two inverted blocks never stack.
+  const swap = {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: reduced ? { duration: 0 } : { delay: 0.09, duration: 0.22, ease: EASE_OUT_EXPO },
+    },
+    exit: {
+      opacity: 0,
+      transition: reduced ? { duration: 0 } : { duration: 0.12, ease: EASE_OUT_EXPO },
+    },
+  };
+  // Position only: a section that changes height must not scale its heading.
+  const layout = reduced ? false : ('position' as const);
 
   return (
-    // domMax: the chips and rows rely on layout animations.
+    // domMax: the rows and sections rely on layout animations.
     <LazyMotion features={domMax} strict>
       <LayoutGroup>
-        <div role="group" aria-label="Filter posts by topic" className="flex gap-2 pb-7 pt-5">
-          {tags.map((tag) => {
-            const on = tag === active;
-            return (
+        <div className="pb-7 pt-5">
+          <div
+            ref={groupRef}
+            role="group"
+            aria-label="Filter posts by topic"
+            className="relative flex flex-wrap gap-2"
+          >
+            {tags.map((tag) => (
               <button
                 key={tag}
                 type="button"
-                aria-pressed={on}
+                aria-pressed={tag === active}
                 onClick={() => setActive(tag)}
-                className="label press relative h-11 px-4"
+                className={cn(
+                  'chip label press h-11 whitespace-nowrap px-4',
+                  !clip && tag === active && 'bg-inv text-inv-ink'
+                )}
               >
-                {on ? (
-                  <m.span
-                    layoutId="chip"
-                    transition={spring}
-                    className="absolute inset-0 bg-inv"
-                    aria-hidden
-                  />
-                ) : null}
-                <span className={on ? 'relative text-inv-ink' : 'relative'}>{tag}</span>
+                {tag}
               </button>
-            );
-          })}
+            ))}
+            {clip ? (
+              <div
+                aria-hidden
+                className="chip-overlay pointer-events-none absolute inset-0 flex flex-wrap gap-2 bg-inv text-inv-ink"
+                style={{ clipPath: clip }}
+              >
+                {tags.map((tag) => (
+                  <span key={tag} className="label flex h-11 items-center whitespace-nowrap px-4">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <AnimatePresence mode="popLayout" initial={false}>
           {latest ? (
-            <m.div
-              key={`latest-${latest.id}`}
-              layout={!reduced}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={spring}
-            >
+            <m.div key={`latest-${latest.id}`} layout={layout} {...swap} transition={spring}>
               <LatestPost post={latest} withDescription />
             </m.div>
           ) : null}
           {ordered.map(([year, list]) => (
-            <m.section
-              key={year}
-              layout={!reduced}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={spring}
-            >
-              <div className="mt-11 flex items-baseline justify-between pb-2.5 md:mt-[72px]">
+            <m.section key={year} layout={layout} {...swap} transition={spring}>
+              <div className="flex items-baseline justify-between pb-2.5 pt-11 md:pt-[72px]">
                 <h2 className="display text-4xl leading-none md:text-5xl">{year}</h2>
                 <span className="label">
                   {list.length} {list.length === 1 ? 'post' : 'posts'}
                 </span>
               </div>
-              {list.map((post) => (
-                <m.div key={post.id} layout={!reduced} transition={spring}>
-                  <PostRow post={post} date={formatDay(post.date)} detailed />
-                </m.div>
-              ))}
+              <AnimatePresence mode="popLayout" initial={false}>
+                {list.map((post) => (
+                  <m.div key={post.id} layout={layout} {...swap} transition={spring}>
+                    <PostRow post={post} date={formatDay(post.date)} detailed />
+                  </m.div>
+                ))}
+              </AnimatePresence>
             </m.section>
           ))}
         </AnimatePresence>
