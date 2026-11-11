@@ -32,7 +32,8 @@ Implement the redesign in layers, as separate PRs: tokens + chrome → home → 
 `src/lib/posts.ts` parses each `page.mdx` with **regular expressions, not by evaluating
 the module**, and throws at build time when something does not match:
 
-- `metadata.title` must be quoted and **followed by a comma**.
+- `metadata.title` must be quoted and **followed by a comma**. So must
+  `metadata.description`, or it is silently dropped.
 - `date` must be a quoted `Month DD, YYYY` string.
 - The year in `date` must equal the `{year}` directory name.
 - No `# H1` in the body; the title comes from `metadata`.

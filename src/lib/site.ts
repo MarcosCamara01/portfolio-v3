@@ -6,7 +6,6 @@ export const LINKEDIN_URL = 'https://www.linkedin.com/in/marcospenelascamara';
 export const X_URL = 'https://twitter.com/marcoscamara01';
 export const X_HANDLE = '@marcoscamara01';
 
-// schema.org Person, shared by the home page and article JSON-LD.
 export const AUTHOR = {
   '@type': 'Person',
   name: 'Marcos Penelas Cámara',

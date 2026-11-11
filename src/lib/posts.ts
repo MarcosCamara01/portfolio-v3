@@ -41,9 +41,8 @@ function extractHeadings(source: string): Heading[] {
   }));
 }
 
-// Posts are derived from the filesystem: src/app/(posts)/{year}/{slug}/page.mdx.
-// Each page.mdx must export `metadata` (with a title) and a `date` string.
-// `metadata.description` and `export const tag` are optional.
+// Each page.mdx is read as text with the regexes below, not imported, so its exports
+// must match them exactly. AGENTS.md "Writing articles" lists the rules.
 export async function getPosts(): Promise<Post[]> {
   const years = fs.readdirSync(POSTS_ROOT).filter((entry) => /^\d{4}$/.test(entry));
 

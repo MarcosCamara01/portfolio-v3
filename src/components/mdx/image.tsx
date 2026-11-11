@@ -9,9 +9,8 @@ async function fetchImage(url: string) {
   return Buffer.from(new Uint8Array(await res.arrayBuffer()));
 }
 
-// Remote images are fetched and local ones are read from /public. A page rendered at
-// request time on Vercel (where CI is unset) has no /public on disk, so it fetches local
-// images from its own deployment instead.
+// On Vercel, a page rendered at request time (CI unset) has no /public on disk, so local
+// images are fetched from the deployment instead.
 async function readImage(src: string) {
   if (src.startsWith('http')) return fetchImage(src);
   if (!process.env.CI && process.env.VERCEL_URL && process.env.NODE_ENV === 'production') {
@@ -36,7 +35,6 @@ function Caption({ children }: { children: string }) {
   );
 }
 
-// Markdown images: `![alt](src)`. The alt text doubles as the caption.
 export async function Image({ src, alt = '' }: { src: string; alt?: string }) {
   let size: { width: number; height: number };
   try {

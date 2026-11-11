@@ -1,6 +1,5 @@
 import type { Config } from 'tailwindcss';
 
-// Colors map to the CSS variables in globals.css, which hold both the light and dark values.
 const config = {
   darkMode: 'class',
   content: ['./src/app/**/*.{ts,tsx,mdx}', './src/components/**/*.{ts,tsx}'],

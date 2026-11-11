@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn';
 
 export function SiteHeader() {
   const pathname = usePathname();
-  // Posts live at /{year}/{slug}; anything else (home, 404) leaves Blog unmarked.
+  // Posts live at /{year}/{slug}.
   const onBlog = pathname === '/blog' || /^\/\d{4}\//.test(pathname);
 
   return (

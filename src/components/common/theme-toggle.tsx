@@ -29,7 +29,8 @@ export function ThemeToggle() {
       root.style.colorScheme = next;
       setTheme(next);
     });
-    // The browser skips the animation (e.g. a hidden tab) but still applies the update.
+    // `ready` rejects when the browser skips the animation (e.g. a hidden tab); the
+    // theme still changes.
     transition.ready.catch(() => {});
   };
 

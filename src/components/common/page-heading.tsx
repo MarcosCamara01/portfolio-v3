@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { SplitTitle } from './split-title';
 
-// Title and intro of the pages that are not home: /blog and the 404.
 export function PageHeading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <>

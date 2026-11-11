@@ -61,8 +61,8 @@
 }
 
 @layer components {
-  /* Condensed uppercase display type. Archivo is variable on `wdth`, which the
-     hero title plays with. */
+  /* Archivo is variable on `wdth`: 62% is the condensed cut, and SplitTitle animates
+     letters wider from there. */
   .display {
     font-family: var(--font-display), sans-serif;
     font-weight: 900;
@@ -75,7 +75,7 @@
     @apply text-[13px] font-bold uppercase tracking-[0.04em];
   }
 
-  /* Article blockquotes: the first one is the lede, later ones are pull quotes. */
+  /* A blockquote that opens the article is its lede; any other is a pull quote. */
   .prose-b4 > blockquote {
     margin: 28px 0 8px;
     padding: 18px;
@@ -280,7 +280,7 @@
     background-size: 100% 2px;
     transition-duration: var(--t-hover);
   }
-  /* Slow, linear-ish pan so the page reads as it scrolls past. */
+  /* Slow pan so the page reads as it scrolls past. */
   .shot:hover img {
     transform: scale(1.02);
     object-position: 0 100%;
@@ -290,7 +290,6 @@
   }
 }
 
-/* Touch: the same feedback while the finger is down. */
 @media (hover: none) {
   /* Touch feedback has to land while the finger is still down: 200ms. */
   .row:active::after,
@@ -436,8 +435,8 @@
   }
 }
 
-/* Letters start a full line box plus the mask's 0.3em top padding below, so accents
-   that stick out above the box (the Á in Cámara) stay hidden until their letter rises. */
+/* Letters start a full line box plus 0.35em below, past the mask's 0.3em top padding,
+   so accents above the box (the Á in Cámara) stay hidden until their letter rises. */
 @keyframes char-rise {
   from {
     transform: translateY(calc(100% + 0.35em));

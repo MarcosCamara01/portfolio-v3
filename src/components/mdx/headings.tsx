@@ -23,8 +23,7 @@ function Anchor({ id }: { id: string }) {
   );
 }
 
-// Headings are authored as `## 1. Title [#id]`: strip the id into an anchor and
-// pull a leading number out so it can be styled separately.
+// Headings are authored as `## 1. Title [#id]`.
 function withHeadingId(children: ReactNode, { numbered = false } = {}) {
   return Children.map(children, (el) => {
     if ('string' !== typeof el) return el;

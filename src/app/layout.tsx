@@ -11,9 +11,8 @@ import { SITE_NAME, SITE_URL, X_HANDLE } from '@/lib/site';
 
 import './globals.css';
 
-// Self-hosted instances of the Google Fonts files (both OFL), cut down to what the
-// design uses: Archivo pinned at weight 900 with its width axis kept at 62–100 for
-// the hero, Work Sans kept variable between 400 and 700. See src/app/fonts/README.md.
+// Self-hosted subset instances of Google Fonts (OFL), cut as src/app/fonts/README.md
+// describes. Archivo keeps its `wdth` axis because SplitTitle animates it.
 const display = localFont({
   src: './fonts/archivo-black-wdth.woff2',
   variable: '--font-display',
@@ -27,7 +26,7 @@ const sans = localFont({
   weight: '400 700',
 });
 
-// Only articles with code use it, so it is not preloaded on every page.
+// Only article bodies use it, so it is not preloaded on every page.
 const mono = IBM_Plex_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
