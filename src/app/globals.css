@@ -431,6 +431,12 @@
   translate: none;
   transition-duration: 0ms;
 }
+/* While the keyboard moves focus (KeyboardMode), leaving a row is instant too, so
+   tabbing doesn't leave a trail of retracting lines. */
+html[data-keyboard] :is(.row, .latest)::after,
+html[data-keyboard] .row-arrow {
+  transition-duration: 0ms;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   /* Load sequence, one beat after another:

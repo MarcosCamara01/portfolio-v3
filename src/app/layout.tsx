@@ -7,6 +7,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SiteHeader } from '@/components/common/site-header';
 import { SiteFooter } from '@/components/common/site-footer';
 import { RevealObserver } from '@/components/common/reveal-observer';
+import { KeyboardMode } from '@/components/common/keyboard-mode';
 import { SITE_NAME, SITE_URL, X_HANDLE } from '@/lib/site';
 
 import './globals.css';
@@ -85,6 +86,7 @@ export default function RootLayout({
           </div>
         </ThemeProvider>
         <RevealObserver />
+        <KeyboardMode />
         {/* The insights script only exists on Vercel deployments. */}
         {process.env.VERCEL ? <Analytics /> : null}
       </body>
