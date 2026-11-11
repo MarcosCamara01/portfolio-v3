@@ -1,14 +1,8 @@
-const withMDX = require('@next/mdx')({
-  extension: /\.mdx?$/,
-  options: {
-    remarkPlugins: [],
-    rehypePlugins: [],
-  },
-});
+const withMDX = require('@next/mdx')();
 
 /** @type {import('next').NextConfig} */
 module.exports = withMDX({
-  pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
+  pageExtensions: ['ts', 'tsx', 'mdx'],
   reactStrictMode: true,
   // `npm run lighthouse` builds into its own folder so it can run next to `next dev`.
   distDir: process.env.NEXT_DIST_DIR || '.next',

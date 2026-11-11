@@ -17,31 +17,6 @@
     --on-signal: #ffffff;
     --code: #111111;
     --code-ink: #f2f2f0;
-
-    /* Legacy names still read by shadcn/ui pieces and embeds */
-    --background: var(--page);
-    --foreground: var(--surface);
-    --text-primary: var(--ink);
-    --text-secondary: var(--sub);
-
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --primary: 0 0% 7%;
-    --primary-foreground: 60 7% 95%;
-    --secondary: 60 5% 90%;
-    --secondary-foreground: 0 0% 7%;
-    --muted: 60 5% 90%;
-    --muted-foreground: 0 0% 27%;
-    --accent: 60 5% 90%;
-    --accent-foreground: 0 0% 7%;
-    --destructive: 8 82% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 60 5% 78%;
-    --input: 60 5% 78%;
-    --ring: 0 0% 7%;
-    --radius: 0rem;
   }
 
   .dark {
@@ -57,24 +32,6 @@
     --on-signal: #111111;
     --code: #1a1a18;
     --code-ink: #f2f2f0;
-
-    --card: 60 4% 10%;
-    --card-foreground: 60 7% 95%;
-    --popover: 60 4% 10%;
-    --popover-foreground: 60 7% 95%;
-    --primary: 60 7% 95%;
-    --primary-foreground: 0 0% 7%;
-    --secondary: 60 3% 22%;
-    --secondary-foreground: 60 7% 95%;
-    --muted: 60 3% 22%;
-    --muted-foreground: 60 4% 69%;
-    --accent: 60 3% 22%;
-    --accent-foreground: 60 7% 95%;
-    --destructive: 9 100% 63%;
-    --destructive-foreground: 0 0% 7%;
-    --border: 60 3% 22%;
-    --input: 60 3% 22%;
-    --ring: 60 7% 95%;
   }
 }
 
@@ -104,8 +61,8 @@
 }
 
 @layer components {
-  /* Condensed uppercase display type. Archivo is variable on `wdth`, which the
-     hero title plays with. */
+  /* Archivo is variable on `wdth`: 62% is the condensed cut, and SplitTitle animates
+     letters wider from there. */
   .display {
     font-family: var(--font-display), sans-serif;
     font-weight: 900;
@@ -118,7 +75,7 @@
     @apply text-[13px] font-bold uppercase tracking-[0.04em];
   }
 
-  /* Article blockquotes: the first one is the lede, later ones are pull quotes. */
+  /* A blockquote that opens the article is its lede; any other is a pull quote. */
   .prose-b4 > blockquote {
     margin: 28px 0 8px;
     padding: 18px;
@@ -323,7 +280,7 @@
     background-size: 100% 2px;
     transition-duration: var(--t-hover);
   }
-  /* Slow, linear-ish pan so the page reads as it scrolls past. */
+  /* Slow pan so the page reads as it scrolls past. */
   .shot:hover img {
     transform: scale(1.02);
     object-position: 0 100%;
@@ -333,7 +290,6 @@
   }
 }
 
-/* Touch: the same feedback while the finger is down. */
 @media (hover: none) {
   /* Touch feedback has to land while the finger is still down: 200ms. */
   .row:active::after,
@@ -479,8 +435,8 @@
   }
 }
 
-/* Letters start a full line box plus the mask's 0.3em top padding below, so accents
-   that stick out above the box (the Á in Cámara) stay hidden until their letter rises. */
+/* Letters start a full line box plus 0.35em below, past the mask's 0.3em top padding,
+   so accents above the box (the Á in Cámara) stay hidden until their letter rises. */
 @keyframes char-rise {
   from {
     transform: translateY(calc(100% + 0.35em));

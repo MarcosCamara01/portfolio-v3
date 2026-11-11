@@ -1,0 +1,41 @@
+import { SectionTitle } from './section-title';
+
+const JOBS = [
+  {
+    when: '2024 — Now',
+    what: 'Togga · Full-stack developer',
+    description:
+      'Togga is a workspace for law firms, now in beta. I work across the whole product, from the legal AI chat to the three.js canvas and payments.',
+  },
+  {
+    when: '2023 — 2024',
+    what: 'Freelance developer',
+    description: 'Built complete products for different clients.',
+  },
+];
+
+export function Experience() {
+  return (
+    <section>
+      <SectionTitle>Work</SectionTitle>
+      <ul data-reveal="list">
+        {JOBS.map((job) => (
+          <li
+            key={job.what}
+            className="flex flex-col gap-1 border-t border-soft py-3.5 md:grid md:grid-cols-[120px_minmax(0,1fr)] md:gap-4 md:py-4"
+          >
+            <span className="label md:pt-[3px] md:text-[15px] md:normal-case md:tracking-normal">
+              {job.when}
+            </span>
+            <div className="flex flex-col gap-1">
+              <span className="text-lg font-bold md:text-xl">{job.what}</span>
+              <span className="text-[15px] leading-normal text-sub md:leading-[1.55]">
+                {job.description}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

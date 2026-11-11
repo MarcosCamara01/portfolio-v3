@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Personal portfolio and technical blog. Next.js 16 (App Router) + React 19 + Tailwind,
-articles written as MDX. Deployed on Vercel. Embedded tweets may be cached in Upstash Redis.
+articles written as MDX. Deployed on Vercel.
 
 ## Commands
 
@@ -18,22 +18,28 @@ Post metadata is parsed at build time and a malformed export fails the build.
 ## Layout
 
 - `src/app/(posts)/{year}/{slug}/page.mdx` — one article per directory.
-- `src/get-posts.ts` — derives the post list from the filesystem. No index to maintain.
-- `src/components/` — UI, split into `blog/` and `portfolio/`.
-- `src/lib/`, `src/redis.ts` — site config and optional tweet cache.
+- `src/lib/posts.ts` — derives the post list from the filesystem. No index to maintain.
+- `src/components/` — UI by page: `home/`, `blog/` and `article/`. `mdx/` holds the elements
+  posts render with (mapped in `src/mdx-components.tsx`); `common/` holds the site chrome and
+  pieces shared across pages.
+- `src/lib/` — site config, post loading and small helpers.
 - `DESIGN.md` — visual redesign source of truth (tokens, type, `max-w-2xl` column, home/blog/article structure). Read it before changing UI.
 
 Implement the redesign in layers, as separate PRs: tokens + chrome → home → `/blog` → article pages → motion/polish. Posts stay MDX in git. Do not install Spec Kit for this work.
 
 ## Writing articles
 
-`src/get-posts.ts` parses each `page.mdx` with **regular expressions, not by evaluating
+`src/lib/posts.ts` parses each `page.mdx` with **regular expressions, not by evaluating
 the module**, and throws at build time when something does not match:
 
-- `metadata.title` must be quoted and **followed by a comma**.
+- `metadata.title` must be quoted and **followed by a comma**. So must
+  `metadata.description`, or it is silently dropped.
 - `date` must be a quoted `Month DD, YYYY` string.
 - The year in `date` must equal the `{year}` directory name.
 - No `# H1` in the body; the title comes from `metadata`.
+
+Bodies are plain markdown plus `<YouTube videoId="…" />`. Any other JSX component has to be
+added to `src/mdx-components.tsx` first, or the build fails.
 
 ## Skills
 

@@ -1,4 +1,4 @@
-// Structured data for search engines. `<` is escaped so the JSON can't close the tag.
+// `<` is escaped so a string in the data can't close the <script> tag.
 export function JsonLd({ data }: { data: Record<string, unknown> }) {
   return (
     <script

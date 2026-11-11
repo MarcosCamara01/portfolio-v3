@@ -1,2 +1,4 @@
-// Lives apart from get-posts.ts, which reads the filesystem, so client components can import it.
-export const postHref = (post: { id: string; year: string }) => `/${post.year}/${post.id}`;
+// Lives apart from posts.ts, which reads the filesystem, so client components can import it.
+export function postHref(post: { id: string; year: string }) {
+  return `/${post.year}/${post.id}`;
+}
