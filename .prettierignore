@@ -8,4 +8,9 @@ coverage
 .env*
 package-lock.json
 yarn.lock
-pnpm-lock.yaml 
+pnpm-lock.yaml
+
+# Agent skills. The third-party ones must stay byte-for-byte as upstream ships
+# them, or the content hashes in skills-lock.json stop matching. Update them
+# with the Skills CLI.
+.agents/skills
