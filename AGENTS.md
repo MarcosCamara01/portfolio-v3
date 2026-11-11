@@ -35,29 +35,35 @@ the module**, and throws at build time when something does not match:
 - The year in `date` must equal the `{year}` directory name.
 - No `# H1` in the body; the title comes from `metadata`.
 
-The full conventions, voice profile and editing pipeline are in the `blog-post` skill
-(`.agents/skills/blog-post/SKILL.md`). Read it before drafting or restructuring a post.
-
 ## Skills
 
-Reusable agent instructions live in `.agents/skills/`, committed to the repo:
+The repo only carries skills by Emil Kowalski
+([emilkowalski/skills](https://github.com/emilkowalski/skills), MIT), committed in
+`.agents/skills/`. Skills by Lauren Tan (poteto) come from the `pstack` Claude Code
+plugin, which is installed per machine and not vendored here.
 
-| Skill | Use it for |
-| --- | --- |
-| `blog-post` | MDX conventions, article structure, the research to publish pipeline |
-| `research` | Gathering facts from primary sources into a cited Markdown file |
-| `humanizer` | Editing prose for AI writing patterns ([blader/humanizer](https://github.com/blader/humanizer), MIT) |
-| `review` | Read-only bug-and-risk review of a diff |
-| `frontend-design` | Distinctive visual identity (not Inter + gray defaults) |
-| `design-taste-frontend` | Portfolio/redesign direction, anti-slop |
-| `emil-design-eng` | Motion, hover, interaction feel |
-| `web-design-guidelines` | UX/accessibility review (Vercel) |
-| `better-ui` | Surface, radius, icon, micro-interaction polish |
-| `better-typography` | Type scale, wrapping, tabular numbers |
-| `better-layout` | Spacing, grouping, breakpoints |
-| `better-accessibility` | Focus, keyboard, hit areas, reduced motion |
-| `impeccable` | Production polish pass |
-| `vercel-react-best-practices` | React/Next performance while redesigning |
+| Skill                          | Use it for                                                |
+| ------------------------------ | --------------------------------------------------------- |
+| `emil-design-eng`              | UI polish, component design and animation decisions       |
+| `animate`                      | Building an animation from scratch, decision by decision  |
+| `choreograph`                  | Several elements moving together: order, overlap, stagger |
+| `gestures`                     | Drag, swipe and sheet interactions that track the finger  |
+| `animation-performance`        | Keeping motion inside the frame budget, finding jank      |
+| `find-animation-opportunities` | Read-only: where the UI should and should not animate     |
+| `improve-animations`           | Read-only audit of the motion code, with fix plans        |
+| `remove-animations`            | Deleting motion the interface does not need               |
+| `review-animations`            | Reviewing motion code against a high craft bar            |
+| `animation-vocabulary`         | Naming a motion effect you can only describe              |
+| `apple-design`                 | Apple-style fluid motion, depth and typography on the web |
+| `mobile-native`                | Making the site feel native on phones                     |
+| `break-ui`                     | Stress-testing UI with worst-case data                    |
+| `prototype`                    | Several variants of a UI piece behind a live picker       |
+| `pick-ui-library`              | Curated library picks for a frontend task                 |
+| `ask-sonner`                   | The Sonner toast library                                  |
+| `animate-expo`                 | React Native and Expo animation (not used by this site)   |
+| `write-swift`                  | Modern Swift (not used by this site)                      |
+
+`review-animations`, `prototype` and `pick-ui-library` only run when invoked by name.
 
 `.agents/skills/` is the tool-neutral location, so most agent tools pick these up as
 soon as the repo is cloned. Claude Code reads `.claude/skills/` instead, which is
@@ -68,11 +74,11 @@ bash scripts/setup-skills.sh            # this repo only
 bash scripts/setup-skills.sh --global   # also expose them in ~/.claude/skills/
 ```
 
-Third-party skills are pinned in `skills-lock.json`. Update them with the Skills CLI
-rather than editing the vendored files by hand:
+The skills are pinned in `skills-lock.json`. Update them with the Skills CLI rather
+than editing the vendored files by hand:
 
 ```bash
-npx skills add blader/humanizer --agent '*'
+npx skills add emilkowalski/skills --skill '*' --agent '*'
 ```
 
 ## Conventions
