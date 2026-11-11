@@ -1,5 +1,5 @@
-import { ArticleHeader, ArticleFooter } from './header';
-import { getPosts } from '@/get-posts';
+import { ArticleHeader, ArticleFooter } from '@/components/article/article-header';
+import { getPosts } from '@/lib/posts';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const posts = await getPosts();

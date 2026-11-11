@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import type { Post } from '@/get-posts';
+import type { Post } from '@/lib/posts';
 import { postHref } from '@/lib/post-href';
-import { ArrowRight } from '../common/icons';
+import { ArrowRight } from '@/components/common/icons';
 
 export function PostRow({
   post,

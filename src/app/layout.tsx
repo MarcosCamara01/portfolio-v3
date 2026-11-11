@@ -1,8 +1,8 @@
 import { IBM_Plex_Mono } from 'next/font/google';
 import localFont from 'next/font/local';
-import Header from '@/components/common/header';
-import { ThemeProvider } from '@/components/theme/theme-provider';
-import Footer from '@/components/common/footer';
+import Header from '@/components/common/site-header';
+import { ThemeProvider } from '@/components/common/theme-provider';
+import Footer from '@/components/common/site-footer';
 import { RevealObserver } from '@/components/common/reveal-observer';
 import { Analytics } from '@vercel/analytics/react';
 import { SITE_URL } from '@/lib/site';

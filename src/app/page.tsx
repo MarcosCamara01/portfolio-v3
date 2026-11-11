@@ -1,7 +1,7 @@
-import { Hero } from '@/components/portfolio/hero';
-import { Experience } from '@/components/portfolio/experience';
-import { FeaturedProject } from '@/components/portfolio/featured-project';
-import { Writing } from '@/components/portfolio/writing';
+import { Hero } from '@/components/home/hero';
+import { Experience } from '@/components/home/experience';
+import { FeaturedProject } from '@/components/home/featured-project';
+import { Writing } from '@/components/home/writing';
 import { JsonLd } from '@/components/common/json-ld';
 import { AUTHOR, SITE_URL } from '@/lib/site';
 

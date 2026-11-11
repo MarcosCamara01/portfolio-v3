@@ -9,9 +9,9 @@ import {
   m,
   useReducedMotion,
 } from 'framer-motion';
-import type { Post } from '@/get-posts';
+import type { Post } from '@/lib/posts';
 import { PostRow } from './post-row';
-import { formatDay } from './format';
+import { formatDay } from '@/lib/dates';
 import { LatestPost } from './latest-post';
 
 const ALL = 'All';

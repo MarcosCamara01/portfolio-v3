@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import { SectionTitle } from '../blog/section-title';
-import { ArrowUpRight, GitHub } from '../common/icons';
+import { SectionTitle } from './section-title';
+import { ArrowUpRight, GitHub } from '@/components/common/icons';
 import { StarCount } from './star-count';
 // Static import: hashed URL (cache busts on change), size and blur placeholder at build.
 import screenshot from './ecommerce-template.webp';

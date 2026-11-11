@@ -1,4 +1,4 @@
-import { SectionTitle } from '../blog/section-title';
+import { SectionTitle } from './section-title';
 
 const JOBS = [
   {

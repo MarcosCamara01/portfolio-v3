@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/cn';
 
 const REST = 62;
 const PEAK = 100;

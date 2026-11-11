@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { useSelectedLayoutSegments } from 'next/navigation';
-import type { Post } from '@/get-posts';
+import type { Post } from '@/lib/posts';
 import { postHref } from '@/lib/post-href';
 import { ArrowLeft, ArrowRight } from '@/components/common/icons';
-import { formatFull, isoDate } from '@/components/blog/format';
+import { formatFull, isoDate } from '@/lib/dates';
 import { JsonLd } from '@/components/common/json-ld';
 import { AUTHOR, SITE_URL, X_URL } from '@/lib/site';
-import { A } from '@/components/posts/a';
-import { splitNumber } from '@/components/posts/utils';
+import { A } from '@/components/mdx/a';
+import { splitNumber } from '@/components/mdx/utils';
 
 function useCurrentPost(posts: Post[]) {
   const segments = useSelectedLayoutSegments();

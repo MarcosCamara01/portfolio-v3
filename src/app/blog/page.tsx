@@ -1,6 +1,6 @@
-import { getPosts } from '@/get-posts';
+import { getPosts } from '@/lib/posts';
 import { PostList } from '@/components/blog/post-list';
-import { SplitTitle } from '@/components/portfolio/split-title';
+import { SplitTitle } from '@/components/common/split-title';
 
 export const metadata = {
   title: 'Writing',

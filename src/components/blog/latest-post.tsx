@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import type { Post } from '@/get-posts';
+import type { Post } from '@/lib/posts';
 import { postHref } from '@/lib/post-href';
-import { ArrowRight } from '../common/icons';
-import { formatMonth } from './format';
+import { ArrowRight } from '@/components/common/icons';
+import { formatMonth } from '@/lib/dates';
 
 export function LatestPost({
   post,

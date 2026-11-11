@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { getPosts } from '@/get-posts';
-import { SectionTitle } from '../blog/section-title';
-import { LatestPost } from '../blog/latest-post';
-import { PostRow } from '../blog/post-row';
-import { formatMonth } from '../blog/format';
-import { ArrowRight } from '../common/icons';
+import { getPosts } from '@/lib/posts';
+import { SectionTitle } from './section-title';
+import { LatestPost } from '@/components/blog/latest-post';
+import { PostRow } from '@/components/blog/post-row';
+import { formatMonth } from '@/lib/dates';
+import { ArrowRight } from '@/components/common/icons';
 
 export const Writing = async () => {
   const [latest, ...rest] = await getPosts();

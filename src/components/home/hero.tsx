@@ -1,4 +1,4 @@
-import { SplitTitle } from './split-title';
+import { SplitTitle } from '@/components/common/split-title';
 
 export function Hero() {
   return (

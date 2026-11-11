@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SplitTitle } from '@/components/portfolio/split-title';
+import { SplitTitle } from '@/components/common/split-title';
 import { ArrowLeft, ArrowRight } from '@/components/common/icons';
 
 export const metadata = {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/cn';
 
 export function A({ children, className = '', href, ...props }: any) {
   const styles = cn('link', className);
