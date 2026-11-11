@@ -17,31 +17,6 @@
     --on-signal: #ffffff;
     --code: #111111;
     --code-ink: #f2f2f0;
-
-    /* Legacy names still read by shadcn/ui pieces and embeds */
-    --background: var(--page);
-    --foreground: var(--surface);
-    --text-primary: var(--ink);
-    --text-secondary: var(--sub);
-
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --primary: 0 0% 7%;
-    --primary-foreground: 60 7% 95%;
-    --secondary: 60 5% 90%;
-    --secondary-foreground: 0 0% 7%;
-    --muted: 60 5% 90%;
-    --muted-foreground: 0 0% 27%;
-    --accent: 60 5% 90%;
-    --accent-foreground: 0 0% 7%;
-    --destructive: 8 82% 45%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 60 5% 78%;
-    --input: 60 5% 78%;
-    --ring: 0 0% 7%;
-    --radius: 0rem;
   }
 
   .dark {
@@ -57,24 +32,6 @@
     --on-signal: #111111;
     --code: #1a1a18;
     --code-ink: #f2f2f0;
-
-    --card: 60 4% 10%;
-    --card-foreground: 60 7% 95%;
-    --popover: 60 4% 10%;
-    --popover-foreground: 60 7% 95%;
-    --primary: 60 7% 95%;
-    --primary-foreground: 0 0% 7%;
-    --secondary: 60 3% 22%;
-    --secondary-foreground: 60 7% 95%;
-    --muted: 60 3% 22%;
-    --muted-foreground: 60 4% 69%;
-    --accent: 60 3% 22%;
-    --accent-foreground: 60 7% 95%;
-    --destructive: 9 100% 63%;
-    --destructive-foreground: 0 0% 7%;
-    --border: 60 3% 22%;
-    --input: 60 3% 22%;
-    --ring: 60 7% 95%;
   }
 }
 
