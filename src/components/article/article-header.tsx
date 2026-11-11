@@ -37,15 +37,18 @@ export function ArticleHeader({ posts }: { posts: Post[] }) {
         All writing
       </Link>
 
-      <p className="label flex flex-wrap gap-2 pt-2">
+      {/* Each separator travels with the item after it, so a wrap never strands a "·". */}
+      <p className="label flex flex-wrap gap-x-2 gap-y-1 pt-2">
         <span>{formatFull(post.date)}</span>
-        <span>·</span>
-        <span>{post.minutes} min read</span>
+        <span className="flex gap-2">
+          <span aria-hidden>·</span>
+          <span>{post.minutes} min read</span>
+        </span>
         {post.tag ? (
-          <>
-            <span>·</span>
+          <span className="flex gap-2">
+            <span aria-hidden>·</span>
             <span className="bg-signal px-1.5 text-signal-on">{post.tag}</span>
-          </>
+          </span>
         ) : null}
       </p>
 
@@ -63,7 +66,7 @@ export function ArticleHeader({ posts }: { posts: Post[] }) {
         <nav aria-label="On this page" className="mt-8 bg-surface px-[18px] py-4">
           <div className="label pb-1.5">On this page</div>
           <ol>
-            {post.headings.map((heading, i) => {
+            {post.headings.map((heading) => {
               const { number, text } = splitNumber(heading.title);
               return (
                 <li key={heading.id}>
@@ -71,10 +74,8 @@ export function ArticleHeader({ posts }: { posts: Post[] }) {
                     href={`#${heading.id}`}
                     className="group grid grid-cols-[28px_minmax(0,1fr)] gap-2 py-1.5 text-[15px] font-medium"
                   >
-                    <span className="font-bold text-signal">
-                      {number ?? String(i + 1).padStart(2, '0')}
-                    </span>
-                    <span className="decoration-signal decoration-2 underline-offset-4 group-hover:underline">
+                    <span className="font-bold text-signal">{number}</span>
+                    <span className="decoration-signal decoration-2 underline-offset-4 group-hover:underline group-active:underline">
                       {text}
                     </span>
                   </a>

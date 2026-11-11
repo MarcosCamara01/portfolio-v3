@@ -6,6 +6,7 @@ import { postHref } from '@/lib/post-href';
 import { X_URL } from '@/lib/site';
 import { ArrowLeft, ArrowRight } from '@/components/common/icons';
 import { A } from '@/components/mdx/a';
+import { cn } from '@/lib/cn';
 import { useCurrentPost } from './use-current-post';
 
 export function ArticleFooter({ posts }: { posts: Post[] }) {
@@ -25,7 +26,10 @@ export function ArticleFooter({ posts }: { posts: Post[] }) {
         </span>
       </div>
 
-      <nav aria-label="More posts" className="mt-7 flex flex-col bg-surface md:grid md:grid-cols-2">
+      <nav
+        aria-label="More posts"
+        className={cn('mt-7 flex flex-col bg-surface', older && 'md:grid md:grid-cols-2')}
+      >
         <Link href="/blog" className="press flex flex-col gap-1.5 p-4">
           <span className="label inline-flex items-center gap-2">
             <ArrowLeft />
