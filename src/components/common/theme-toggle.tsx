@@ -1,16 +1,29 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useTheme } from 'next-themes';
 
 const subscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
+// Same values as viewport.themeColor in app/layout.tsx. Those tags follow the OS theme,
+// so after a manual toggle the browser chrome needs them rewritten.
+const THEME_COLOR = { light: '#f2f2f0', dark: '#0e0e0d' } as const;
+function paintThemeColor(theme: keyof typeof THEME_COLOR) {
+  document
+    .querySelectorAll('meta[name="theme-color"]')
+    .forEach((meta) => meta.setAttribute('content', THEME_COLOR[theme]));
+}
+
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
   const next = resolvedTheme === 'dark' ? 'light' : 'dark';
+
+  useEffect(() => {
+    if (resolvedTheme === 'light' || resolvedTheme === 'dark') paintThemeColor(resolvedTheme);
+  }, [resolvedTheme]);
 
   const toggle = () => {
     const root = document.documentElement;
@@ -27,6 +40,7 @@ export function ThemeToggle() {
       // next-themes then persists it.
       root.classList.toggle('dark', next === 'dark');
       root.style.colorScheme = next;
+      paintThemeColor(next);
       setTheme(next);
     });
     // `ready` rejects when the browser skips the animation (e.g. a hidden tab); the
@@ -39,7 +53,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={mounted ? `Switch to ${next} theme` : 'Switch theme'}
-      className="press label flex h-11 items-center gap-2 px-2.5"
+      className="press label flex h-11 min-w-11 items-center justify-center gap-2 px-2.5"
     >
       <span
         aria-hidden

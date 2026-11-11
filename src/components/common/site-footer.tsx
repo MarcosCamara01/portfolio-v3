@@ -17,7 +17,7 @@ export function SiteFooter() {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2 hover:text-signal"
+            className="relative py-2 before:absolute before:-inset-x-[9px] before:-inset-y-1 before:content-[''] last:before:-right-[26px] hover:text-signal active:text-signal"
           >
             {link.label}
           </a>

@@ -15,7 +15,8 @@ export function Code({ children, className }: { children: ReactNode; className?:
         [:is(p,li,h2,h3)_&]:px-1.5
         [:is(p,li,h2,h3)_&]:py-0.5
         [:is(p,li,h2,h3)_&]:font-mono
-        [:is(p,li,h2,h3)_&]:text-[0.85em]`
+        [:is(p,li,h2,h3)_&]:text-[0.85em]
+        [:is(p,li,h2,h3)_&]:box-decoration-clone`
       )}
     >
       {children}
