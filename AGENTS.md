@@ -34,8 +34,10 @@ the module**, and throws at build time when something does not match:
 
 - `metadata.title` must be quoted and **followed by a comma**. So must
   `metadata.description`, or it is silently dropped.
-- `date` must be a quoted `Month DD, YYYY` string.
+- `date` must be a quoted `Month D, YYYY` string with the full month name, such as
+  `'September 10, 2026'`. Any other format fails the build.
 - The year in `date` must equal the `{year}` directory name.
+- The slug (directory name) must be unique across years.
 - No `# H1` in the body; the title comes from `metadata`.
 
 Bodies are plain markdown plus `<YouTube videoId="…" />`. Any other JSX component has to be
