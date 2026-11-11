@@ -30,9 +30,9 @@ export function ArticleFooter({ posts }: { posts: Post[] }) {
         aria-label="More posts"
         className={cn('mt-7 flex flex-col bg-surface', older && 'md:grid md:grid-cols-2')}
       >
-        <Link href="/blog" className="press flex flex-col gap-1.5 p-4">
+        <Link href="/blog" className="back press flex flex-col gap-1.5 p-4">
           <span className="label inline-flex items-center gap-2">
-            <ArrowLeft />
+            <ArrowLeft className="back-arrow" />
             All writing
           </span>
           <span className="text-base font-semibold">

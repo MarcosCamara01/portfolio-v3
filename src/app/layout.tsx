@@ -69,7 +69,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${display.variable} ${sans.variable} ${mono.variable} scroll-smooth`}
+      // Next only turns smooth scrolling off for route changes when this attribute says
+      // it is on; in-page anchors still glide, and reduced motion never does.
+      data-scroll-behavior="smooth"
+      className={`${display.variable} ${sans.variable} ${mono.variable} motion-safe:scroll-smooth`}
     >
       <body>
         <ThemeProvider attribute="class" disableTransitionOnChange>

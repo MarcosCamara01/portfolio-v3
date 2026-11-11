@@ -32,8 +32,8 @@ export function ArticleHeader({ posts }: { posts: Post[] }) {
           inLanguage: 'en',
         }}
       />
-      <Link href="/blog" className="label press inline-flex items-center gap-2 pb-2 pt-[18px]">
-        <ArrowLeft />
+      <Link href="/blog" className="back label press inline-flex items-center gap-2 pb-2 pt-[18px]">
+        <ArrowLeft className="back-arrow" />
         All writing
       </Link>
 

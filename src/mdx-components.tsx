@@ -8,10 +8,12 @@ import { Code } from '@/components/mdx/code';
 import { Image } from '@/components/mdx/image';
 import { Snippet } from '@/components/mdx/snippet';
 import { YouTube } from '@/components/mdx/youtube';
+import { ArticleShell } from '@/components/article/article-shell';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
     ...components,
+    wrapper: ArticleShell,
     a: A,
     h2: H2,
     h3: H3,

@@ -14,7 +14,7 @@ export default function NotFound() {
         Nothing at this address. I either moved the page or never wrote it.
       </PageHeading>
 
-      <div className="hero-intro label mt-8 flex flex-wrap gap-2">
+      <div className="label mt-8 flex flex-wrap gap-2">
         <Link
           href="/"
           className="btn-fill press inline-flex items-center gap-2.5 bg-inv px-4 py-3.5 text-inv-ink"
