@@ -52,9 +52,7 @@ export function ArticleHeader({ posts }: { posts: Post[] }) {
         ) : null}
       </p>
 
-      <h1 className="display mt-3.5 text-[50px] leading-[0.92] [text-wrap:balance] md:text-[80px]">
-        {post.title}
-      </h1>
+      <h1 className="display mt-3.5 text-[50px] leading-[0.92] md:text-[80px]">{post.title}</h1>
 
       {post.description ? (
         <p className="mt-[18px] text-lg font-medium leading-[1.45] text-sub md:text-xl">

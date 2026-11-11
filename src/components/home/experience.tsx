@@ -22,9 +22,9 @@ export function Experience() {
         {JOBS.map((job) => (
           <li
             key={job.what}
-            className="flex flex-col gap-1 border-t border-soft py-3.5 md:grid md:grid-cols-[120px_minmax(0,1fr)] md:gap-4 md:py-4"
+            className="flex flex-col gap-1 border-t border-soft py-3.5 md:grid md:grid-cols-[120px_minmax(0,1fr)] md:items-baseline md:gap-4 md:py-4"
           >
-            <span className="label md:pt-[3px] md:text-[15px] md:normal-case md:tracking-normal">
+            <span className="label md:text-[15px] md:normal-case md:tracking-normal">
               {job.when}
             </span>
             <div className="flex flex-col gap-1">
