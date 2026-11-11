@@ -1,11 +1,9 @@
-import { useSelectedLayoutSegments } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import type { Post } from '@/lib/posts';
 
-// Layouts don't receive the page's params, so the article header and footer (rendered by
-// the (posts) layout) find their post from the URL segments: {year}/{slug}.
+// Posts live at /{year}/{slug}; the header and footer find theirs from the URL.
 export function useCurrentPost(posts: Post[]) {
-  const segments = useSelectedLayoutSegments();
-  const postId = segments?.length >= 2 ? segments[1] : null;
-  const index = posts.findIndex((item) => item.id === postId);
+  const [, year, slug] = usePathname().split('/');
+  const index = posts.findIndex((item) => item.year === year && item.id === slug);
   return { post: index === -1 ? null : posts[index], older: posts[index + 1] ?? null };
 }
