@@ -19,6 +19,8 @@ export type Post = {
 
 const POSTS_ROOT = path.join(process.cwd(), 'src', 'app', '(posts)');
 const WORDS_PER_MINUTE = 230;
+const DATE =
+  /^(January|February|March|April|May|June|July|August|September|October|November|December) (0?[1-9]|[12]\d|3[01]), (\d{4})$/;
 
 function extract(source: string, regex: RegExp, what: string, file: string): string {
   const match = source.match(regex);
@@ -36,7 +38,11 @@ function optional(source: string, regex: RegExp): string | null {
 function extractHeadings(source: string): Heading[] {
   const withoutCode = source.replace(/```[\s\S]*?```/g, '');
   return [...withoutCode.matchAll(/^##\s+(.+?)\s*\[#([^\]]+)\]\s*$/gm)].map((match) => ({
-    title: match[1],
+    // The TOC shows plain text: drop inline code ticks, link targets and emphasis.
+    title: match[1]
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/\*\*?([^*]+)\*\*?/g, '$1'),
     id: match[2],
   }));
 }
@@ -64,12 +70,21 @@ export async function getPosts(): Promise<Post[]> {
           file
         );
 
+        if (!DATE.test(date)) {
+          throw new Error(`Date "${date}" in ${file} must look like "September 10, 2026"`);
+        }
         if (String(new Date(date).getFullYear()) !== year) {
           throw new Error(`Date "${date}" in ${file} does not match its "${year}" directory`);
         }
 
-        const body = source.replace(/^export[\s\S]*?;\s*$/gm, '');
-        const words = body.split(/\s+/).filter(Boolean).length;
+        // Count prose only: code blocks, imports, JSX tags and link targets aren't read.
+        const prose = source
+          .replace(/^export[\s\S]*?;\s*$/gm, '')
+          .replace(/```[\s\S]*?```/g, ' ')
+          .replace(/^import .*$/gm, ' ')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\]\([^)]*\)/g, ']');
+        const words = prose.split(/\s+/).filter(Boolean).length;
 
         return {
           id: slug,
@@ -83,6 +98,15 @@ export async function getPosts(): Promise<Post[]> {
         };
       });
   });
+
+  // Slugs key rows and links site-wide, so a slug reused in another year would collide.
+  const slugs = new Set<string>();
+  for (const post of posts) {
+    if (slugs.has(post.id)) {
+      throw new Error(`Two posts use the slug "${post.id}"; slugs must be unique across years`);
+    }
+    slugs.add(post.id);
+  }
 
   return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }

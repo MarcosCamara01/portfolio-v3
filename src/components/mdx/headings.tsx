@@ -15,7 +15,7 @@ function Anchor({ id }: { id: string }) {
       <a
         href={`#${id}`}
         aria-label="Link to this section"
-        className="invisible absolute -left-7 font-mono font-normal text-sub [span:hover>&]:visible"
+        className="invisible absolute -left-7 font-mono font-normal text-sub group-hover/heading:visible"
       >
         #
       </a>
@@ -23,23 +23,36 @@ function Anchor({ id }: { id: string }) {
   );
 }
 
-// Headings are authored as `## 1. Title [#id]`.
+// Headings are authored as `## 1. Title [#id]`. MDX splits a heading with inline code
+// or a link into several children, so the id comes off the last one and the number off
+// the first, and the heading stays one row.
 function withHeadingId(children: ReactNode, { numbered = false } = {}) {
-  return Children.map(children, (el) => {
-    if ('string' !== typeof el) return el;
+  const parts = Children.toArray(children);
 
-    const match = el.match(/\[#([^\]]+)\]\s*$/m);
-    const label = match ? el.substring(0, match.index).trimEnd() : el;
-    const { number, text } = numbered ? splitNumber(label) : { number: null, text: label };
+  let id: string | null = null;
+  const last = parts.at(-1);
+  if (typeof last === 'string') {
+    const match = last.match(/\s*\[#([^\]]+)\]\s*$/);
+    if (match) {
+      id = match[1];
+      parts[parts.length - 1] = last.slice(0, match.index);
+    }
+  }
 
-    return (
-      <span className="relative flex gap-3.5">
-        {match?.[1] ? <Anchor id={match[1]} /> : null}
-        {number ? <span className="text-signal">{number}</span> : null}
-        <span>{text}</span>
-      </span>
-    );
-  });
+  let number: string | null = null;
+  if (numbered && typeof parts[0] === 'string') {
+    const split = splitNumber(parts[0]);
+    number = split.number;
+    parts[0] = split.text;
+  }
+
+  return (
+    <span className="group/heading relative flex gap-3.5">
+      {id ? <Anchor id={id} /> : null}
+      {number ? <span className="shrink-0 text-signal">{number}</span> : null}
+      <span className="min-w-0">{parts}</span>
+    </span>
+  );
 }
 
 export function H2({ children }: { children: ReactNode }) {

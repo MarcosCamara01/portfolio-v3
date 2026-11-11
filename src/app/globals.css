@@ -46,7 +46,18 @@
   }
 
   body {
-    @apply bg-page text-ink font-sans antialiased;
+    @apply bg-page text-ink font-sans antialiased break-words;
+  }
+
+  /* Taps fire at once (no double-tap-zoom wait), and a long-press on a control selects
+     nothing. Links stay selectable: their text is content. */
+  a,
+  button {
+    touch-action: manipulation;
+  }
+  button {
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   ::selection {
@@ -69,6 +80,7 @@
     font-stretch: 62%;
     text-transform: uppercase;
     letter-spacing: -0.005em;
+    overflow-wrap: anywhere;
   }
 
   .label {
@@ -132,6 +144,9 @@
   /* Link underline: 2px signal bar that leaves to the right and returns from the left. */
   .link {
     background: linear-gradient(var(--signal), var(--signal)) 100% 100% / 100% 2px no-repeat;
+  }
+  .link:active {
+    color: var(--signal);
   }
 
   /* Rows: a signal line draws underneath, the text shifts and an arrow arrives. */
@@ -203,6 +218,10 @@
     background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
     transition: background-size var(--t-exit) var(--ease-out-expo);
   }
+  .btn-line:active > span {
+    background-size: 100% 2px;
+    transition-duration: 200ms;
+  }
 
   /* Leaving, the screenshot scrolls back up quickly instead of retracing the pan. */
   .shot img {
@@ -242,7 +261,7 @@
   --t-hover: 350ms;
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .link:hover {
     animation: link-wipe 500ms var(--ease-out-expo);
   }
@@ -290,26 +309,25 @@
   }
 }
 
-@media (hover: none) {
-  /* Touch feedback has to land while the finger is still down: 200ms. */
-  .row:active::after,
-  .latest:active::after {
-    transform: scaleX(1);
-    transition-duration: 200ms;
-  }
-  .row:active .row-body {
-    transform: translateX(6px);
-    transition-duration: 200ms;
-  }
-  .row:active .row-arrow {
-    opacity: 1;
-    translate: 0 0;
-    transition-duration: 150ms, 200ms;
-  }
-  .btn-fill:active::before {
-    transform: scaleY(1);
-    transition-duration: 200ms;
-  }
+/* Press states for every input, not only touch screens: touch feedback has to land while
+   the finger is still down (200ms), and on a mouse it repeats what hover already shows. */
+.row:active::after,
+.latest:active::after {
+  transform: scaleX(1);
+  transition-duration: 200ms;
+}
+.row:active .row-body {
+  transform: translateX(6px);
+  transition-duration: 200ms;
+}
+.row:active .row-arrow {
+  opacity: 1;
+  translate: 0 0;
+  transition-duration: 150ms, 200ms;
+}
+.btn-fill:active::before {
+  transform: scaleY(1);
+  transition-duration: 200ms;
 }
 
 @keyframes link-wipe {

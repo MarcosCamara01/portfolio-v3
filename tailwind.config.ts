@@ -2,6 +2,9 @@ import type { Config } from 'tailwindcss';
 
 const config = {
   darkMode: 'class',
+  // hover: utilities only apply where a fine pointer can hover, so taps don't leave
+  // them stuck on touch screens.
+  future: { hoverOnlyWhenSupported: true },
   content: ['./src/app/**/*.{ts,tsx,mdx}', './src/components/**/*.{ts,tsx}'],
   theme: {
     extend: {
