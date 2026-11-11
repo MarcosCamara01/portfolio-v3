@@ -1,20 +1,11 @@
-import { cn } from '@/lib/cn';
+import type { ReactNode } from 'react';
 
-export function SectionTitle({
-  children,
-  aside,
-  className,
-}: {
-  children: React.ReactNode;
-  aside?: React.ReactNode;
-  className?: string;
-}) {
+export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <div className={cn('mb-3.5 mt-20 flex items-baseline justify-between md:mt-28', className)}>
+    <div className="mb-3.5 mt-20 flex items-baseline justify-between md:mt-28">
       <h2 data-reveal="title" className="display text-4xl leading-none md:text-5xl">
         {children}
       </h2>
-      {aside ? <span className="label">{aside}</span> : null}
     </div>
   );
 }

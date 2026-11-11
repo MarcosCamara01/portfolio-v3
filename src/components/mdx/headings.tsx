@@ -1,4 +1,4 @@
-import { Children } from 'react';
+import { Children, type ReactNode } from 'react';
 
 // `1. Title` → number and title, so the number can be set in the signal colour.
 export function splitNumber(title: string) {
@@ -25,7 +25,7 @@ function Anchor({ id }: { id: string }) {
 
 // Headings are authored as `## 1. Title [#id]`: strip the id into an anchor and
 // pull a leading number out so it can be styled separately.
-export function withHeadingId(children: React.ReactNode, { numbered = false } = {}) {
+function withHeadingId(children: ReactNode, { numbered = false } = {}) {
   return Children.map(children, (el) => {
     if ('string' !== typeof el) return el;
 
@@ -41,4 +41,20 @@ export function withHeadingId(children: React.ReactNode, { numbered = false } = 
       </span>
     );
   });
+}
+
+export function H2({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="display mt-16 text-[30px] leading-[0.98] md:mt-[88px] md:text-[40px]">
+      {withHeadingId(children, { numbered: true })}
+    </h2>
+  );
+}
+
+export function H3({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="display mt-11 text-[22px] leading-none md:text-[26px]">
+      {withHeadingId(children)}
+    </h3>
+  );
 }

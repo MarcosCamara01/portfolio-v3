@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, type CSSProperties, type PointerEvent } from 'react';
 import { cn } from '@/lib/cn';
 
 const REST = 62;
@@ -10,15 +10,7 @@ const RADIUS = 160;
 // A display title set letter by letter: the letters rise out of a mask on load,
 // the signal dot lands last, and afterwards the letter nearest the pointer (or
 // finger) widens on Archivo's `wdth` axis, with its neighbours following.
-export function SplitTitle({
-  lines,
-  className,
-  interactive = true,
-}: {
-  lines: string[];
-  className?: string;
-  interactive?: boolean;
-}) {
+export function SplitTitle({ lines, className }: { lines: string[]; className?: string }) {
   const ref = useRef<HTMLHeadingElement>(null);
   const centers = useRef<{ el: HTMLElement; x: number; y: number }[]>([]);
   const frame = useRef(0);
@@ -31,8 +23,8 @@ export function SplitTitle({
     });
   };
 
-  const onMove = (event: React.PointerEvent) => {
-    if (!interactive || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const onMove = (event: PointerEvent) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const { clientX, clientY } = event;
     cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(() => {
@@ -73,13 +65,13 @@ export function SplitTitle({
               key={index}
               data-char
               className="split-char"
-              style={{ '--i': index++ } as React.CSSProperties}
+              style={{ '--i': index++ } as CSSProperties}
             >
               {char}
             </span>
           ))}
           {lineIndex === lines.length - 1 ? (
-            <span className="split-dot text-signal" style={{ '--i': index } as React.CSSProperties}>
+            <span className="split-dot text-signal" style={{ '--i': index } as CSSProperties}>
               .
             </span>
           ) : null}

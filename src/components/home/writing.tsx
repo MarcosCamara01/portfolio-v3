@@ -6,7 +6,7 @@ import { PostRow } from '@/components/blog/post-row';
 import { formatMonth } from '@/lib/dates';
 import { ArrowRight } from '@/components/common/icons';
 
-export const Writing = async () => {
+export async function Writing() {
   const [latest, ...rest] = await getPosts();
 
   return (
@@ -27,4 +27,4 @@ export const Writing = async () => {
       </div>
     </section>
   );
-};
+}

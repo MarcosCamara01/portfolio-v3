@@ -1,6 +1,7 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-export function P({ children, className }: { children: React.ReactNode; className?: string }) {
+export function P({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <p
       className={cn(

@@ -8,23 +8,23 @@ function parts(date: string) {
   return { month: MONTHS[index] ?? month, day, year };
 }
 
-export const formatMonth = (date: string) => {
+export function formatMonth(date: string) {
   const { month, year } = parts(date);
   return `${month} ${year}`;
-};
+}
 
-export const formatDay = (date: string) => {
+export function formatDay(date: string) {
   const { month, day } = parts(date);
   return `${month} ${day}`;
-};
+}
 
-export const isoDate = (date: string) => {
+export function isoDate(date: string) {
   const { month, day, year } = parts(date);
   const m = String(MONTHS.indexOf(month) + 1).padStart(2, '0');
   return `${year}-${m}-${String(day).padStart(2, '0')}`;
-};
+}
 
-export const formatFull = (date: string) => {
+export function formatFull(date: string) {
   const { month, day, year } = parts(date);
   return `${month} ${day}, ${year}`;
-};
+}

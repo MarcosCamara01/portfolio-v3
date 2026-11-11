@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getPosts } from '@/lib/posts';
+import { postHref } from '@/lib/post-href';
 import { SITE_URL } from '@/lib/site';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -17,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     ...posts.map((post) => ({
-      url: `${SITE_URL}/${new Date(post.date).getFullYear()}/${post.id}`,
+      url: `${SITE_URL}${postHref(post)}`,
       lastModified: new Date(post.date),
       changeFrequency: 'yearly' as const,
       priority: 0.6,

@@ -2,7 +2,6 @@ import sizeOf from 'image-size';
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import NextImage from 'next/image';
-import { Caption } from './caption';
 
 async function fetchImage(url: string) {
   const res = await fetch(url);
@@ -27,6 +26,14 @@ async function measure(src: string) {
     throw new Error('Could not compute image size');
   }
   return { width, height };
+}
+
+function Caption({ children }: { children: string }) {
+  return (
+    <span className="my-3 block w-full text-center font-mono text-xs leading-normal text-sub [text-wrap:balance]">
+      {children}
+    </span>
+  );
 }
 
 // Markdown images: `![alt](src)`. The alt text doubles as the caption.

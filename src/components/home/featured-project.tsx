@@ -28,7 +28,7 @@ async function getStars() {
   }
 }
 
-export const FeaturedProject = async () => {
+export async function FeaturedProject() {
   const stars = await getStars();
 
   return (
@@ -90,4 +90,4 @@ export const FeaturedProject = async () => {
       </article>
     </section>
   );
-};
+}

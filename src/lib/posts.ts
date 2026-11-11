@@ -44,7 +44,7 @@ function extractHeadings(source: string): Heading[] {
 // Posts are derived from the filesystem: src/app/(posts)/{year}/{slug}/page.mdx.
 // Each page.mdx must export `metadata` (with a title) and a `date` string.
 // `metadata.description` and `export const tag` are optional.
-export const getPosts = async (): Promise<Post[]> => {
+export async function getPosts(): Promise<Post[]> {
   const years = fs.readdirSync(POSTS_ROOT).filter((entry) => /^\d{4}$/.test(entry));
 
   const posts = years.flatMap((year) => {
@@ -86,4 +86,4 @@ export const getPosts = async (): Promise<Post[]> => {
   });
 
   return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-};
+}

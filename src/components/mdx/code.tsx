@@ -1,12 +1,7 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-export const Code = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
+export function Code({ children, className }: { children: ReactNode; className?: string }) {
   // Fenced blocks arrive as `language-xyz`; keep it readable for <Snippet>, which
   // only sees this already-rendered element.
   const language = className?.match(/language-(\S+)/)?.[1];
@@ -26,4 +21,4 @@ export const Code = ({
       {children}
     </code>
   );
-};
+}

@@ -11,7 +11,7 @@ function textOf(node: ReactNode): string {
   return '';
 }
 
-export const Snippet = ({ children }: { children: ReactNode }) => {
+export function Snippet({ children }: { children: ReactNode }) {
   const [copied, setCopied] = useState(false);
   const code = isValidElement(children) ? (children as CodeElement) : null;
   const language = code?.props['data-lang'] ?? 'code';
@@ -46,4 +46,4 @@ export const Snippet = ({ children }: { children: ReactNode }) => {
       </div>
     </div>
   );
-};
+}

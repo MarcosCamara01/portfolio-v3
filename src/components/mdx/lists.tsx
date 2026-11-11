@@ -1,5 +1,15 @@
+import type { ReactNode } from 'react';
+
+export function OL({ children }: { children: ReactNode }) {
+  return <ol className="mt-5 [counter-reset:item]">{children}</ol>;
+}
+
+export function UL({ children }: { children: ReactNode }) {
+  return <ul className="mt-5">{children}</ul>;
+}
+
 // Markers come from the parent list: numbered 01, 02… in an <OL>, a square in a <UL>.
-export function Li({ children }: { children: React.ReactNode }) {
+export function Li({ children }: { children: ReactNode }) {
   return (
     <li
       className={`

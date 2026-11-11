@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './theme-toggle';
 import { cn } from '@/lib/cn';
 
-const Header = () => {
+export function SiteHeader() {
   const pathname = usePathname();
   // Posts live at /{year}/{slug}; anything else (home, 404) leaves Blog unmarked.
   const onBlog = pathname === '/blog' || /^\/\d{4}\//.test(pathname);
@@ -30,6 +30,4 @@ const Header = () => {
       </nav>
     </header>
   );
-};
-
-export default Header;
+}
