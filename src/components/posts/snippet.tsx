@@ -1,7 +1,6 @@
 'use client';
 
 import { isValidElement, useState, type ReactElement, type ReactNode } from 'react';
-import { Caption } from './caption';
 
 type CodeElement = ReactElement<{ 'data-lang'?: string; children?: ReactNode }>;
 
@@ -12,7 +11,7 @@ function textOf(node: ReactNode): string {
   return '';
 }
 
-export const Snippet = ({ children, scroll = true, caption = null }: any) => {
+export const Snippet = ({ children }: { children: ReactNode }) => {
   const [copied, setCopied] = useState(false);
   const code = isValidElement(children) ? (children as CodeElement) : null;
   const language = code?.props['data-lang'] ?? 'code';
@@ -41,16 +40,10 @@ export const Snippet = ({ children, scroll = true, caption = null }: any) => {
             {copied ? 'Copied ✓' : 'Copy'}
           </button>
         </div>
-        <pre
-          className={`px-3.5 pb-4 pt-2 font-mono text-xs leading-[1.6] md:text-[13px] ${
-            scroll ? 'overflow-x-auto' : 'whitespace-pre-wrap break-all'
-          }`}
-        >
+        <pre className="px-3.5 pb-4 pt-2 font-mono text-xs leading-[1.6] md:text-[13px] overflow-x-auto">
           {children}
         </pre>
       </div>
-
-      {caption != null ? <Caption>{caption}</Caption> : null}
     </div>
   );
 };
