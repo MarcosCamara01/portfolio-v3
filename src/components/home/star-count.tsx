@@ -18,7 +18,9 @@ export function StarCount({ value }: { value: number }) {
     const node = ref.current;
     // React's own text node: writing its value keeps React's DOM in sync.
     const text = num.current?.firstChild;
-    if (!node || !text || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const entered = 'entered' in document.documentElement.dataset; // see RevealObserver
+    if (!node || !text || entered || window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+      return;
     // Already on screen (or above it) when it mounts: keep the real count rather than
     // dropping to 0 in view.
     if (node.getBoundingClientRect().top < window.innerHeight) return;

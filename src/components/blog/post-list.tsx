@@ -34,22 +34,29 @@ export function PostList({ posts }: { posts: Post[] }) {
   const groupRef = useRef<HTMLDivElement>(null);
   // The active block is an inverted copy of the chip row, clipped to the active chip.
   // Undefined until measured, so the server HTML and first paint mark the chip statically.
-  const [clip, setClip] = useState<string>();
+  // Only a click slides it; a resize or a late font swap moves it in place.
+  const [clip, setClip] = useState<{ value: string; animate: boolean }>();
+  const clicked = useRef(false);
 
   useLayoutEffect(() => {
     const group = groupRef.current;
     if (!group) return;
-    const update = () => {
+    const update = (animate: boolean) => {
       const chip = group.querySelector<HTMLElement>('button[aria-pressed="true"]');
       if (!chip) return;
       const { offsetTop: top, offsetLeft: left, offsetWidth: width, offsetHeight: height } = chip;
       const right = group.offsetWidth - left - width;
       const bottom = group.offsetHeight - top - height;
-      setClip(`inset(${top}px ${right}px ${bottom}px ${left}px)`);
+      const value = `inset(${top}px ${right}px ${bottom}px ${left}px)`;
+      // Keep the previous state when nothing moved, so the observer's first callback
+      // doesn't cancel a slide that a click just started.
+      setClip((prev) => (prev?.value === value ? prev : { value, animate }));
     };
-    update();
-    document.fonts.ready.then(update);
-    const observer = new ResizeObserver(update);
+    update(clicked.current);
+    clicked.current = false;
+    const settle = () => update(false);
+    document.fonts.ready.then(settle);
+    const observer = new ResizeObserver(settle);
     observer.observe(group);
     return () => observer.disconnect();
   }, [active]);
@@ -89,7 +96,11 @@ export function PostList({ posts }: { posts: Post[] }) {
                 key={tag}
                 type="button"
                 aria-pressed={tag === active}
-                onClick={() => setActive(tag)}
+                onClick={() => {
+                  if (tag === active) return;
+                  clicked.current = true;
+                  setActive(tag);
+                }}
                 className={cn(
                   'chip label press h-11 whitespace-nowrap px-4',
                   !clip && tag === active && 'bg-inv text-inv-ink'
@@ -102,7 +113,7 @@ export function PostList({ posts }: { posts: Post[] }) {
               <div
                 aria-hidden
                 className="chip-overlay pointer-events-none absolute inset-0 flex flex-wrap gap-2 bg-inv text-inv-ink"
-                style={{ clipPath: clip }}
+                style={{ clipPath: clip.value, transition: clip.animate ? undefined : 'none' }}
               >
                 {tags.map((tag) => (
                   <span key={tag} className="label flex h-11 items-center whitespace-nowrap px-4">

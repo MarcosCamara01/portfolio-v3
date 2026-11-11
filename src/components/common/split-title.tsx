@@ -65,13 +65,11 @@ export function SplitTitle({ lines, className }: { lines: string[]; className?: 
     };
   }, []);
 
-  const apply = (clientX: number, clientY: number) => {
-    const h1 = ref.current;
-    if (!h1) return;
-    const box = h1.getBoundingClientRect();
+  // x and y are relative to the title. Only writes happen here, in the frame callback.
+  const apply = (px: number, py: number) => {
     const radius = RADIUS_EM * size.current;
     const pull = chars.current.map(({ x, y }) => {
-      const distance = Math.hypot(clientX - box.left - x, (clientY - box.top - y) * 1.6);
+      const distance = Math.hypot(px - x, (py - y) * 1.6);
       const p = Math.max(0, 1 - distance / radius);
       return p * p;
     });
@@ -102,8 +100,14 @@ export function SplitTitle({ lines, className }: { lines: string[]; className?: 
       if (dx <= dy) return;
       touchStart.current = null;
     }
+    // Read the title's position here, while layout is still clean: inside the frame
+    // callback the running font-stretch transitions would force an extra layout.
+    const box = ref.current?.getBoundingClientRect();
+    if (!box) return;
+    const px = clientX - box.left;
+    const py = clientY - box.top;
     cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => apply(clientX, clientY));
+    frame.current = requestAnimationFrame(() => apply(px, py));
   };
 
   const onLeave = () => {
