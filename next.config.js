@@ -9,13 +9,27 @@ module.exports = withMDX({
   images: {
     // List each remote image a post uses, not whole hosts: anyone can make /_next/image
     // optimize any URL that matches here, and every new one is a billed transformation.
+    // pathname is a glob, so the literal `*` in Medium's file name is escaped, and
+    // `search: ''` rejects query strings.
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'cdn-images-1.medium.com',
         port: '',
-        pathname: '/max/2000/1*KmHMETupo3tKwV6rxLlJ9g.png',
+        pathname: '/max/2000/1\\*KmHMETupo3tKwV6rxLlJ9g.png',
+        search: '',
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
   },
 });

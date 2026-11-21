@@ -1,9 +1,17 @@
+import type { Metadata } from 'next';
 import { Hero } from '@/components/home/hero';
 import { Experience } from '@/components/home/experience';
 import { FeaturedProject } from '@/components/home/featured-project';
 import { Writing } from '@/components/home/writing';
 import { JsonLd } from '@/components/common/json-ld';
 import { AUTHOR, SITE_NAME, SITE_URL } from '@/lib/site';
+
+// On Vercel the layout's './' resolves to /index for the root route. A page openGraph
+// replaces the layout's instead of merging, so siteName is repeated.
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+  openGraph: { url: '/', siteName: SITE_NAME },
+};
 
 export default function Home() {
   return (
