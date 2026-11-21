@@ -1,71 +1,71 @@
-# Investigacion tecnica de Vercel Eve
+# Vercel Eve technical research
 
 <!-- markdownlint-disable MD013 -->
 
-Fecha de investigacion: 2026-06-21
+Research date: 2026-06-21
 
-## Estado
+## Status
 
-Documento vivo. Esta investigacion se esta construyendo a partir de fuentes oficiales, repo publico, paquete npm, documentacion incluida en el paquete, templates oficiales de Vercel Labs, issues/PRs publicos, pruebas del repo y ejecuciones reales de la CLI.
+Living document. This research is being built from official sources, the public repo, the npm package, the documentation included in the package, official Vercel Labs templates, public issues/PRs, the repo's tests and real CLI runs.
 
-## Resumen ejecutivo
+## Executive summary
 
-Eve es un framework filesystem-first para construir agentes AI backend durables sobre Vercel. Su idea central es parecida a "Next.js para apps web, pero para agentes": el comportamiento se define mediante convenciones de archivos y carpetas dentro de `agent/`, con instrucciones en Markdown, herramientas en TypeScript, skills cargadas bajo demanda, canales de entrada/salida, conexiones autenticadas, subagentes, schedules y runtime durable.
+Eve is a filesystem-first framework for building durable backend AI agents on Vercel. Its core idea is similar to "Next.js for web apps, but for agents": behavior is defined through file and folder conventions inside `agent/`, with instructions in Markdown, tools in TypeScript, skills loaded on demand, input/output channels, authenticated connections, subagents, schedules and a durable runtime.
 
-Segun Vercel, Eve compila ese directorio, conecta infraestructura de agentes y se apoya en varias primitivas de Vercel: AI Gateway para modelos, Vercel Sandbox para ejecucion aislada, Vercel Workflows para durabilidad, Vercel Connect para credenciales y canales, Chat SDK para superficies de chat, y observabilidad/gobernanza de la plataforma.
+According to Vercel, Eve compiles that directory, wires up the agent infrastructure and builds on several Vercel primitives: AI Gateway for models, Vercel Sandbox for isolated execution, Vercel Workflows for durability, Vercel Connect for credentials and channels, Chat SDK for chat surfaces, and the platform's observability/governance.
 
-Mi lectura tecnica: Eve intenta convertir un agente de produccion en una superficie declarativa y auditable. No escribes una aplicacion de agentes como un grafo imperativo enorme; escribes un directorio `agent/` con slots convencionales. El runtime descubre esa superficie, genera manifiestos, levanta rutas HTTP estables, ejecuta turns como workflows durables, conserva estado de sesion, expone streaming NDJSON, y media herramientas, sandbox, OAuth, HITL y subagentes.
+My technical read: Eve tries to turn a production agent into a declarative, auditable surface. You do not write an agent application as one huge imperative graph; you write an `agent/` directory with conventional slots. The runtime discovers that surface, generates manifests, brings up stable HTTP routes, runs turns as durable workflows, keeps session state, exposes NDJSON streaming, and mediates tools, sandbox, OAuth, HITL and subagents.
 
-Esta abstraccion tiene una consecuencia importante: Eve no es solo un SDK de llamadas LLM. Es un runtime completo de agente backend, con build system, CLI, servidor Nitro, protocolo HTTP, cliente TS, hooks, evals, auth, sandbox, canales y despliegue.
+This abstraction has an important consequence: Eve is not just an SDK for LLM calls. It is a complete backend agent runtime, with a build system, CLI, Nitro server, HTTP protocol, TS client, hooks, evals, auth, sandbox, channels and deployment.
 
-## Hallazgos confirmados
+## Confirmed findings
 
-- La landing oficial define Eve como "the framework for building agents" y lo posiciona como un framework durable para agentes con instrucciones/skills en Markdown y tools en TypeScript.
-- La Knowledge Base de Vercel lo define como "a filesystem-first framework for durable backend agents on Vercel".
-- El repo oficial es `vercel/eve`, publico, Apache-2.0, con codigo TypeScript y estructura monorepo.
-- El paquete npm `eve` existe y, al momento de consulta, `latest` apunta a `0.12.0`, publicado el 2026-06-21. El repo clonado tambien esta etiquetado como `eve@0.12.0`.
-- GitHub API confirma release `eve@0.12.0`, publicada el 2026-06-21 a las 14:46 UTC. Una vista HTML inicial de GitHub mostro `0.11.7`, probablemente por render/cache; queda descartado frente a API + npm + tag local.
-- El paquete `eve` declara Node `>=24`.
-- El paquete `eve` incluye documentacion local, y el README del repo dice que los coding agents pueden leerla desde `node_modules/eve/docs`.
-- La CLI actual `0.12.0` confirma comandos `init`, `link`, `deploy`, `build`, `start`, `dev`, `info`, `eval` y `channels`.
-- Diferencia doc/CLI actual: la documentacion local dice que `eve dev` usa `$PORT` y despues `3000`; `npx eve@latest dev --help` en `0.12.0` muestra `$PORT` y despues `2000`. `eve start` si muestra `$PORT` y despues `3000`.
-- `npx eve@latest init probe-agent` se probo en `/tmp`: detecta entorno de coding agent, crea scaffold minimo, instala deps, inicializa Git y no arranca la TUI. La salida recomienda que el humano ejecute `npm exec -- eve dev`.
-- En el scaffold real, `npm run typecheck` pasa y `npm run build` genera `.output/` Nitro. El build probado produjo un servidor de 5.49 MB total, con `.output/server/_libs/eve.mjs` de 4.75 MB.
-- `npm exec -- eve info --json` sobre el scaffold minimo devuelve estado `ready`, 0 errores, 0 warnings, modelo `anthropic/claude-sonnet-4.6`, instrucciones `instructions.md`, sin tools/skills, y tres rutas HTTP base.
-- Las templates oficiales listadas por Vercel KB son:
+- The official landing page defines Eve as "the framework for building agents" and positions it as a durable framework for agents with instructions/skills in Markdown and tools in TypeScript.
+- The Vercel Knowledge Base defines it as "a filesystem-first framework for durable backend agents on Vercel".
+- The official repo is `vercel/eve`: public, Apache-2.0, TypeScript code and a monorepo structure.
+- The npm package `eve` exists and, at the time of checking, `latest` points to `0.12.0`, published on 2026-06-21. The cloned repo is also tagged `eve@0.12.0`.
+- The GitHub API confirms release `eve@0.12.0`, published on 2026-06-21 at 14:46 UTC. An initial GitHub HTML view showed `0.11.7`, probably due to rendering/caching; it is ruled out against the API + npm + local tag.
+- The `eve` package declares Node `>=24`.
+- The `eve` package includes local documentation, and the repo README says coding agents can read it from `node_modules/eve/docs`.
+- The current CLI `0.12.0` confirms the commands `init`, `link`, `deploy`, `build`, `start`, `dev`, `info`, `eval` and `channels`.
+- Mismatch between the docs and the current CLI: the local documentation says `eve dev` uses `$PORT` and then `3000`; `npx eve@latest dev --help` in `0.12.0` shows `$PORT` and then `2000`. `eve start` does show `$PORT` and then `3000`.
+- `npx eve@latest init probe-agent` was tested in `/tmp`: it detects a coding agent environment, creates a minimal scaffold, installs deps, initializes Git and does not start the TUI. The output recommends that the human run `npm exec -- eve dev`.
+- In the real scaffold, `npm run typecheck` passes and `npm run build` generates a Nitro `.output/`. The tested build produced a server of 5.49 MB total, with `.output/server/_libs/eve.mjs` at 4.75 MB.
+- `npm exec -- eve info --json` on the minimal scaffold returns status `ready`, 0 errors, 0 warnings, model `anthropic/claude-sonnet-4.6`, instructions `instructions.md`, no tools/skills, and three base HTTP routes.
+- The official templates listed by the Vercel KB are:
   - `vercel-labs/eve-content-agent-template`
   - `vercel-labs/personal-agent-template`
   - `vercel-labs/eve-pr-triage-agent-template`
   - `vercel-labs/eve-slack-agent-template`
   - `vercel-labs/eve-chat-template`
 
-## Fuentes primarias
+## Primary sources
 
-- Landing oficial: <https://vercel.com/eve>
-- Knowledge Base principal: <https://vercel.com/kb/eve>
+- Official landing page: <https://vercel.com/eve>
+- Main Knowledge Base: <https://vercel.com/kb/eve>
 - Docs: <https://eve.dev>
-- Integraciones: <https://eve.dev/integrations>
-- Repo framework: <https://github.com/vercel/eve>
+- Integrations: <https://eve.dev/integrations>
+- Framework repo: <https://github.com/vercel/eve>
 - npm package: <https://www.npmjs.com/package/eve>
-- GitHub release actual: <https://github.com/vercel/eve/releases/tag/eve%400.12.0>
+- Current GitHub release: <https://github.com/vercel/eve/releases/tag/eve%400.12.0>
 - Content agent template: <https://github.com/vercel-labs/eve-content-agent-template>
 - Personal agent template: <https://github.com/vercel-labs/personal-agent-template>
 - PR triage agent template: <https://github.com/vercel-labs/eve-pr-triage-agent-template>
 - Slack agent template: <https://github.com/vercel-labs/eve-slack-agent-template>
 - Next.js chat template: <https://github.com/vercel-labs/eve-chat-template>
 
-## Versiones, repo y estado publico
+## Versions, repo and public status
 
-- Repo principal: `vercel/eve`
-- Descripcion GitHub API: "The Framework for Building Agents"
-- Licencia: Apache-2.0
-- Rama default: `main`
-- Ultimo release confirmado: `eve@0.12.0`
-- Fecha release: 2026-06-21 14:46 UTC
+- Main repo: `vercel/eve`
+- GitHub API description: "The Framework for Building Agents"
+- License: Apache-2.0
+- Default branch: `main`
+- Latest confirmed release: `eve@0.12.0`
+- Release date: 2026-06-21 14:46 UTC
 - npm `latest`: `0.12.0`
-- Node requerido: `>=24`
-- Estado: beta/preview; Vercel advierte que APIs, docs y comportamiento pueden cambiar antes de GA.
-- Metadatos GitHub API al investigar:
+- Required Node: `>=24`
+- Status: beta/preview; Vercel warns that APIs, docs and behavior may change before GA.
+- GitHub API metadata at research time:
   - `vercel/eve`: 1972 stars, 136 forks, 70 open issues, pushed `2026-06-21T14:46:41Z`
   - `vercel-labs/eve-content-agent-template`: 4 stars, 0 forks, 0 issues, Apache-2.0
   - `vercel-labs/personal-agent-template`: 336 stars, 25 forks, 2 issues, MIT
@@ -73,80 +73,80 @@ Esta abstraccion tiene una consecuencia importante: Eve no es solo un SDK de lla
   - `vercel-labs/eve-slack-agent-template`: 8 stars, 5 forks, 0 issues
   - `vercel-labs/eve-chat-template`: 19 stars, 5 forks, 0 issues
 
-## Changelog relevante
+## Relevant changelog
 
-`packages/eve/CHANGELOG.md` confirma que `0.12.0` es una release pequena pero importante para nombres de capacidades dinamicas:
+`packages/eve/CHANGELOG.md` confirms that `0.12.0` is a small but important release for dynamic capability names:
 
 - `0.12.0`:
-  - Los resolvers dinamicos que devuelven maps ya no autoprefijan con el slug del archivo. El key del map es el nombre final de tool/skill.
-  - Un `defineTool` o `defineSkill` unico sigue tomando el nombre del slug del archivo.
-  - Si un map puede colisionar, el autor debe namespacear manualmente, por ejemplo `team__playbook`.
-  - Una tool/skill dinamica reemplaza una authored con el mismo nombre.
-  - Dos resolvers dinamicos que emiten el mismo nombre fallan con error.
-  - Las connection tools quedan como `connection_search` y `<connection>__<tool>`, por ejemplo `linear__list_issues`.
-  - Corrige resolucion de modelos definidos por codigo en `eve dev`, incluyendo imports NodeNext `.js` que apuntan a `.ts`.
+  - Dynamic resolvers that return maps no longer auto-prefix with the file slug. The map key is the final tool/skill name.
+  - A single `defineTool` or `defineSkill` still takes its name from the file slug.
+  - If a map can collide, the author must namespace it by hand, for example `team__playbook`.
+  - A dynamic tool/skill replaces an authored one with the same name.
+  - Two dynamic resolvers that emit the same name fail with an error.
+  - Connection tools stay as `connection_search` and `<connection>__<tool>`, for example `linear__list_issues`.
+  - Fixes resolution of code-defined models in `eve dev`, including NodeNext `.js` imports that point to `.ts`.
 - `0.11.10`:
-  - Mejoras en output de `eve init` y `eve dev`.
-  - Fix anterior de dynamic skill map naming; queda reemplazado por el contrato final de `0.12.0`.
-  - TUI soporta Ctrl+C para limpiar prompts y input multilinea.
+  - Improvements to `eve init` and `eve dev` output.
+  - Earlier fix for dynamic skill map naming; replaced by the final `0.12.0` contract.
+  - The TUI supports Ctrl+C to clear prompts and multiline input.
 - `0.11.9`:
-  - Agrega `experimental.workflow.world` para elegir un Workflow world instalado, importante para self-hosting avanzado.
+  - Adds `experimental.workflow.world` to choose an installed Workflow world, important for advanced self-hosting.
 - `0.11.8`:
-  - Canonicaliza docs hacia `eve.dev`.
-  - Usa TypeScript 7 `tsc` en builds Eve; proyectos Next generados mantienen TS 6.0.3 por compatibilidad con Next.
-- `0.11.7` a `0.11.1`:
-  - Muchas correcciones de sandbox, microsandbox, Slack typing, OIDC, HITL en connections y recovery de backends.
+  - Canonicalizes docs to `eve.dev`.
+  - Uses TypeScript 7 `tsc` in Eve builds; generated Next projects keep TS 6.0.3 for Next compatibility.
+- `0.11.7` to `0.11.1`:
+  - Many fixes for sandbox, microsandbox, Slack typing, OIDC, HITL in connections and backend recovery.
 - `0.11.0`:
-  - Elimina `withEve` opt-out de Vercel output.
-  - `action.result` puede tener status `rejected` tras denegacion HITL; version de stream sube a `16`.
+  - Removes the `withEve` opt-out from Vercel output.
+  - `action.result` can have status `rejected` after a HITL denial; the stream version goes up to `16`.
 - `0.10.0`:
-  - Primera release publica.
+  - First public release.
 
-Nota de codigo: hay comentarios internos antiguos que aun mencionan nombres `slug__key` para algunos maps dinamicos. La implementacion de `0.12.0`, `defineDynamic` y el changelog actual dicen lo contrario: map keys son nombres finales sin prefijo automatico.
+Code note: some old internal comments still mention `slug__key` names for some dynamic maps. The `0.12.0` implementation, `defineDynamic` and the current changelog say the opposite: map keys are final names with no automatic prefix.
 
 ## Mental model
 
-Eve tiene tres capas:
+Eve has three layers:
 
-1. Superficie filesystem-first:
-   - `agent/instructions.*`: identidad y prompt base.
-   - `agent/agent.ts`: modelo y runtime config.
-   - `agent/tools/`: acciones tipadas que el modelo puede llamar.
-   - `agent/skills/`: procedimientos Markdown cargados bajo demanda.
-   - `agent/connections/`: MCP/OpenAPI externos con auth gestionada.
-   - `agent/channels/`: superficies de entrada/salida como HTTP, Slack, GitHub, Discord.
-   - `agent/sandbox/`: sandbox y workspace aislado.
-   - `agent/subagents/`: agentes hijos especializados.
-   - `agent/schedules/`: cron jobs root-only.
-   - `agent/hooks/`: subscriptores a eventos del runtime.
-   - `evals/`: checks repetibles fuera de `agent/`.
+1. Filesystem-first surface:
+   - `agent/instructions.*`: identity and base prompt.
+   - `agent/agent.ts`: model and runtime config.
+   - `agent/tools/`: typed actions the model can call.
+   - `agent/skills/`: Markdown procedures loaded on demand.
+   - `agent/connections/`: external MCP/OpenAPI with managed auth.
+   - `agent/channels/`: input/output surfaces such as HTTP, Slack, GitHub, Discord.
+   - `agent/sandbox/`: sandbox and isolated workspace.
+   - `agent/subagents/`: specialized child agents.
+   - `agent/schedules/`: root-only cron jobs.
+   - `agent/hooks/`: subscribers to runtime events.
+   - `evals/`: repeatable checks outside `agent/`.
 
-2. Compilacion y host:
-   - Eve descubre archivos bajo `agent/`.
-   - Genera artefactos bajo `.eve/`.
-   - Nitro aloja rutas HTTP, canales, callbacks, schedules y workflow entrypoints.
-   - En Vercel emite Vercel Build Output en `.vercel/output`.
-   - Fuera de Vercel usa output Nitro Node en `.output/`.
+2. Compilation and host:
+   - Eve discovers files under `agent/`.
+   - It generates artifacts under `.eve/`.
+   - Nitro hosts HTTP routes, channels, callbacks, schedules and workflow entrypoints.
+   - On Vercel it emits Vercel Build Output in `.vercel/output`.
+   - Outside Vercel it uses Nitro Node output in `.output/`.
 
-3. Runtime durable:
-   - Cada sesion es conversacion durable.
-   - Cada turno corre como workflow durable.
-   - Cada step es checkpoint durable.
-   - El stream de eventos es replayable por indice.
-   - HITL, OAuth y subagentes pueden aparcar el trabajo sin mantener compute activo.
+3. Durable runtime:
+   - Each session is a durable conversation.
+   - Each turn runs as a durable workflow.
+   - Each step is a durable checkpoint.
+   - The event stream is replayable by index.
+   - HITL, OAuth and subagents can park work without keeping compute active.
 
 ## Project layout
 
-Eve deriva identidad desde la ruta, no desde campos `name` o `id`.
+Eve derives identity from the path, not from `name` or `id` fields.
 
-| Archivo | Se convierte en |
-| --- | --- |
-| `agent/tools/get_weather.ts` | tool `get_weather` |
-| `agent/connections/linear.ts` | connection `linear` |
-| `agent/skills/summarize.md` | skill `summarize` |
+| File                                  | Becomes               |
+| ------------------------------------- | --------------------- |
+| `agent/tools/get_weather.ts`          | tool `get_weather`    |
+| `agent/connections/linear.ts`         | connection `linear`   |
+| `agent/skills/summarize.md`           | skill `summarize`     |
 | `agent/subagents/researcher/agent.ts` | subagent `researcher` |
 
-Layout recomendado:
+Recommended layout:
 
 ```text
 my-agent/
@@ -168,70 +168,70 @@ my-agent/
 └── evals/
 ```
 
-Reglas importantes:
+Important rules:
 
-- `evals/` vive en la raiz de la app, no dentro de `agent/`.
-- El root agent requiere instrucciones, salvo casos de compatibilidad/deprecados detectados en tests (`system.md`/`system.ts`).
-- Los subagentes declarados necesitan `agent.ts` con `description`, pero sus `instructions` son opcionales.
-- `channels/` y `schedules/` son root-only, no se declaran dentro de subagentes locales.
-- `lib/` es solo codigo importable; no se monta en workspace.
-- Solo llegan al sandbox workspace:
-  - skills bajo `/workspace/skills/...`
-  - `agent/sandbox/workspace/**` bajo `/workspace/...`
+- `evals/` lives at the app root, not inside `agent/`.
+- The root agent requires instructions, except for compatibility/deprecated cases found in tests (`system.md`/`system.ts`).
+- Declared subagents need an `agent.ts` with a `description`, but their `instructions` are optional.
+- `channels/` and `schedules/` are root-only; they are not declared inside local subagents.
+- `lib/` is importable code only; it is not mounted in the workspace.
+- Only these reach the sandbox workspace:
+  - skills under `/workspace/skills/...`
+  - `agent/sandbox/workspace/**` under `/workspace/...`
 
-## API TypeScript publica
+## Public TypeScript API
 
-La doc local dice que el contrato publico vive en `packages/eve/src/public/index.ts`; lo que no se exporta ahi se considera interno. El paquete npm `0.12.0` exporta muchas subrutas. Las principales:
+The local doc says the public contract lives in `packages/eve/src/public/index.ts`; anything not exported there is considered internal. The npm package `0.12.0` exports many subpaths. The main ones:
 
-| Helper/API | Import | Donde se usa |
-| --- | --- | --- |
-| `defineAgent` | `eve` | `agent/agent.ts` |
-| `defineRemoteAgent` | `eve` | remote subagents |
-| `defineTool` | `eve/tools` | `agent/tools/*.ts` |
-| `defineDynamic` | `eve/tools`, `eve/skills`, `eve/instructions` | capacidades runtime por sesion/turn/step |
-| `disableTool` | `eve/tools` | deshabilitar built-ins por slug |
-| `ExperimentalWorkflow` | `eve/tools` | opt-in Workflow tool |
-| `defineMcpClientConnection` | `eve/connections` | MCP externo |
-| `defineOpenAPIConnection` | `eve/connections` | OpenAPI 3.x externo |
-| `defineInteractiveAuthorization` | `eve/connections` | OAuth propio |
-| `defineChannel` | `eve/channels` | canales custom |
-| `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`WS` | `eve/channels` | rutas custom |
-| `eveChannel` | `eve/channels/eve` | canal HTTP base |
-| `slackChannel` | `eve/channels/slack` | Slack |
-| `githubChannel` | `eve/channels/github` | GitHub |
-| `defineSkill` | `eve/skills` | skills TS |
-| `defineInstructions` | `eve/instructions` | instrucciones TS |
-| `defineHook` | `eve/hooks` | hooks stream/runtime |
-| `defineSchedule` | `eve/schedules` | cron |
-| `defineState` | `eve/context` | memoria durable por sesion |
-| `defineSandbox` | `eve/sandbox` | sandbox |
-| `defineInstrumentation` | `eve/instrumentation` | OTel/telemetria |
-| `defineEval`, `defineEvalConfig` | `eve/evals` | evals |
-| `includes`, `equals`, `matches`, `similarity` | `eve/evals/expect` | assertions |
-| `Client`, `ClientSession` | `eve/client` | SDK TS |
-| `useEveAgent` | `eve/react`, `eve/vue`, `eve/svelte` | frontend |
-| `withEve` | `eve/next` | Next.js |
-| Nuxt module | `eve/nuxt` | Nuxt |
-| SvelteKit plugin | `eve/sveltekit` | SvelteKit |
+| Helper/API                                    | Import                                        | Where it is used                           |
+| --------------------------------------------- | --------------------------------------------- | ------------------------------------------ |
+| `defineAgent`                                 | `eve`                                         | `agent/agent.ts`                           |
+| `defineRemoteAgent`                           | `eve`                                         | remote subagents                           |
+| `defineTool`                                  | `eve/tools`                                   | `agent/tools/*.ts`                         |
+| `defineDynamic`                               | `eve/tools`, `eve/skills`, `eve/instructions` | runtime capabilities per session/turn/step |
+| `disableTool`                                 | `eve/tools`                                   | disable built-ins by slug                  |
+| `ExperimentalWorkflow`                        | `eve/tools`                                   | opt-in Workflow tool                       |
+| `defineMcpClientConnection`                   | `eve/connections`                             | external MCP                               |
+| `defineOpenAPIConnection`                     | `eve/connections`                             | external OpenAPI 3.x                       |
+| `defineInteractiveAuthorization`              | `eve/connections`                             | your own OAuth                             |
+| `defineChannel`                               | `eve/channels`                                | custom channels                            |
+| `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`WS`      | `eve/channels`                                | custom routes                              |
+| `eveChannel`                                  | `eve/channels/eve`                            | base HTTP channel                          |
+| `slackChannel`                                | `eve/channels/slack`                          | Slack                                      |
+| `githubChannel`                               | `eve/channels/github`                         | GitHub                                     |
+| `defineSkill`                                 | `eve/skills`                                  | TS skills                                  |
+| `defineInstructions`                          | `eve/instructions`                            | TS instructions                            |
+| `defineHook`                                  | `eve/hooks`                                   | stream/runtime hooks                       |
+| `defineSchedule`                              | `eve/schedules`                               | cron                                       |
+| `defineState`                                 | `eve/context`                                 | durable per-session memory                 |
+| `defineSandbox`                               | `eve/sandbox`                                 | sandbox                                    |
+| `defineInstrumentation`                       | `eve/instrumentation`                         | OTel/telemetry                             |
+| `defineEval`, `defineEvalConfig`              | `eve/evals`                                   | evals                                      |
+| `includes`, `equals`, `matches`, `similarity` | `eve/evals/expect`                            | assertions                                 |
+| `Client`, `ClientSession`                     | `eve/client`                                  | TS SDK                                     |
+| `useEveAgent`                                 | `eve/react`, `eve/vue`, `eve/svelte`          | frontend                                   |
+| `withEve`                                     | `eve/next`                                    | Next.js                                    |
+| Nuxt module                                   | `eve/nuxt`                                    | Nuxt                                       |
+| SvelteKit plugin                              | `eve/sveltekit`                               | SvelteKit                                  |
 
-El `ctx` runtime aparece en tools, hooks y handlers. Miembros clave:
+The runtime `ctx` appears in tools, hooks and handlers. Key members:
 
-- `ctx.session`: metadata de sesion, turn, auth y parent lineage.
-- `ctx.getSandbox()`: handle vivo del sandbox.
-- `ctx.getSkill(identifier)`: acceso a skill y archivos empaquetados.
-- `ctx.getToken()`: resuelve bearer token del `auth` declarado en tool/connection.
-- `ctx.requireAuth()`: fuerza flujo de autorizacion interactiva.
+- `ctx.session`: session, turn, auth and parent lineage metadata.
+- `ctx.getSandbox()`: live sandbox handle.
+- `ctx.getSkill(identifier)`: access to the skill and its bundled files.
+- `ctx.getToken()`: resolves the bearer token for the `auth` declared on the tool/connection.
+- `ctx.requireAuth()`: forces the interactive authorization flow.
 
-### Exports reales del paquete
+### Actual package exports
 
-`packages/eve/package.json` en `0.12.0` confirma:
+`packages/eve/package.json` in `0.12.0` confirms:
 
 - `type`: `module`
 - bin:
   - `eve`: `./bin/eve.js`
-- runtime dependency directa:
+- direct runtime dependency:
   - `nitro`: `3.0.260610-beta`
-- peer dependencies relevantes:
+- relevant peer dependencies:
   - `ai`
   - `next`
   - `react`
@@ -245,7 +245,7 @@ El `ctx` runtime aparece en tools, hooks y handlers. Miembros clave:
   - `just-bash`
   - `microsandbox`
 
-Subpath exports publicos:
+Public subpath exports:
 
 - `eve`
 - `eve/client`
@@ -286,41 +286,41 @@ Subpath exports publicos:
 - `eve/channels/teams`
 - `eve/channels/linear`
 
-Tambien exporta `eve/setup` y `eve/setup/scaffold`, pero esas rutas son claramente de setup/scaffolding, no superficie normal de autor de agentes.
+It also exports `eve/setup` and `eve/setup/scaffold`, but those paths are clearly for setup/scaffolding, not the normal surface for agent authors.
 
-## Configuracion de `agent.ts`
+## `agent.ts` configuration
 
-`agent.ts` llama `defineAgent`.
+`agent.ts` calls `defineAgent`.
 
-- Si el root no tiene `agent.ts`, Eve usa por defecto `anthropic/claude-sonnet-4.6`.
-- Si `agent.ts` existe, `model` es requerido.
-- Si `model` es string, se enruta por Vercel AI Gateway.
-- Si `model` es un `LanguageModel` de AI SDK, llama directo al provider configurado.
-- `compaction.thresholdPercent` controla cuando compactar historia; default documentado `0.9`.
-- `experimental.workflow.world` permite cambiar el Workflow world en self-hosted avanzado.
-- `experimental.codeMode` existe, pero se marca inestable.
-- `outputSchema` sirve para task-mode runs, subagentes, schedules o jobs remotos.
-- `build.externalDependencies` controla empaquetado de dependencias externas.
+- If the root has no `agent.ts`, Eve defaults to `anthropic/claude-sonnet-4.6`.
+- If `agent.ts` exists, `model` is required.
+- If `model` is a string, it is routed through Vercel AI Gateway.
+- If `model` is an AI SDK `LanguageModel`, it calls the configured provider directly.
+- `compaction.thresholdPercent` controls when history is compacted; the documented default is `0.9`.
+- `experimental.workflow.world` lets you change the Workflow world in advanced self-hosted setups.
+- `experimental.codeMode` exists, but is marked unstable.
+- `outputSchema` is for task-mode runs, subagents, schedules or remote jobs.
+- `build.externalDependencies` controls how external dependencies are bundled.
 
 ## CLI
 
-CLI actual validada con `npx eve@latest --help` (`0.12.0`):
+Current CLI checked with `npx eve@latest --help` (`0.12.0`):
 
-| Comando | Uso |
-| --- | --- |
-| `eve` | sin comando equivale a `eve dev` |
-| `eve init [target]` | crear agente o agregar Eve a un proyecto existente |
-| `eve link` | vincular a Vercel y traer credenciales AI Gateway |
-| `eve deploy` | desplegar a Vercel production |
-| `eve build` | compilar app Eve |
-| `eve start` | servir app compilada |
-| `eve dev` | server local + TUI, o conectar TUI a URL remota |
-| `eve info --json` | inspeccion de superficie resuelta |
-| `eve eval` | correr evals |
-| `eve channels add slack\|web` | scaffolding de canal |
-| `eve channels list --json` | listar canales authored |
+| Command                       | Use                                                    |
+| ----------------------------- | ------------------------------------------------------ |
+| `eve`                         | with no command, same as `eve dev`                     |
+| `eve init [target]`           | create an agent or add Eve to an existing project      |
+| `eve link`                    | link to Vercel and pull AI Gateway credentials         |
+| `eve deploy`                  | deploy to Vercel production                            |
+| `eve build`                   | build an Eve app                                       |
+| `eve start`                   | serve a built app                                      |
+| `eve dev`                     | local server + TUI, or connect the TUI to a remote URL |
+| `eve info --json`             | inspect the resolved surface                           |
+| `eve eval`                    | run evals                                              |
+| `eve channels add slack\|web` | channel scaffolding                                    |
+| `eve channels list --json`    | list authored channels                                 |
 
-Comandos recomendados por la doc:
+Commands recommended by the docs:
 
 ```bash
 eve info
@@ -331,7 +331,7 @@ eve deploy
 eve eval
 ```
 
-Artefactos utiles bajo `.eve/`:
+Useful artifacts under `.eve/`:
 
 - `.eve/discovery/agent-discovery-manifest.json`
 - `.eve/discovery/diagnostics.json`
@@ -339,25 +339,25 @@ Artefactos utiles bajo `.eve/`:
 - `.eve/compile/compile-metadata.json`
 - `.eve/compile/module-map.mjs`
 
-### Scaffold real probado
+### Scaffold tested for real
 
-Comando ejecutado en `/tmp/eve-init-probe`:
+Command run in `/tmp/eve-init-probe`:
 
 ```bash
 npx eve@latest init probe-agent
 ```
 
-Resultado observado:
+Observed result:
 
-- Version impresa: `eve v0.12.0`.
-- Directorio creado: `/private/tmp/eve-init-probe/probe-agent`.
-- Dependencias instaladas en 3.5s en la segunda prueba.
-- No arranca `eve dev` porque detecta que lo ejecuta un coding agent.
-- Inicializa Git.
-- Recomienda leer `node_modules/eve/docs/` antes de editar.
-- Pide reemplazar `agent/instructions.md` con el proposito real del agente.
+- Printed version: `eve v0.12.0`.
+- Directory created: `/private/tmp/eve-init-probe/probe-agent`.
+- Dependencies installed in 3.5s on the second run.
+- It does not start `eve dev` because it detects that a coding agent is running it.
+- It initializes Git.
+- It recommends reading `node_modules/eve/docs/` before editing.
+- It asks you to replace `agent/instructions.md` with the agent's real purpose.
 
-Archivos authored del scaffold minimo:
+Authored files in the minimal scaffold:
 
 ```text
 agent/
@@ -367,10 +367,10 @@ agent/
 └── instructions.md
 ```
 
-`package.json` generado:
+Generated `package.json`:
 
 - `type: "module"`
-- imports `#*` -> `./agent/*` y `#evals/*` -> `./evals/*`
+- imports `#*` -> `./agent/*` and `#evals/*` -> `./evals/*`
 - scripts:
   - `build`: `eve build`
   - `dev`: `eve dev`
@@ -387,25 +387,25 @@ agent/
 - engine:
   - `node`: `24.x`
 
-`agent/agent.ts` usa por defecto:
+By default, `agent/agent.ts` uses:
 
 ```ts
-import { defineAgent } from "eve";
+import { defineAgent } from 'eve';
 
 export default defineAgent({
-  model: "anthropic/claude-sonnet-4.6",
+  model: 'anthropic/claude-sonnet-4.6',
 });
 ```
 
-`agent/channels/eve.ts` configura `eveChannel` con `localDev()`, `vercelOidc()` y `placeholderAuth()`.
+`agent/channels/eve.ts` configures `eveChannel` with `localDev()`, `vercelOidc()` and `placeholderAuth()`.
 
-### `eve info --json` real
+### Actual `eve info --json` output
 
-Sobre el scaffold minimo, `npm exec -- eve info --json` devuelve:
+On the minimal scaffold, `npm exec -- eve info --json` returns:
 
 - `layout`: `nested`
 - `status`: `ready`
-- `diagnostics`: 0 errores, 0 warnings
+- `diagnostics`: 0 errors, 0 warnings
 - `model`: `anthropic/claude-sonnet-4.6`
 - `instructions`: `instructions.md`
 - `skills`: `[]`
@@ -421,83 +421,83 @@ Sobre el scaffold minimo, `npm exec -- eve info --json` devuelve:
   - `.eve/compile/module-map.mjs`
   - `.eve/compile/compile-metadata.json`
 
-### Artefactos `.eve` reales
+### Actual `.eve` artifacts
 
-El scaffold minimo genera:
+The minimal scaffold generates:
 
 - Discovery manifest:
   - kind `eve-agent-discovery-manifest`
   - version `12`
-  - registra `agent.ts`, `instructions.md` y `channels/eve.ts`
+  - registers `agent.ts`, `instructions.md` and `channels/eve.ts`
 - Compiled manifest:
   - kind `eve-agent-compiled-manifest`
   - version `30`
-  - modelo con routing `{ kind: "gateway", target: "anthropic" }`
+  - model with routing `{ kind: "gateway", target: "anthropic" }`
   - `contextWindowTokens`: `1000000`
   - `workflowEnabled`: `false`
   - `sandbox`: `null`
-  - `workspaceResourceRoot` con content hash
+  - `workspaceResourceRoot` with a content hash
 - Compile metadata:
   - kind `eve-compile-metadata`
   - version `5`
   - status `ready`
-  - hashes SHA-256 para module map, discovery manifest y diagnostics
+  - SHA-256 hashes for the module map, discovery manifest and diagnostics
   - generator `eve@0.12.0`
 - `module-map.mjs`:
-  - importa `../../agent/agent.ts`
-  - importa `../../agent/channels/eve.ts`
-  - exporta un `moduleMap` congelado por node id `__root__`
+  - imports `../../agent/agent.ts`
+  - imports `../../agent/channels/eve.ts`
+  - exports a `moduleMap` frozen by node id `__root__`
 
-### Build real probado
+### Build tested for real
 
-Sobre el scaffold minimo:
+On the minimal scaffold:
 
 ```bash
 npm run typecheck
 npm run build
 ```
 
-Resultados:
+Results:
 
-- `tsc` pasa.
-- `eve build` pasa.
-- Nitro usa preset `node-server` y builder `rolldown`.
-- Genera `.output/server/index.mjs`.
-- Bundle total reportado: 5.49 MB, 1.3 MB gzip.
-- Libreria mas grande: `.output/server/_libs/eve.mjs`, 4.75 MB, 1.15 MB gzip.
+- `tsc` passes.
+- `eve build` passes.
+- Nitro uses the `node-server` preset and the `rolldown` builder.
+- It generates `.output/server/index.mjs`.
+- Reported total bundle: 5.49 MB, 1.3 MB gzip.
+- Largest library: `.output/server/_libs/eve.mjs`, 4.75 MB, 1.15 MB gzip.
 
-## Runtime durable
+## Durable runtime
 
-Eve organiza trabajo en tres niveles:
+Eve organizes work in three levels:
 
-- `session`: conversacion/tarea durable, puede durar dias/semanas.
-- `turn`: un mensaje de usuario y todo el trabajo que dispara.
-- `step`: checkpoint durable dentro del turn; normalmente un model call y sus tool calls.
+- `session`: durable conversation/task; it can last days/weeks.
+- `turn`: one user message and all the work it triggers.
+- `step`: durable checkpoint inside the turn; usually one model call and its tool calls.
 
-Garantias y limites:
+Guarantees and limits:
 
-- Cada turn corre como workflow durable.
-- Los steps completados no se reejecutan; se replayea el resultado registrado.
-- Si un step queda interrumpido a mitad, puede reejecutarse. Por eso las acciones no idempotentes deben ser idempotentes o estar detras de aprobacion.
-- HITL, OAuth y subagentes pueden aparcar el workflow sin compute hasta que llegue input/callback.
-- Eve no mantiene una cola FIFO durable de mensajes por sesion. El `continuationToken` es un handle de reanudacion, no una direccion de cola. Para orden determinista, enviar un turno y esperar `session.waiting` antes del siguiente.
-- Subagentes declarados tienen su propia sesion durable, sandbox, skills y estado.
+- Each turn runs as a durable workflow.
+- Completed steps are not re-run; the recorded result is replayed.
+- If a step is interrupted midway, it can be re-run. That is why non-idempotent actions must be made idempotent or put behind approval.
+- HITL, OAuth and subagents can park the workflow with no compute until the input/callback arrives.
+- Eve does not keep a durable FIFO message queue per session. The `continuationToken` is a resume handle, not a queue address. For deterministic ordering, send one turn and wait for `session.waiting` before the next.
+- Declared subagents have their own durable session, sandbox, skills and state.
 
-## Internals confirmados en codigo
+## Internals confirmed in code
 
-### Discovery y compile
+### Discovery and compile
 
-`compileAgent()` hace este recorrido:
+`compileAgent()` goes through these steps:
 
-1. Resuelve el proyecto con `resolveDiscoveryProject`.
-2. Descubre el source graph con `discoverAgent`.
-3. Escribe artefactos con `writeCompilerArtifacts`.
-4. Si hay diagnostics de error, lanza `CompileAgentError`, pero aun deja diagnostics y manifests escritos.
+1. Resolves the project with `resolveDiscoveryProject`.
+2. Discovers the source graph with `discoverAgent`.
+3. Writes artifacts with `writeCompilerArtifacts`.
+4. If there are error diagnostics, it throws `CompileAgentError`, but still leaves the diagnostics and manifests written.
 
-`discoverAgent()` no importa modulos authored. Lee filesystem y clasifica slots:
+`discoverAgent()` does not import authored modules. It reads the filesystem and classifies slots:
 
-- instrucciones
-- config `agent.ts`
+- instructions
+- `agent.ts` config
 - channels
 - lib
 - schedules
@@ -508,7 +508,7 @@ Garantias y limites:
 - skills
 - subagents
 
-Los artefactos viven bajo `.eve/`:
+The artifacts live under `.eve/`:
 
 ```text
 .eve/
@@ -522,82 +522,82 @@ Los artefactos viven bajo `.eve/`:
     └── channel-instrumentation-types.d.ts
 ```
 
-`compile-metadata.json` guarda hashes SHA-256 y `sourceGraphHash`, asi que el runtime/dev server puede detectar cambios de artefactos sin reanalizar todo.
+`compile-metadata.json` stores SHA-256 hashes and `sourceGraphHash`, so the runtime/dev server can detect artifact changes without re-analyzing everything.
 
-### Manifest y module map
+### Manifest and module map
 
-El manifest compilado es deliberadamente serializable. Guarda metadata, rutas, modelo, instrucciones, skills, tools, subagents, schedules, sandbox, workspace resources y referencias a modulos. Las funciones authored no se serializan en JSON; viven en `module-map.mjs`.
+The compiled manifest is deliberately serializable. It stores metadata, routes, model, instructions, skills, tools, subagents, schedules, sandbox, workspace resources and module references. Authored functions are not serialized to JSON; they live in `module-map.mjs`.
 
-Constantes observadas:
+Observed constants:
 
 - `COMPILED_AGENT_MANIFEST_KIND`: `eve-agent-compiled-manifest`
 - `COMPILED_AGENT_MANIFEST_VERSION`: `30`
-- root node id compilado: `__root__`
+- compiled root node id: `__root__`
 
-El `module-map.mjs` importa los modulos reales y expone un mapa congelado por node id y source id. En un scaffold minimo:
+`module-map.mjs` imports the real modules and exposes a map frozen by node id and source id. In a minimal scaffold:
 
 ```js
-import * as module_0 from "../../agent/agent.ts";
-import * as module_1 from "../../agent/channels/eve.ts";
+import * as module_0 from '../../agent/agent.ts';
+import * as module_1 from '../../agent/channels/eve.ts';
 ```
 
 ### Runtime graph
 
-`resolveRuntimeAgentGraph()` hidrata el manifest y el module map en un bundle runtime:
+`resolveRuntimeAgentGraph()` hydrates the manifest and the module map into a runtime bundle:
 
-- Resuelve root agent y subagents.
-- Mezcla framework tools con authored tools.
-- Authored tools con mismo nombre reemplazan defaults.
-- `disableTool()` elimina defaults si el slug apunta a una tool framework valida.
-- Authored channels reemplazan framework channels con el mismo nombre.
-- `disableRoute()` elimina framework channels si el slug apunta a un channel framework valido.
-- Si hay connections, inyecta un dynamic resolver `connection_search`.
-- Construye registries de tools, hooks, sandbox y subagents.
+- Resolves the root agent and subagents.
+- Merges framework tools with authored tools.
+- Authored tools with the same name replace defaults.
+- `disableTool()` removes defaults if the slug points to a valid framework tool.
+- Authored channels replace framework channels with the same name.
+- `disableRoute()` removes framework channels if the slug points to a valid framework channel.
+- If there are connections, it injects a `connection_search` dynamic resolver.
+- Builds registries for tools, hooks, sandbox and subagents.
 
-### Dynamic capabilities internas
+### Internal dynamic capabilities
 
-El runtime de dinamicos usa scopes:
+The dynamic runtime uses scopes:
 
-- Tools dinamicas:
-  - `session.started`: metadata durable de sesion.
-  - `turn.started`: metadata durable de turno.
-  - `step.started`: live closures de step.
-- Skills dinamicas:
+- Dynamic tools:
+  - `session.started`: durable session metadata.
+  - `turn.started`: durable turn metadata.
+  - `step.started`: live step closures.
+- Dynamic skills:
   - `session.started`
   - `turn.started`
-- Instructions dinamicas:
+- Dynamic instructions:
   - `session.started`
   - `turn.started`
 
-Motivo: instructions y skills afectan el system prompt, la zona mas sensible para prompt caching, asi que no cambian en cada step.
+Reason: instructions and skills affect the system prompt, the most sensitive area for prompt caching, so they do not change on every step.
 
-Para tools dinamicas de sesion/turno:
+For session/turn dynamic tools:
 
-- Eve guarda metadata durable: nombre, descripcion, schema, resolver slug, entry key, step function name y closure vars serializadas.
-- El replay no reinvoca resolvers; reconstituye execute desde registered workflow steps.
-- Las step-scoped tools conservan closures vivas y se re-resuelven cada step.
-- El orden efectivo es step > turn > session. La primera definicion de un nombre gana en `buildToolSetFromDefinitions`.
-- Despues, las dynamic tools sobrescriben authored/default tools del mismo nombre.
+- Eve stores durable metadata: name, description, schema, resolver slug, entry key, step function name and serialized closure vars.
+- Replay does not re-invoke resolvers; it rebuilds execute from registered workflow steps.
+- Step-scoped tools keep live closures and are re-resolved on every step.
+- The effective order is step > turn > session. The first definition of a name wins in `buildToolSetFromDefinitions`.
+- After that, dynamic tools override authored/default tools with the same name.
 
-Limitacion importante: `needsApproval` en dynamic tools solo se honra para tools step-scoped; las session/turn-scoped se replayean desde metadata durable y no pueden transportar esa funcion.
+Important limitation: `needsApproval` on dynamic tools is only honored for step-scoped tools; session/turn-scoped ones are replayed from durable metadata and cannot carry that function.
 
 ### Workflow runtime
 
-`createWorkflowRuntime()` crea un runtime respaldado por Workflow:
+`createWorkflowRuntime()` creates a Workflow-backed runtime:
 
-- El long-lived driver usa workflow `workflowEntry`.
-- Cada turno se despacha como child workflow `turnWorkflow`.
-- El driver posee el event stream.
-- `getEventStream(sessionId, { startIndex })` lee NDJSON desde el run.
-- `deliver()` reanuda un hook por `continuationToken`; si no existe, lanza `RuntimeNoActiveSessionError`.
-- Las referencias de workflow son estables y no llevan version de paquete:
+- The long-lived driver uses the `workflowEntry` workflow.
+- Each turn is dispatched as a `turnWorkflow` child workflow.
+- The driver owns the event stream.
+- `getEventStream(sessionId, { startIndex })` reads NDJSON from the run.
+- `deliver()` resumes a hook by `continuationToken`; if it does not exist, it throws `RuntimeNoActiveSessionError`.
+- Workflow references are stable and carry no package version:
   - `workflow//eve//workflowEntry`
   - `workflow//eve//turnWorkflow`
-- En Vercel production intenta `deploymentId: "latest"`; en preview/local no, porque previews no tienen la misma semantica de branch/latest.
+- In Vercel production it tries `deploymentId: "latest"`; in preview/local it does not, because previews do not have the same branch/latest semantics.
 
-## Protocolo HTTP y streaming
+## HTTP protocol and streaming
 
-Rutas principales del canal Eve:
+Main Eve channel routes:
 
 ```bash
 POST /eve/v1/session
@@ -607,12 +607,12 @@ GET  /eve/v1/info
 GET  /eve/v1/health
 ```
 
-Dos handles distintos:
+Two different handles:
 
-- `continuationToken`: para enviar follow-ups a la misma conversacion. Pertenece al channel.
-- `sessionId` / `runId`: para streaming e inspeccion. Pertenece al runtime.
+- `continuationToken`: for sending follow-ups to the same conversation. It belongs to the channel.
+- `sessionId` / `runId`: for streaming and inspection. It belongs to the runtime.
 
-Eventos stream NDJSON importantes:
+Important NDJSON stream events:
 
 - `session.started`
 - `turn.started`
@@ -640,154 +640,154 @@ Eventos stream NDJSON importantes:
 - `session.failed`
 - `session.completed`
 
-Streams son replayables. `startIndex` permite reconectar por indice de evento.
+Streams are replayable. `startIndex` lets you reconnect by event index.
 
-## Harness y herramientas por defecto
+## Harness and default tools
 
-Todo agente Eve trae un harness por defecto con loop de agente y herramientas built-in:
+Every Eve agent comes with a default harness with an agent loop and built-in tools:
 
-| Tool | Ejecuta/afecta |
-| --- | --- |
-| `bash` | comando shell en sandbox |
-| `read_file` | lectura text con numeros de linea en sandbox |
-| `write_file` | escritura completa con read-before-write/stale-read |
-| `glob` | busqueda de archivos en sandbox |
-| `grep` | busqueda por regex en sandbox |
-| `web_fetch` | fetch desde app runtime |
-| `web_search` | busqueda gestionada por provider |
-| `todo` | lista durable por sesion |
-| `ask_question` | HITL: pregunta al usuario y aparca |
-| `agent` | subagente copy-of-self |
-| `load_skill` | carga skill en contexto |
-| `connection_search` | descubre tools de conexiones |
+| Tool                | Runs/affects                                 |
+| ------------------- | -------------------------------------------- |
+| `bash`              | shell command in the sandbox                 |
+| `read_file`         | text read with line numbers in the sandbox   |
+| `write_file`        | full write with read-before-write/stale-read |
+| `glob`              | file search in the sandbox                   |
+| `grep`              | regex search in the sandbox                  |
+| `web_fetch`         | fetch from the app runtime                   |
+| `web_search`        | provider-managed search                      |
+| `todo`              | durable per-session list                     |
+| `ask_question`      | HITL: asks the user and parks                |
+| `agent`             | copy-of-self subagent                        |
+| `load_skill`        | loads a skill into context                   |
+| `connection_search` | discovers connection tools                   |
 
-Se pueden:
+You can:
 
-- Sobrescribir creando `agent/tools/<slug>.ts`.
-- Deshabilitar con `disableTool()` en un archivo con el mismo slug.
-- Envolver built-ins desde `eve/tools/defaults`.
+- Override them by creating `agent/tools/<slug>.ts`.
+- Disable them with `disableTool()` in a file with the same slug.
+- Wrap built-ins from `eve/tools/defaults`.
 
-Ejemplo real en template PR triage: deshabilitan `bash`, `glob`, `grep`, `read_file`, `write_file` porque el agente triagea desde el diff inyectado y solo debe usar `apply_labels`, sin sandbox.
+Real example in the PR triage template: they disable `bash`, `glob`, `grep`, `read_file`, `write_file` because the agent triages from the injected diff and should only use `apply_labels`, with no sandbox.
 
-## Tools authored
+## Authored tools
 
-Las tools:
+Tools:
 
-- viven en `agent/tools/<name>.ts`.
-- se definen con `defineTool`.
-- corren en app runtime, con acceso a `process.env`.
-- nunca se ejecutan durante discovery.
-- requieren `inputSchema`.
-- pueden tener `outputSchema`.
-- pueden transformar salida para el modelo con `toModelOutput`.
-- pueden declarar `auth`.
-- pueden declarar `needsApproval`.
+- live in `agent/tools/<name>.ts`.
+- are defined with `defineTool`.
+- run in the app runtime, with access to `process.env`.
+- never run during discovery.
+- require `inputSchema`.
+- can have `outputSchema`.
+- can transform output for the model with `toModelOutput`.
+- can declare `auth`.
+- can declare `needsApproval`.
 
-Patron base:
+Base pattern:
 
 ```ts
-import { defineTool } from "eve/tools";
-import { z } from "zod";
+import { defineTool } from 'eve/tools';
+import { z } from 'zod';
 
 export default defineTool({
-  description: "Get the current weather for a city.",
+  description: 'Get the current weather for a city.',
   inputSchema: z.object({ city: z.string().min(1) }),
   async execute({ city }, ctx) {
-    return { city, condition: "Sunny" };
+    return { city, condition: 'Sunny' };
   },
 });
 ```
 
 ## Human-in-the-loop
 
-HITL existe en dos formas:
+HITL comes in two forms:
 
-- Approval: la tool quiere correr y una persona aprueba/deniega.
-- Question: el modelo llama `ask_question` y aparca esperando respuesta.
+- Approval: the tool wants to run and a person approves/denies it.
+- Question: the model calls `ask_question` and parks while it waits for an answer.
 
 Helpers:
 
-- `never()`: default si se omite `needsApproval`.
-- `once()`: aprobar una vez por sesion.
-- `always()`: aprobar cada llamada.
-- Predicate custom: decide segun input.
+- `never()`: default if `needsApproval` is omitted.
+- `once()`: approve once per session.
+- `always()`: approve every call.
+- Custom predicate: decides based on the input.
 
-Importante: si `needsApproval` se omite, la tool puede ejecutarse sin aprobacion. La doc recomienda usar aprobacion para acciones sensibles, irreversibles, reguladas, financieras, de salud, empleo, housing, legales, safety-impacting, user-impacting o con side effects externos.
+Important: if `needsApproval` is omitted, the tool can run without approval. The doc recommends approval for sensitive, irreversible, regulated, financial, health, employment, housing, legal, safety-impacting or user-impacting actions, or actions with external side effects.
 
 ## Skills
 
-Las skills son procedimientos Markdown cargados bajo demanda por `load_skill`.
+Skills are Markdown procedures loaded on demand by `load_skill`.
 
-Formas:
+Forms:
 
-- Archivo plano: `agent/skills/forecast.md`
-- Paquete: `agent/skills/research/SKILL.md` con `references/`, `assets/`, `scripts/`
-- TS: `defineSkill` desde `eve/skills`
+- Flat file: `agent/skills/forecast.md`
+- Package: `agent/skills/research/SKILL.md` with `references/`, `assets/`, `scripts/`
+- TS: `defineSkill` from `eve/skills`
 
-Reglas:
+Rules:
 
-- La descripcion es routing hint, no label.
-- Cargar una skill solo agrega instrucciones, no nuevas acciones.
-- Tools siguen siendo la superficie ejecutable.
-- Skills son scoped por agente; subagente y root no comparten skills.
-- Archivos sibling se pueden leer desde runtime con `ctx.getSkill(id).file(path)`.
+- The description is a routing hint, not a label.
+- Loading a skill only adds instructions, not new actions.
+- Tools remain the executable surface.
+- Skills are scoped per agent; a subagent and the root do not share skills.
+- Sibling files can be read at runtime with `ctx.getSkill(id).file(path)`.
 
-Esto encaja con el Agent Skills standard: una skill existente compatible con `SKILL.md` deberia portar a Eve.
+This fits the Agent Skills standard: an existing `SKILL.md`-compatible skill should port to Eve.
 
-## Dynamic capabilities de autor
+## Author-facing dynamic capabilities
 
-`defineDynamic` permite resolver tools, skills e instructions por sesion, turno o step.
+`defineDynamic` lets you resolve tools, skills and instructions per session, turn or step.
 
-Usos:
+Uses:
 
-- Capabilities por tenant/equipo/usuario.
-- Playbooks por plan o feature flag.
-- Tools generadas desde una base de datos o catalogo.
-- Instrucciones por canal o perfil.
+- Capabilities per tenant/team/user.
+- Playbooks per plan or feature flag.
+- Tools generated from a database or catalog.
+- Instructions per channel or profile.
 
-Eventos:
+Events:
 
-| Evento | Tools | Skills | Instructions |
-| --- | --- | --- | --- |
-| `session.started` | si | si | si |
-| `turn.started` | si | si | si |
-| `step.started` | si | no | no |
+| Event             | Tools | Skills | Instructions |
+| ----------------- | ----- | ------ | ------------ |
+| `session.started` | yes   | yes    | yes          |
+| `turn.started`    | yes   | yes    | yes          |
+| `step.started`    | yes   | no     | no           |
 
-Detalle critico: en dynamic tools, `execute` debe ser inline (`execute: (...) => ...` o method shorthand). Si se usa `execute: myFn` o factory, puede funcionar al principio pero no sobrevivir a replay/resume durable porque el transform necesita reconstruir closures.
+Critical detail: in dynamic tools, `execute` must be inline (`execute: (...) => ...` or method shorthand). If you use `execute: myFn` or a factory, it may work at first but not survive durable replay/resume, because the transform needs to rebuild closures.
 
 ## State
 
-`defineState` crea memoria durable por sesion.
+`defineState` creates durable per-session memory.
 
-- `get()`: lee valor actual.
-- `update(fn)`: reemplaza desde valor actual.
-- Requiere contexto Eve activo.
-- No se comparte con subagentes.
-- Sirve para memoria de trabajo de sesion: presupuesto, checklist, glosario, flags.
-- No reemplaza una base de datos si la informacion debe vivir entre sesiones/usuarios.
+- `get()`: reads the current value.
+- `update(fn)`: replaces it based on the current value.
+- Requires an active Eve context.
+- Not shared with subagents.
+- Useful for session working memory: budget, checklist, glossary, flags.
+- Does not replace a database if the data must live across sessions/users.
 
 ## Sandbox
 
-Cada agente tiene exactamente un sandbox por sesion logica.
+Each agent has exactly one sandbox per logical session.
 
 Trust boundary:
 
-| Aspecto | App runtime | Sandbox |
-| --- | --- | --- |
-| `process.env` / secretos | si | no |
-| Codigo Node propio | si | no |
-| Network | sin restriccion por runtime | policy configurable |
-| FS | app propia | `/workspace` aislado |
+| Aspect                  | App runtime            | Sandbox               |
+| ----------------------- | ---------------------- | --------------------- |
+| `process.env` / secrets | yes                    | no                    |
+| Your own Node code      | yes                    | no                    |
+| Network                 | no runtime restriction | configurable policy   |
+| FS                      | the app's own          | isolated `/workspace` |
 
 Backends:
 
-- `vercel()` desde `eve/sandbox/vercel`: Vercel Sandbox.
-- `docker()` desde `eve/sandbox/docker`: Docker local.
-- `microsandbox()` desde `eve/sandbox/microsandbox`: VM local ligera.
-- `justbash()` desde `eve/sandbox/just-bash`: fallback JS, sin binarios reales.
-- `defaultBackend()` elige Vercel en Vercel, luego Docker, microsandbox, just-bash.
+- `vercel()` from `eve/sandbox/vercel`: Vercel Sandbox.
+- `docker()` from `eve/sandbox/docker`: local Docker.
+- `microsandbox()` from `eve/sandbox/microsandbox`: lightweight local VM.
+- `justbash()` from `eve/sandbox/just-bash`: JS fallback, no real binaries.
+- `defaultBackend()` picks Vercel on Vercel, then Docker, microsandbox, just-bash.
 
-Metodos del handle:
+Handle methods:
 
 - `run`
 - `spawn`
@@ -801,24 +801,24 @@ Metodos del handle:
 Egress:
 
 - Default: `allow-all`.
-- Produccion/sensibles: usar `deny-all` o allow-list explicita.
-- Domain allow-lists y credential brokering soportados por `vercel()` y `microsandbox()`.
-- Docker solo soporta allow-all/deny-all.
-- just-bash rechaza `setNetworkPolicy`.
+- Production/sensitive data: use `deny-all` or an explicit allow-list.
+- Domain allow-lists and credential brokering are supported by `vercel()` and `microsandbox()`.
+- Docker only supports allow-all/deny-all.
+- just-bash rejects `setNetworkPolicy`.
 
 Lifecycle:
 
-- `bootstrap({ use })`: template-scoped; corre al construir template.
-- `onSession({ use, ctx })`: por sesion durable; lugar correcto para user-specific setup, network policy y credenciales por principal.
+- `bootstrap({ use })`: template-scoped; runs when the template is built.
+- `onSession({ use, ctx })`: per durable session; the right place for user-specific setup, network policy and per-principal credentials.
 
 ## Connections
 
-Connections conectan con servidores externos no authored:
+Connections link the agent to external servers that are not authored in the project:
 
-- MCP con `defineMcpClientConnection`.
-- OpenAPI 3.x con `defineOpenAPIConnection`.
+- MCP with `defineMcpClientConnection`.
+- OpenAPI 3.x with `defineOpenAPIConnection`.
 
-El modelo no ve URL ni credenciales. Usa `connection_search`, descubre tools y llama nombres calificados:
+The model does not see the URL or the credentials. It uses `connection_search`, discovers tools and calls qualified names:
 
 ```text
 <connection>__<tool>
@@ -826,31 +826,31 @@ linear__list_issues
 petstore__getInventory
 ```
 
-Auth soportada:
+Supported auth:
 
-- Sin auth para servicios publicos/locales.
-- Static token con `getToken`.
-- Headers custom.
-- OAuth interactivo con Vercel Connect: `connect("linear")` desde `@vercel/connect/eve`.
-- OAuth interactivo self-hosted con `defineInteractiveAuthorization`.
+- No auth for public/local services.
+- Static token with `getToken`.
+- Custom headers.
+- Interactive OAuth with Vercel Connect: `connect("linear")` from `@vercel/connect/eve`.
+- Self-hosted interactive OAuth with `defineInteractiveAuthorization`.
 
-Controles:
+Controls:
 
-- MCP: `tools.allow` o `tools.block`.
-- OpenAPI: `operations.allow` o `operations.block`.
-- `approval` a nivel de conexion (`never`, `once`, `always`).
+- MCP: `tools.allow` or `tools.block`.
+- OpenAPI: `operations.allow` or `operations.block`.
+- Connection-level `approval` (`never`, `once`, `always`).
 
-Orden con approval + auth: primero approval, luego sign-in. Eve guarda la aprobacion en state de sesion para no pedir doble aprobacion tras OAuth.
+Order with approval + auth: approval first, then sign-in. Eve stores the approval in session state so it does not ask for approval twice after OAuth.
 
 ## Channels
 
-Un channel es el edge adapter entre plataforma y agente. Hace tres cosas:
+A channel is the edge adapter between a platform and the agent. It does three things:
 
-1. Normaliza input de plataforma a mensaje.
-2. Posee el `continuationToken`.
-3. Decide entrega/respuesta.
+1. Normalizes platform input into a message.
+2. Owns the `continuationToken`.
+3. Decides delivery/response.
 
-Built-ins principales:
+Main built-ins:
 
 - Eve HTTP channel: default, `/eve/v1/*`.
 - Slack.
@@ -860,37 +860,37 @@ Built-ins principales:
 - Twilio SMS/WhatsApp/voice/transcription.
 - GitHub.
 - Linear Agent.
-- Custom channels con `defineChannel`.
+- Custom channels with `defineChannel`.
 
-Eve usa componentes card-builder del Chat SDK para Slack, pero no usa el runtime del Chat SDK.
+Eve uses Chat SDK card-builder components for Slack, but does not use the Chat SDK runtime.
 
-### Matriz de channels
+### Channel matrix
 
-| Channel | Ruta(s) default | Auth/verificacion | Dispatch | Delivery | Notas |
-| --- | --- | --- | --- | --- | --- |
-| Eve HTTP | `/eve/v1/session`, `/eve/v1/session/:sessionId`, `/eve/v1/session/:sessionId/stream` | `localDev()`, `vercelOidc()` por defecto; `placeholderAuth()` en scaffold | POST crea/continua sesiones | Stream NDJSON y cliente TS/frontend | Enabled aunque no exista `agent/channels/eve.ts`; escribir ese archivo solo para custom auth/config |
-| Slack | `/eve/v1/slack` | Vercel Connect gestiona bot token y webhook verifier | `app_mention` y `message.im`; hooks `onAppMention`, `onDirectMessage` | Threads, typing indicators, Block Kit/cards, HITL con botones/modales | El auth OAuth challenge se entrega ephemeral/DM; no expone raw token |
-| Discord | `/eve/v1/discord` | Ed25519 signatures, app id, bot token, public key | Slash/app commands, components, modals | ACK rapido y trabajo en background; edita deferred response y followups | Discord exige ACK en 3s; textos largos se parten a 2000 chars |
-| Microsoft Teams | `/eve/v1/teams` | Bot Framework bearer JWT | Personal chat y mensajes que mencionan al bot | Bot Framework Connector, Adaptive Cards para HITL | Proactive sessions requieren conversation reference existente |
-| Telegram | `/eve/v1/telegram` | `X-Telegram-Bot-Api-Secret-Token` | Private chats y grupos que dirigen mensaje al bot | `sendMessage`, inline keyboard HITL | No llama `setWebhook`; se registra fuera. Limite 4096 chars por mensaje |
-| Twilio | `/eve/v1/twilio/messages`, `/voice`, `/voice/transcription` | `X-Twilio-Signature` | SMS y transcripciones de voz | SMS via Messages API; voz con TwiML `Gather` | Raw continuation token `From:To`; proactive outbound requiere sender |
-| GitHub | `/eve/v1/github` | GitHub App id/private key/webhook secret | @mentions en issues, PRs o review comments; hooks opt-in para issue/PR opened | Comentarios nativos en GitHub | Inyecta PR diff y puede checkout de ref en sandbox en backend Vercel |
-| Linear Agent | `/eve/v1/linear` | Linear HMAC signature o verifier custom | `AgentSessionEvent` (`created`, `prompted`) | Linear Agent Activities: thought/action/elicitation/response/error | Usa surface Agent Sessions, no comentarios normales |
-| Custom | rutas `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`WS` | Lo define el autor en route handlers | `send(...)` o cross-channel `receive(...)` | events map por stream event | Soporta WebSocket, metadata, file uploads y re-key de continuation token |
+| Channel         | Default route(s)                                                                     | Auth/verification                                                            | Dispatch                                                                      | Delivery                                                                | Notes                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Eve HTTP        | `/eve/v1/session`, `/eve/v1/session/:sessionId`, `/eve/v1/session/:sessionId/stream` | `localDev()`, `vercelOidc()` by default; `placeholderAuth()` in the scaffold | POST creates/continues sessions                                               | NDJSON stream and TS/frontend client                                    | Enabled even if `agent/channels/eve.ts` does not exist; write that file only for custom auth/config |
+| Slack           | `/eve/v1/slack`                                                                      | Vercel Connect manages the bot token and webhook verifier                    | `app_mention` and `message.im`; hooks `onAppMention`, `onDirectMessage`       | Threads, typing indicators, Block Kit/cards, HITL with buttons/modals   | The OAuth auth challenge is delivered as ephemeral/DM; it does not expose the raw token             |
+| Discord         | `/eve/v1/discord`                                                                    | Ed25519 signatures, app id, bot token, public key                            | Slash/app commands, components, modals                                        | Fast ACK and background work; edits the deferred response and followups | Discord requires an ACK within 3s; long texts are split at 2000 chars                               |
+| Microsoft Teams | `/eve/v1/teams`                                                                      | Bot Framework bearer JWT                                                     | Personal chat and messages that mention the bot                               | Bot Framework Connector, Adaptive Cards for HITL                        | Proactive sessions require an existing conversation reference                                       |
+| Telegram        | `/eve/v1/telegram`                                                                   | `X-Telegram-Bot-Api-Secret-Token`                                            | Private chats and groups that address a message to the bot                    | `sendMessage`, inline keyboard HITL                                     | Does not call `setWebhook`; you register it separately. 4096 char limit per message                 |
+| Twilio          | `/eve/v1/twilio/messages`, `/voice`, `/voice/transcription`                          | `X-Twilio-Signature`                                                         | SMS and voice transcriptions                                                  | SMS via Messages API; voice with TwiML `Gather`                         | Raw continuation token `From:To`; proactive outbound requires a sender                              |
+| GitHub          | `/eve/v1/github`                                                                     | GitHub App id/private key/webhook secret                                     | @mentions in issues, PRs or review comments; opt-in hooks for issue/PR opened | Native GitHub comments                                                  | Injects the PR diff and can check out a ref in the sandbox on the Vercel backend                    |
+| Linear Agent    | `/eve/v1/linear`                                                                     | Linear HMAC signature or custom verifier                                     | `AgentSessionEvent` (`created`, `prompted`)                                   | Linear Agent Activities: thought/action/elicitation/response/error      | Uses the Agent Sessions surface, not normal comments                                                |
+| Custom          | `GET`/`POST`/`PUT`/`PATCH`/`DELETE`/`WS` routes                                      | The author defines it in route handlers                                      | `send(...)` or cross-channel `receive(...)`                                   | events map per stream event                                             | Supports WebSocket, metadata, file uploads and re-keying the continuation token                     |
 
-### Integrations gallery y scaffolding
+### Integrations gallery and scaffolding
 
-El catalogo `@vercel/eve-catalog` contiene channels y connections con dos surfaces:
+The `@vercel/eve-catalog` catalog contains channels and connections with two surfaces:
 
-- `gallery`: aparece en docs/integrations.
-- `scaffoldable`: la CLI puede generarlo hoy.
+- `gallery`: appears in docs/integrations.
+- `scaffoldable`: the CLI can generate it today.
 
-Channels scaffoldable por CLI:
+Channels the CLI can scaffold:
 
 - `slack`
 - `eve` Web Chat
 
-Channels en gallery pero configurados a mano hoy:
+Channels in the gallery that are configured by hand today:
 
 - Discord
 - Microsoft Teams
@@ -899,41 +899,41 @@ Channels en gallery pero configurados a mano hoy:
 - GitHub
 - Linear Agent
 
-Connections scaffoldable/gallery:
+Scaffoldable/gallery connections:
 
-| Connection | Protocolos | Endpoint/capacidad | Auth modes docs |
-| --- | --- | --- | --- |
-| Linear | MCP | `https://mcp.linear.app/sse`; issues, projects, cycles, comments | user, app |
-| Notion | MCP + OpenAPI | MCP `https://mcp.notion.com/mcp`; OpenAPI `https://developers.notion.com/openapi.json` con base `https://api.notion.com` | user, app, JWT bearer |
-| Datadog | MCP | `https://mcp.datadoghq.com/api/mcp`; metrics, monitors, logs, incidents | JWT bearer |
-| Honeycomb | MCP | `https://mcp.honeycomb.io/mcp`; traces, queries, datasets | JWT bearer |
+| Connection | Protocols     | Endpoint/capability                                                                                                       | Documented auth modes |
+| ---------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Linear     | MCP           | `https://mcp.linear.app/sse`; issues, projects, cycles, comments                                                          | user, app             |
+| Notion     | MCP + OpenAPI | MCP `https://mcp.notion.com/mcp`; OpenAPI `https://developers.notion.com/openapi.json` with base `https://api.notion.com` | user, app, JWT bearer |
+| Datadog    | MCP           | `https://mcp.datadoghq.com/api/mcp`; metrics, monitors, logs, incidents                                                   | JWT bearer            |
+| Honeycomb  | MCP           | `https://mcp.honeycomb.io/mcp`; traces, queries, datasets                                                                 | JWT bearer            |
 
-CLI actual para channels:
+Current CLI for channels:
 
 - `eve channels add slack`
 - `eve channels add web`
 - `eve channels list --json`
 
-## Auth y route protection
+## Auth and route protection
 
-Eve tiene dos sistemas independientes:
+Eve has two independent systems:
 
-1. Route auth inbound: quien puede llamar rutas HTTP.
-2. Tool/connection auth outbound: como el agente accede a servicios externos.
+1. Inbound route auth: who can call the HTTP routes.
+2. Outbound tool/connection auth: how the agent accesses external services.
 
-Route auth protege:
+Route auth protects:
 
 - `POST /eve/v1/session`
 - `POST /eve/v1/session/:sessionId`
 - `GET /eve/v1/session/:sessionId/stream`
 
-`GET /eve/v1/health` es publico.
+`GET /eve/v1/health` is public.
 
-Auth fail-closed:
+Fail-closed auth:
 
-- Si ningun `AuthFn` acepta, 401.
-- Anonymous requiere `none()` explicitamente.
-- `placeholderAuth()` mantiene produccion cerrada hasta reemplazo.
+- If no `AuthFn` accepts, 401.
+- Anonymous access requires `none()` explicitly.
+- `placeholderAuth()` keeps production closed until it is replaced.
 
 Helpers:
 
@@ -945,71 +945,71 @@ Helpers:
 - `jwtEcdsa(...)`
 - `oidc(...)`
 
-Advertencia critica: route auth no impone ownership de sesion. Si varios usuarios/tenants pueden llegar a la misma ruta, la app debe implementar autorizacion por usuario/tenant/sesion.
+Critical warning: route auth does not enforce session ownership. If several users/tenants can reach the same route, the app must implement per-user/tenant/session authorization.
 
 ## Hooks
 
-Hooks subscriben a eventos del stream y corren despues de que el evento fue durably recorded.
+Hooks subscribe to stream events and run after the event has been durably recorded.
 
-Usos:
+Uses:
 
 - audit logs
-- metricas
+- metrics
 - alerting
-- persistir eventos/sesiones a una DB propia
+- persisting events/sessions to your own DB
 
-Si un hook lanza, se considera fallo real: puede convertirse en `turn.failed`, o escalar a `session.failed` si rompe durante cascada de fallo. Para hooks no criticos, envolver con `try/catch`.
+If a hook throws, it counts as a real failure: it can turn into `turn.failed`, or escalate to `session.failed` if it breaks during a failure cascade. For non-critical hooks, wrap them in `try/catch`.
 
 ## Subagents
 
-Hay dos tipos:
+There are two types:
 
-- Built-in `agent` tool: copia del agente actual, comparte sandbox y tools, fresh history/state.
-- Declared subagents: `agent/subagents/<id>/`, con su propio `agent.ts`, tools, skills, sandbox, state.
-- Remote agents: `defineRemoteAgent` bajo `agent/subagents/`, apuntando a otro deployment Eve.
+- Built-in `agent` tool: a copy of the current agent; it shares the sandbox and tools, with fresh history/state.
+- Declared subagents: `agent/subagents/<id>/`, with their own `agent.ts`, tools, skills, sandbox and state.
+- Remote agents: `defineRemoteAgent` under `agent/subagents/`, pointing to another Eve deployment.
 
-Reglas:
+Rules:
 
-- El parent le pasa todo contexto necesario en `message`.
-- El child no ve la historia del parent.
-- Un declared subagent no hereda slots del root.
-- El nombre del subagente comparte namespace con tools; colisiones fallan en build.
-- No usar subagentes como boundary de seguridad por si solos; approvals/auth deben estar donde estan las acciones.
+- The parent passes all the context the child needs in `message`.
+- The child does not see the parent's history.
+- A declared subagent does not inherit the root's slots.
+- The subagent name shares a namespace with tools; collisions fail at build time.
+- Do not use subagents as a security boundary on their own; approvals/auth must sit where the actions are.
 
 ### Remote agents
 
-`defineRemoteAgent` permite llamar otro despliegue Eve como si fuera subagent local.
+`defineRemoteAgent` lets you call another Eve deployment as if it were a local subagent.
 
-Ejemplo:
+Example:
 
 ```ts
-import { defineRemoteAgent } from "eve";
-import { vercelOidc } from "eve/agents/auth";
+import { defineRemoteAgent } from 'eve';
+import { vercelOidc } from 'eve/agents/auth';
 
 export default defineRemoteAgent({
-  url: "https://weather-agent.example.com",
-  description: "Answers weather questions.",
+  url: 'https://weather-agent.example.com',
+  description: 'Answers weather questions.',
   auth: vercelOidc(),
 });
 ```
 
-Campos:
+Fields:
 
-- `url`: base URL del deployment remoto.
-- `description`: descripcion visible para el modelo.
-- `auth`: outbound auth opcional.
-- `headers`: headers estaticos o lazy.
+- `url`: base URL of the remote deployment.
+- `description`: description the model sees.
+- `auth`: optional outbound auth.
+- `headers`: static or lazy headers.
 - `path`: default `/eve/v1/session`.
-- `outputSchema`: schema para task-mode remoto.
+- `outputSchema`: schema for remote task mode.
 
-Funcionamiento:
+How it works:
 
-1. Parent inicia una sesion task-mode en el remoto.
-2. Parent aparca el turno y pasa una callback URL.
-3. Remote completa o falla.
-4. Parent recibe callback terminal y reanuda el turno.
+1. The parent starts a task-mode session on the remote.
+2. The parent parks the turn and passes a callback URL.
+3. The remote completes or fails.
+4. The parent receives the terminal callback and resumes the turn.
 
-Auth outbound soportada:
+Supported outbound auth:
 
 - `vercelOidc()`
 - `bearer(token)`
@@ -1017,142 +1017,142 @@ Auth outbound soportada:
 
 Failure model:
 
-- Fallo al arrancar remoto vuelve como tool result fallido.
-- Fallo despues de arrancar llega por terminal callback.
-- Callback delivery corre como durable step; si falla el POST, se reintenta.
+- A failure to start the remote comes back as a failed tool result.
+- A failure after the start arrives through the terminal callback.
+- Callback delivery runs as a durable step; if the POST fails, it is retried.
 
 ### Experimental Workflow tool
 
-`ExperimentalWorkflow` habilita una tool `Workflow` para que el modelo escriba JavaScript que coordina subagentes como un unico step durable.
+`ExperimentalWorkflow` enables a `Workflow` tool so the model can write JavaScript that coordinates subagents as a single durable step.
 
 Opt-in:
 
 ```ts
-export { ExperimentalWorkflow as default } from "eve/tools";
+export { ExperimentalWorkflow as default } from 'eve/tools';
 ```
 
-Archivo esperado:
+Expected file:
 
 ```text
 agent/tools/workflow.ts
 ```
 
-Puede orquestar:
+It can orchestrate:
 
 - built-in `agent`
-- subagents declarados
+- declared subagents
 - remote agents
 
-No puede acceder a:
+It cannot access:
 
 - filesystem
-- red
+- network
 - shell
 - skills
 - connections
 - `process`
 - imports
 
-La ejecucion corre en una sandbox QuickJS pequena. Es una allowlist: el programa solo ve `tools.<subagentName>` y built-ins del lenguaje.
+Execution runs in a small QuickJS sandbox. It is an allowlist: the program only sees `tools.<subagentName>` and the language built-ins.
 
-Utilidad:
+What it is good for:
 
-- fan-out programatico
-- secuencias donde el output de un subagente alimenta otro
-- agregaciones runtime que no caben bien en tool calls sueltos
+- programmatic fan-out
+- sequences where one subagent's output feeds another
+- runtime aggregations that do not fit well in separate tool calls
 
-Riesgo:
+Risk:
 
-- Marcado experimental.
-- El modelo escribe codigo de orquestacion; debe probarse con evals antes de usar en flujos criticos.
+- Marked experimental.
+- The model writes orchestration code; test it with evals before using it in critical flows.
 
 ## Schedules
 
-Schedules viven en `agent/schedules/` y son root-only.
+Schedules live in `agent/schedules/` and are root-only.
 
-Dos formas:
+Two forms:
 
-- `markdown`: prompt fire-and-forget en task mode.
-- `run`: handler que puede entregar trabajo a un canal con `receive`.
+- `markdown`: fire-and-forget prompt in task mode.
+- `run`: handler that can hand work to a channel with `receive`.
 
 Cron:
 
-- 5 campos, resolucion de minuto.
-- En Vercel se convierte en Vercel Cron Job y se evalua en UTC.
-- `eve dev` no dispara schedules por cron; hay ruta dev one-shot:
+- 5 fields, minute resolution.
+- On Vercel it becomes a Vercel Cron Job and is evaluated in UTC.
+- `eve dev` does not fire schedules on cron; there is a one-shot dev route:
 
 ```bash
 curl -X POST http://localhost:3000/eve/v1/dev/schedules/<scheduleId>
 ```
 
-En self-hosted, `eve start` arranca scheduler de Nitro. Si se adapta output a otro host que solo sirve HTTP, hay que asegurarse de ejecutar Nitro scheduled tasks o usar scheduler propio.
+When self-hosted, `eve start` starts the Nitro scheduler. If you adapt the output to another host that only serves HTTP, you have to make sure Nitro scheduled tasks run, or use your own scheduler.
 
-## Frontend y SDK cliente
+## Frontend and client SDK
 
 Frontend:
 
-- React: `useEveAgent` desde `eve/react`.
+- React: `useEveAgent` from `eve/react`.
 - Vue: `eve/vue`.
 - Svelte: `eve/svelte`.
-- Next.js: `withEve` desde `eve/next`.
-- Nuxt: modulo `eve/nuxt`.
-- SvelteKit: plugin `eve/sveltekit`.
+- Next.js: `withEve` from `eve/next`.
+- Nuxt: `eve/nuxt` module.
+- SvelteKit: `eve/sveltekit` plugin.
 
-`useEveAgent` maneja:
+`useEveAgent` handles:
 
-- crear sesion durable
-- enviar turns
-- stream de respuesta
-- reducer a mensajes UI
-- estado `ready`/`submitted`/`streaming`/`error`
+- creating a durable session
+- sending turns
+- response streaming
+- reducing to UI messages
+- `ready`/`submitted`/`streaming`/`error` state
 - HITL responses
-- `clientContext` por turno
-- `initialSession` y persistencia de cursor
+- per-turn `clientContext`
+- `initialSession` and cursor persistence
 
-SDK bajo nivel:
+Low-level SDK:
 
-- `Client` desde `eve/client`.
+- `Client` from `eve/client`.
 - `client.session()`.
 - `health()`.
-- Auth bearer/basic dynamic por request.
-- `ClientSession` guarda `sessionId`, `continuationToken` y cursor de stream.
+- Dynamic bearer/basic auth per request.
+- `ClientSession` stores `sessionId`, `continuationToken` and the stream cursor.
 
-Detalles importantes del cliente:
+Important client details:
 
-- `send("texto")` inicia o continua un turno.
-- `send({ message, clientContext })` agrega contexto solo para ese turno; no persiste en historial durable.
-- `send({ message: UserContent[] })` acepta attachments estilo AI SDK, por ejemplo PDFs como data URLs.
-- `send({ inputResponses })` responde aprobaciones o preguntas HITL.
-- `MessageResponse` es single-use: consumir con `result()` o con `for await`, no ambas.
-- `result()` devuelve `status`, `message`, `events`, `sessionId` y `data`.
-- `status` puede ser `waiting`, `completed` o `failed`.
-- Transient stream disconnects se reconectan desde `streamIndex`; default `maxReconnectAttempts` es `3`.
-- `session.stream({ startIndex })` permite reabrir un stream existente.
+- `send("text")` starts or continues a turn.
+- `send({ message, clientContext })` adds context for that turn only; it does not persist in durable history.
+- `send({ message: UserContent[] })` accepts AI SDK-style attachments, for example PDFs as data URLs.
+- `send({ inputResponses })` answers HITL approvals or questions.
+- `MessageResponse` is single-use: consume it with `result()` or with `for await`, not both.
+- `result()` returns `status`, `message`, `events`, `sessionId` and `data`.
+- `status` can be `waiting`, `completed` or `failed`.
+- Transient stream disconnects reconnect from `streamIndex`; the default `maxReconnectAttempts` is `3`.
+- `session.stream({ startIndex })` lets you reopen an existing stream.
 
 Continuations:
 
-- `continuationToken`: resume la conversacion.
-- `sessionId`: identifica stream/historia.
-- `streamIndex`: indice de eventos consumidos.
-- Persistir los tres como `SessionState` es mejor que guardar solo el token.
-- Si un turno acaba en `session.completed` o `session.failed`, el cliente resetea state local; el siguiente `send` abre sesion nueva.
+- `continuationToken`: resumes the conversation.
+- `sessionId`: identifies the stream/history.
+- `streamIndex`: index of the consumed events.
+- Persisting all three as `SessionState` is better than storing only the token.
+- If a turn ends in `session.completed` or `session.failed`, the client resets local state; the next `send` opens a new session.
 
-Output schema por turno:
+Per-turn output schema:
 
-- `send<T>({ message, outputSchema })` pide resultado estructurado.
-- Acepta JSON Schema o Standard Schema (Zod, Valibot, ArkType).
-- El servidor valida; el cliente no revalida client-side.
-- El stream emite `result.completed`.
-- `result().data` contiene el ultimo `result.completed` del turno, o `undefined` si no se pidio/satisfizo estructura.
-- No persiste entre turnos; cada turno que lo necesite debe pasarlo.
+- `send<T>({ message, outputSchema })` asks for a structured result.
+- Accepts JSON Schema or Standard Schema (Zod, Valibot, ArkType).
+- The server validates; the client does not revalidate client-side.
+- The stream emits `result.completed`.
+- `result().data` contains the last `result.completed` of the turn, or `undefined` if no structure was requested or it was not satisfied.
+- It does not persist across turns; each turn that needs it must pass it.
 
-`withEve` para Next.js:
+`withEve` for Next.js:
 
-- Añade rewrites para que `/eve/v1/:path*` apunte al servicio Eve.
-- En desarrollo arranca `eve dev --no-ui --port 0` para el agente y reescribe hacia esa URL.
-- En Vercel production reescribe al prefijo privado del servicio Eve, default `/_eve_internal/eve`.
-- Fuera de Vercel production puede servir `.output/server/index.mjs` en puerto local estable o usar `EVE_NEXT_PRODUCTION_ORIGIN`.
-- Opciones clave:
+- Adds rewrites so `/eve/v1/:path*` points to the Eve service.
+- In development it starts `eve dev --no-ui --port 0` for the agent and rewrites to that URL.
+- In Vercel production it rewrites to the Eve service's private prefix, default `/_eve_internal/eve`.
+- Outside Vercel production it can serve `.output/server/index.mjs` on a stable local port or use `EVE_NEXT_PRODUCTION_ORIGIN`.
+- Key options:
   - `eveRoot`
   - `eveBuildCommand`
   - `servicePrefix`
@@ -1160,13 +1160,13 @@ Output schema por turno:
 
 ## Evals
 
-Evals viven en `evals/*.eval.ts` y usan `defineEval`.
+Evals live in `evals/*.eval.ts` and use `defineEval`.
 
-Propiedades:
+Properties:
 
-- Se ejecutan contra el HTTP real del agente.
-- El runner arranca o apunta a un servidor real.
-- Assertions pueden ser run-level, value checks o LLM-as-judge.
+- They run against the agent's real HTTP endpoints.
+- The runner starts a real server or points to one.
+- Assertions can be run-level, value checks or LLM-as-judge.
 - `t.send`, `t.respond`, `t.expectInputRequests`, etc.
 - `t.completed()`, `t.calledTool("...")`, `t.usedNoTools()`, `t.toolOrder([...])`.
 - `t.check(t.reply, includes("..."))`.
@@ -1174,8 +1174,8 @@ Propiedades:
 
 Config:
 
-- `evals/evals.config.ts` con `defineEvalConfig`.
-- Reporters como Braintrust o JUnit.
+- `evals/evals.config.ts` with `defineEvalConfig`.
+- Reporters such as Braintrust or JUnit.
 
 CLI:
 
@@ -1188,17 +1188,17 @@ eve eval --json
 eve eval --junit results.xml
 ```
 
-Exit codes documentados:
+Documented exit codes:
 
-- `0`: gates pasan.
-- `1`: fallo de eval/check/error/strict threshold.
-- `2`: error de configuracion.
+- `0`: gates pass.
+- `1`: eval/check/error/strict threshold failure.
+- `2`: configuration error.
 
-## Observabilidad
+## Observability
 
-Tres superficies:
+Three surfaces:
 
-1. Workflow run tags `$eve.*`: automaticos, no configurados.
+1. Workflow run tags `$eve.*`: automatic, no configuration.
 2. OpenTelemetry export: via `agent/instrumentation.ts`.
 3. Runtime context events: `events["step.started"]`.
 
@@ -1216,163 +1216,163 @@ Run tags:
 - `$eve.cache_read_tokens`
 - `$eve.tool_count`
 
-Agent Runs en Vercel dashboard:
+Agent Runs in the Vercel dashboard:
 
-- Auto-detecta `eve`.
-- Aparece en Observability.
-- Actualmente gated por team, segun docs.
-- Separado de OTel exporters.
+- Auto-detects `eve`.
+- Appears under Observability.
+- Currently gated by team, according to the docs.
+- Separate from OTel exporters.
 
 ## Deployment
 
-En Vercel:
+On Vercel:
 
-- `eve build` genera `.vercel/output`.
-- Workflow SDK usa Vercel Workflow.
-- `defaultBackend()` usa Vercel Sandbox.
-- Schedules se convierten en Vercel Cron.
-- Prewarm de sandbox templates en build si hay `VERCEL` y `VERCEL_DEPLOYMENT_ID`.
+- `eve build` generates `.vercel/output`.
+- The Workflow SDK uses Vercel Workflow.
+- `defaultBackend()` uses Vercel Sandbox.
+- Schedules become Vercel Cron.
+- Sandbox templates are prewarmed at build time if `VERCEL` and `VERCEL_DEPLOYMENT_ID` are set.
 
-Fuera de Vercel:
+Outside Vercel:
 
 - `eve build`
 - `PORT=3000 eve start --host 0.0.0.0`
-- Output Nitro en `.output/`.
-- Workflow local world persiste estado normalmente bajo `.workflow-data`.
-- Sandbox default intenta Docker, microsandbox, just-bash.
-- Si se quiere no depender de AI Gateway, usar provider directo de AI SDK y API key provider.
+- Nitro output in `.output/`.
+- The local Workflow world usually persists state under `.workflow-data`.
+- The default sandbox tries Docker, microsandbox, just-bash.
+- If you do not want to depend on AI Gateway, use a direct AI SDK provider and a provider API key.
 
-Checklist minima:
+Minimal checklist:
 
-- `eve build` pasa.
-- Secrets/model creds configurados.
-- Sandbox backend correcto.
-- `placeholderAuth()` reemplazado.
-- Health/session/stream smoke tests pasan.
-- Network policy revisada.
-- Tools sensibles detras de approval.
-- OTel/eval providers aprobados para los datos.
+- `eve build` passes.
+- Secrets/model creds configured.
+- Correct sandbox backend.
+- `placeholderAuth()` replaced.
+- Health/session/stream smoke tests pass.
+- Network policy reviewed.
+- Sensitive tools behind approval.
+- OTel/eval providers approved for the data.
 
-## Tutorial oficial Build an Agent
+## Official Build an Agent tutorial
 
-La carpeta `docs/tutorial/` construye un analytics assistant de extremo a extremo en nueve pasos. Es el tutorial mas completo para entender el "happy path" de Eve.
+The `docs/tutorial/` folder builds an analytics assistant end to end in nine steps. It is the most complete tutorial for understanding Eve's "happy path".
 
 ### 1. Your First Agent
 
-Objetivo: crear `analytics-assistant`, fijar modelo y prompt.
+Goal: create `analytics-assistant`, set the model and the prompt.
 
-Conceptos:
+Concepts:
 
-- Requiere Node 24+.
-- El default usa AI Gateway; si no hay `AI_GATEWAY_API_KEY` o `VERCEL_OIDC_TOKEN`, el TUI guia por `/model`.
-- `npx eve@latest init analytics-assistant` crea directorio, instala deps, inicializa Git y arranca dev server para humanos.
-- `agent/agent.ts` define el modelo.
-- `agent/instructions.md` contiene identidad y reglas permanentes.
+- Requires Node 24+.
+- The default uses AI Gateway; if there is no `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`, the TUI walks you through `/model`.
+- `npx eve@latest init analytics-assistant` creates the directory, installs deps, initializes Git and starts the dev server for humans.
+- `agent/agent.ts` defines the model.
+- `agent/instructions.md` holds identity and permanent rules.
 
 ### 2. How It Runs
 
-Define los tres terminos centrales:
+Defines the three core terms:
 
-- session: conversacion durable.
-- turn: mensaje + trabajo disparado.
-- step: checkpoint durable.
+- session: durable conversation.
+- turn: message + the work it triggers.
+- step: durable checkpoint.
 
-Mensaje clave: un turn corre como workflow durable. Steps completados no reejecutan; steps interrumpidos pueden reejecutar. Side effects no idempotentes deben ser idempotentes o gateados.
+Key message: a turn runs as a durable workflow. Completed steps do not re-run; interrupted steps can re-run. Non-idempotent side effects must be idempotent or gated.
 
 ### 3. Query Sample Data
 
-Agrega `run_sql` como tool typed:
+Adds `run_sql` as a typed tool:
 
-- `agent/lib/sample-db.ts` contiene SQLite in-memory con `sql.js`.
-- `agent/tools/run_sql.ts` usa `defineTool`.
-- Filename `run_sql.ts` se convierte en tool `run_sql`.
-- Output se limita a 500 filas para no inundar contexto.
-- Tools corren en app runtime con `process.env`, no en sandbox.
+- `agent/lib/sample-db.ts` holds an in-memory SQLite database with `sql.js`.
+- `agent/tools/run_sql.ts` uses `defineTool`.
+- The filename `run_sql.ts` becomes the tool `run_sql`.
+- Output is capped at 500 rows so it does not flood the context.
+- Tools run in the app runtime with `process.env`, not in the sandbox.
 
 ### 4. Connect a Warehouse
 
-Sustituye dataset toy por una connection MCP OAuth:
+Replaces the toy dataset with an OAuth MCP connection:
 
 - `agent/connections/warehouse.ts`
 - `defineMcpClientConnection`
-- `connect("warehouse")` desde `@vercel/connect/eve`
-- Tools aparecen como `warehouse__<tool>`
-- OAuth es user-scoped por defecto.
-- Si falta token, el turn aparca, el canal muestra sign-in, y despues se reanuda desde el mismo step.
-- El token nunca llega al modelo; Eve lo resuelve justo antes de llamar el MCP server.
+- `connect("warehouse")` from `@vercel/connect/eve`
+- Tools appear as `warehouse__<tool>`
+- OAuth is user-scoped by default.
+- If the token is missing, the turn parks, the channel shows sign-in, and the turn then resumes from the same step.
+- The token never reaches the model; Eve resolves it just before calling the MCP server.
 
-Nota: Vercel Connect se describe como private beta en esa guia. El tutorial permite seguir con sample dataset si no se tiene acceso.
+Note: that guide describes Vercel Connect as a private beta. The tutorial lets you continue with the sample dataset if you do not have access.
 
 ### 5. Run Analysis
 
-Introduce sandbox:
+Introduces the sandbox:
 
-- `agent/sandbox/workspace/schema.sql` se monta en `/workspace/schema.sql`.
-- El modelo puede leer schema/notes antes de escribir consultas.
-- Built-ins `bash`, `read_file`, `write_file` apuntan al sandbox.
-- Una tool custom puede usar `ctx.getSandbox()` para escribir ficheros y ejecutar comandos.
-- Ejemplo `chart_series` escribe JSON + Python y genera PNG.
-- El sandbox base no trae matplotlib; hay que instalarlo en bootstrap o usar imagen custom.
-- Secrets no entran en sandbox.
+- `agent/sandbox/workspace/schema.sql` is mounted at `/workspace/schema.sql`.
+- The model can read the schema/notes before writing queries.
+- The built-ins `bash`, `read_file`, `write_file` point to the sandbox.
+- A custom tool can use `ctx.getSandbox()` to write files and run commands.
+- The `chart_series` example writes JSON + Python and generates a PNG.
+- The base sandbox does not include matplotlib; you have to install it in bootstrap or use a custom image.
+- Secrets do not enter the sandbox.
 
 ### 6. Remember Definitions
 
-Introduce `defineState`:
+Introduces `defineState`:
 
-- `defineState("analytics.glossary", initial)` crea slot durable tipado.
-- Tools `define_metric` y `recall_metrics` actualizan/leen glosario.
-- El estado persiste entre turns de la misma session.
-- State es per-session y aislado por agente; subagents no lo comparten.
+- `defineState("analytics.glossary", initial)` creates a typed durable slot.
+- The tools `define_metric` and `recall_metrics` update/read the glossary.
+- The state persists across turns of the same session.
+- State is per-session and isolated per agent; subagents do not share it.
 
 ### 7. Team Playbooks
 
-Introduce dynamic skills:
+Introduces dynamic skills:
 
 - `agent/skills/team-playbook.ts`
 - `defineDynamic({ events: { "session.started": ... } })`
-- Lee `ctx.session.auth.current?.attributes.team`.
-- Devuelve `defineSkill` con playbook de Growth/Finance.
-- Skill se mantiene disponible durante toda la session.
-- El routing depende de claims autenticados, no del texto del usuario.
+- Reads `ctx.session.auth.current?.attributes.team`.
+- Returns a `defineSkill` with a Growth/Finance playbook.
+- The skill stays available for the whole session.
+- Routing depends on authenticated claims, not on the user's text.
 
 ### 8. Guard the Spend
 
-Introduce HITL cost-based:
+Introduces cost-based HITL:
 
-- `needsApproval` puede ser predicate sobre `toolInput`.
-- Ejemplo: estimar GB escaneados y gatear consultas caras.
-- Si aprueba, el run reanuda y ejecuta.
-- Si deniega, la tool se salta y el modelo recibe el motivo.
-- Cada session tiene una sola continuation activa; respuestas stale se rechazan.
+- `needsApproval` can be a predicate over `toolInput`.
+- Example: estimate the GB scanned and gate expensive queries.
+- If the user approves, the run resumes and executes.
+- If the user denies, the tool is skipped and the model receives the reason.
+- Each session has only one active continuation; stale responses are rejected.
 
 ### 9. Ship It
 
-Convierte TUI en app web:
+Turns the TUI into a web app:
 
-- `npx eve channels add web` agrega app Next.js.
-- `next.config.ts` usa `withEve(nextConfig)`.
-- `AgentChat` usa `useEveAgent`.
-- Reemplaza `placeholderAuth()` por auth real.
-- `agent/channels/eve.ts` debe tener auth de app antes de `localDev()`/`vercelOidc()`.
+- `npx eve channels add web` adds a Next.js app.
+- `next.config.ts` uses `withEve(nextConfig)`.
+- `AgentChat` uses `useEveAgent`.
+- Replaces `placeholderAuth()` with real auth.
+- `agent/channels/eve.ts` must have app auth before `localDev()`/`vercelOidc()`.
 - Deploy:
 
 ```bash
 vercel deploy
 ```
 
-Smoke test remoto:
+Remote smoke test:
 
 ```bash
 npx eve dev https://your-analytics-app.vercel.app
 ```
 
-Resultado final del tutorial: agente web autenticado que consulta warehouse, corre analisis en sandbox, grafica resultados, recuerda definiciones, carga playbooks por team y pide aprobacion antes de gastar.
+Final result of the tutorial: an authenticated web agent that queries the warehouse, runs analysis in the sandbox, charts the results, remembers definitions, loads playbooks per team and asks for approval before spending.
 
-## Templates oficiales
+## Official templates
 
 ### `vercel-labs/eve-slack-agent-template`
 
-Starter minimal para Slack.
+Minimal Slack starter.
 
 Stack:
 
@@ -1381,7 +1381,7 @@ Stack:
 - TypeScript
 - `eve dev/build/start`
 
-Agente:
+Agent:
 
 - `agent/agent.ts`
 - `agent/channels/slack.ts`
@@ -1389,38 +1389,38 @@ Agente:
 - `agent/skills/plan_a_trip.md`
 - `agent/tools/get_weather.ts`
 
-Uso:
+Usage:
 
-- Deploy button crea connector Slack con trigger a `/eve/v1/slack`.
+- The Deploy button creates a Slack connector with a trigger to `/eve/v1/slack`.
 - Local: `vercel link`, `vercel env pull`, `pnpm dev`.
 
 ### `vercel-labs/eve-content-agent-template`
 
-Slack content assistant. Drafts blog posts, LinkedIn posts, release notes y newsletters desde Slack, usando Notion como fuente/publicacion y Vercel Blob para assets.
+Slack content assistant. It drafts blog posts, LinkedIn posts, release notes and newsletters from Slack, using Notion as the source/publishing target and Vercel Blob for assets.
 
 Stack:
 
 - Eve
 - Slack channel via Vercel Connect
 - Notion MCP via Vercel Connect
-- Vercel Blob con OIDC
+- Vercel Blob with OIDC
 - AI Gateway, default Claude Opus 4.8
 - Vercel Sandbox
 - Ultracite/Biome
 
-Agente:
+Agent:
 
 - `agent/agent.ts`: `anthropic/claude-opus-4.8`
 - `agent/channels/slack.ts`
 - `agent/connections/notion.ts`
 - `agent/sandbox.ts`
-- tools Blob:
+- Blob tools:
   - `upload_asset`
   - `list_assets`
   - `get_asset_info`
   - `download_asset`
   - `delete_asset`
-- tool deterministic:
+- deterministic tool:
   - `lint_against_style`
 - skills:
   - `blog-style`
@@ -1428,46 +1428,46 @@ Agente:
   - `release-notes-style`
   - `newsletter-style`
 
-Patron destacado:
+Notable pattern:
 
-- `delete_asset` usa `needsApproval: always()`.
-- Las skills de estilo tienen `banned-words.json` y ejemplos.
-- No hay static keys; Slack/Notion via Connect, Blob/modelo via OIDC.
+- `delete_asset` uses `needsApproval: always()`.
+- The style skills have `banned-words.json` and examples.
+- No static keys; Slack/Notion via Connect, Blob/model via OIDC.
 
 ### `vercel-labs/eve-pr-triage-agent-template`
 
-GitHub App que triagea PRs al abrirse.
+GitHub App that triages PRs when they are opened.
 
 Stack:
 
 - Eve
 - GitHub channel
 - GitHub App webhook
-- AI Gateway/modelo `anthropic/claude-sonnet-4.6`
+- AI Gateway/model `anthropic/claude-sonnet-4.6`
 - YAML ruleset `triage.yml`
 
-Agente:
+Agent:
 
 - `agent/channels/github.ts`
 - `agent/tools/apply_labels.ts`
 - `agent/skills/triage.ts`
-- default sandbox tools deshabilitadas:
+- default sandbox tools disabled:
   - `bash.ts`
   - `glob.ts`
   - `grep.ts`
   - `read_file.ts`
   - `write_file.ts`
 
-Patron destacado:
+Notable pattern:
 
-- v1 triagea desde el diff auto-inyectado por GitHub channel.
-- No paga sandbox ni checkout.
-- Aplica labels y comenta una unica triage comment.
-- La README advierte que no re-triagea pushes posteriores al mismo PR; es v2 item.
+- v1 triages from the diff that the GitHub channel injects automatically.
+- It does not pay for a sandbox or a checkout.
+- It applies labels and posts a single triage comment.
+- The README warns that it does not re-triage later pushes to the same PR; that is a v2 item.
 
 ### `vercel-labs/personal-agent-template`
 
-Personal AI agent durable con web chat, Slack, iMessage, Linear y memoria larga.
+Durable personal AI agent with web chat, Slack, iMessage, Linear and long-term memory.
 
 Stack:
 
@@ -1478,9 +1478,9 @@ Stack:
 - Better Auth
 - Drizzle
 - Vercel Connect
-- Sendblue para iMessage/SMS
+- Sendblue for iMessage/SMS
 
-Agente:
+Agent:
 
 - channels:
   - `eve.ts`
@@ -1496,16 +1496,16 @@ Agente:
 - dynamic instructions:
   - `agent/instructions.ts`
 
-Patrones destacados:
+Notable patterns:
 
-- Instrucciones dinamicas inyectan perfil/memoria del usuario por sesion.
-- `save_memory` requiere aprobacion (`always()`).
-- Para iMessage ajusta instrucciones porque no hay UI de aprobacion en ese canal.
-- Web y Eve comparten API interna autenticada por bearer (`INTERNAL_API_SECRET`).
+- Dynamic instructions inject the user's profile/memory per session.
+- `save_memory` requires approval (`always()`).
+- For iMessage it adjusts the instructions because that channel has no approval UI.
+- Web and Eve share an internal API authenticated by bearer token (`INTERNAL_API_SECRET`).
 
 ### `vercel-labs/eve-chat-template`
 
-Next.js chat persistido para Eve.
+Persisted Next.js chat for Eve.
 
 Stack:
 
@@ -1518,9 +1518,9 @@ Stack:
 - Neon
 - Upstash Redis
 - Eve
-- Vercel Connect para Slack, Notion, Linear, Sentry
+- Vercel Connect for Slack, Notion, Linear, Sentry
 
-Agente:
+Agent:
 
 - `agent/agent.ts`
 - `agent/channels/eve.ts`
@@ -1533,24 +1533,24 @@ Agente:
 
 Frontend:
 
-- `next.config.ts` usa `withEve(nextConfig)`.
-- El browser usa `useEveAgent()` desde `eve/react`.
-- Guarda session cursors y event snapshots para reanudar `/chat/[id]`.
+- `next.config.ts` uses `withEve(nextConfig)`.
+- The browser uses `useEveAgent()` from `eve/react`.
+- It stores session cursors and event snapshots to resume `/chat/[id]`.
 
-Incluye:
+Includes:
 
-- historia chat persistida
-- rate limiting Redis
+- persisted chat history
+- Redis rate limiting
 - sidebar
 - HITL rendering
 - tool rendering
 - connections menu
 
-## Tests, fixtures y cobertura inferida
+## Tests, fixtures and inferred coverage
 
-El repo principal tiene muchas suites unitarias/integration/scenario. Areas cubiertas por nombres de tests:
+The main repo has many unit/integration/scenario suites. Areas covered, judging by test names:
 
-- discovery de agent project, skills, sandbox, subagents
+- discovery of the agent project, skills, sandbox, subagents
 - compiler manifest/module-map/normalize
 - CLI init/info/link/deploy/channels
 - dev TUI, prompt commands, model setup, rendering
@@ -1558,11 +1558,11 @@ El repo principal tiene muchas suites unitarias/integration/scenario. Areas cubi
 - React/Vue/Svelte `useEveAgent`
 - dynamic instructions/skills/tools lifecycle
 - hooks lifecycle
-- durable session store y migrations
+- durable session store and migrations
 - workflow entry/runtime/errors/steps
 - sandbox backends: Docker, microsandbox, just-bash, Vercel
 - bash/read/write/glob/grep tools
-- subagent HITL proxy y delegation
+- subagent HITL proxy and delegation
 - tool auth
 - web fetch
 - harness compaction, tool loop, input requests, provider tools, prompt cache
@@ -1584,60 +1584,60 @@ E2E fixtures:
 - `agent-tools-hitl`
 - `agent-tools-sandbox`
 
-Fixtures de apps:
+App fixtures:
 
 - `weather-agent`
 - `agent-tui-client`
 
-Framework/template fixtures dentro del repo:
+Framework/template fixtures inside the repo:
 
 - `apps/frameworks/next`
-  - agente Eve + `agent/channels/eve.ts`
-  - Next app con `next.config.ts`
-  - tool `whoami`
+  - Eve agent + `agent/channels/eve.ts`
+  - Next app with `next.config.ts`
+  - `whoami` tool
 - `apps/frameworks/nuxt`
-  - agente Eve + Nuxt module
-  - tool `get_weather`
+  - Eve agent + Nuxt module
+  - `get_weather` tool
 - `apps/frameworks/sveltekit`
-  - agente Eve + SvelteKit integration
-  - tool `get_weather`
+  - Eve agent + SvelteKit integration
+  - `get_weather` tool
 - `apps/templates/web-chat-next`
-  - template Next de web chat
+  - Next web chat template
   - `agent/tools/randomize.ts`
   - `agent/channels/eve.ts`
 
-Fixtures especialmente utiles para entender runtime:
+Fixtures that are especially useful for understanding the runtime:
 
 - `apps/fixtures/weather-agent`
-  - README pequeno
-  - skill `get-weather.md`
-  - tool `get_weather.ts`
+  - small README
+  - `get-weather.md` skill
+  - `get_weather.ts` tool
 - `apps/fixtures/agent-tui-client`
-  - channel custom `anchored.ts`
-  - connection stub MCP user
-  - subagent `echo-marker`
+  - custom channel `anchored.ts`
+  - MCP user stub connection
+  - `echo-marker` subagent
 
-Lectura: el repo no solo testea unidades sueltas. Tiene fixtures de agente minimo, channels, OpenAPI, schedules, skills, subagents, HITL, sandbox tools, frameworks web y TUI, lo que da bastante confianza en la cobertura de superficie framework.
+My read: the repo does not only test isolated units. It has fixtures for a minimal agent, channels, OpenAPI, schedules, skills, subagents, HITL, sandbox tools, web frameworks and the TUI, which gives fair confidence in the coverage of the framework surface.
 
-## Riesgos vivos y temas abiertos
+## Live risks and open topics
 
-Issues abiertas relevantes observadas:
+Relevant open issues observed:
 
-- `#154`: AI Gateway rate limiting inesperado tras pocos turns.
-- `#149`: Discord channel 401 por fallback de token.
-- `#147`: definir comportamiento Slack HITL con payloads multi-action.
-- `#145`: feature request para policy/governance interface en lifecycle hooks de tools.
-- `#136`: throughput/TTFT degrada en `eve dev` al acumular sesiones aparcadas.
-- `#134`: stream reconnect exhaustion limpia sesion cliente mientras el turn durable continua.
-- `#133`: bundler falla con imports relativos cuyo basename contiene puntos.
-- `#131`: permitir tokens Anthropic/OpenAI, no solo API keys.
-- `#126`: detener respuesta limpia sesion cliente y el proximo mensaje empieza conversacion nueva.
-- `#124`: client interruption corta stream pero server turn sigue corriendo.
-- `#120`: Vercel Sandbox readFile viola Web stream contract.
+- `#154`: unexpected AI Gateway rate limiting after a few turns.
+- `#149`: Discord channel 401 due to token fallback.
+- `#147`: define Slack HITL behavior with multi-action payloads.
+- `#145`: feature request for a policy/governance interface in tool lifecycle hooks.
+- `#136`: throughput/TTFT degrades in `eve dev` as parked sessions pile up.
+- `#134`: stream reconnect exhaustion clears the client session while the durable turn keeps going.
+- `#133`: the bundler fails on relative imports whose basename contains dots.
+- `#131`: allow Anthropic/OpenAI tokens, not just API keys.
+- `#126`: stopping a response clears the client session, and the next message starts a new conversation.
+- `#124`: client interruption cuts the stream, but the server turn keeps running.
+- `#120`: Vercel Sandbox readFile violates the Web stream contract.
 
-PRs abiertas recientes muestran areas activas:
+Recent open PRs show the active areas:
 
-- cancelacion server/client/delegated agents
+- server/client/delegated agents cancellation
 - HITL Slack bound to verified requester
 - Discord auth fallback
 - remote TUI auth
@@ -1645,81 +1645,81 @@ PRs abiertas recientes muestran areas activas:
 - realtime voice control plane
 - sandbox/network policy fixes
 
-Discussions publicas:
+Public discussions:
 
-- usar OpenRouter u otro provider directo en vez de AI Gateway
-- estructura ideal para multiples root agents con tools/skills compartidas
+- using OpenRouter or another direct provider instead of AI Gateway
+- ideal structure for multiple root agents with shared tools/skills
 - self-hosting
-- carpeta de conocimiento para Eve agents
+- knowledge folder for Eve agents
 
-Interpretacion: Eve esta en desarrollo muy activo. Para produccion, conviene pinnear version, leer changelog/release notes antes de actualizar y cubrir flujos propios con evals.
+Interpretation: Eve is under very active development. For production, it is worth pinning the version, reading the changelog/release notes before upgrading and covering your own flows with evals.
 
-## Comparacion tecnica rapida
+## Quick technical comparison
 
-Eve se diferencia de un "agent SDK" simple porque trae:
+Eve differs from a simple "agent SDK" because it brings:
 
 - filesystem conventions
-- runtime durable
+- durable runtime
 - HTTP session protocol
-- streaming replayable
-- sandbox con egress policy
-- channels de plataforma
-- MCP/OpenAPI connections con auth
-- HITL incorporado
+- replayable streaming
+- sandbox with egress policy
+- platform channels
+- MCP/OpenAPI connections with auth
+- built-in HITL
 - subagents
 - schedules
 - evals
 - frontend hooks
 - Vercel deployment/output integration
 
-Comparado mentalmente con Next.js:
+As a mental comparison with Next.js:
 
-- `agent/` equivale a la convencion de app.
-- `tools/`, `skills/`, `channels/`, `connections/` son slots como routes/components/server actions, pero para agentes.
-- Build/discovery convierte archivos en manifest/runtime.
-- El despliegue Vercel detecta framework y agrega observabilidad de Agent Runs.
+- `agent/` is the equivalent of the app convention.
+- `tools/`, `skills/`, `channels/`, `connections/` are slots like routes/components/server actions, but for agents.
+- Build/discovery turns files into a manifest/runtime.
+- The Vercel deployment detects the framework and adds Agent Runs observability.
 
-## Recomendaciones si se va a probar
+## Recommendations for trying it
 
-Para un primer spike:
+For a first spike:
 
-1. Usar Node 24+.
-2. Crear proyecto aislado, no este portfolio:
+1. Use Node 24+.
+2. Create an isolated project, not this portfolio:
 
    ```bash
    npx eve@latest init my-agent
    ```
 
-3. Correr:
+3. Run:
 
    ```bash
    eve info
    eve dev
    ```
 
-4. Mantener `agent/instructions.md` corto.
-5. Crear una tool simple con `defineTool`.
-6. Deshabilitar `bash` si no hace falta.
-7. Para produccion, no dejar `placeholderAuth()`.
-8. Cerrar sandbox network policy si se manejan datos reales.
-9. Meter `needsApproval: always()` en side effects irreversibles.
-10. Escribir 2-3 evals smoke antes de tocar modelo/prompts.
+4. Keep `agent/instructions.md` short.
+5. Create a simple tool with `defineTool`.
+6. Disable `bash` if you do not need it.
+7. For production, do not leave `placeholderAuth()` in place.
+8. Lock down the sandbox network policy if you handle real data.
+9. Put `needsApproval: always()` on irreversible side effects.
+10. Write 2-3 smoke evals before touching the model/prompts.
 
-Notas practicas:
+Practical notes:
 
-- El scaffold pinnea `engines.node` a `24.x`; al probar con Node `v25.2.1`, npm emite `EBADENGINE`, aunque `tsc` y `eve build` pasaron en el scaffold minimo.
-- Si se ejecuta `eve init` desde un coding agent, no arranca TUI y deja instrucciones para que el humano corra `npm exec -- eve dev`.
-- En shells humanos, la doc dice que `eve init` mantiene el terminal abierto porque arranca dev server/TUI; conviene correrlo en proceso controlable.
+- The scaffold pins `engines.node` to `24.x`; when testing with Node `v25.2.1`, npm emits `EBADENGINE`, although `tsc` and `eve build` passed on the minimal scaffold.
+- If you run `eve init` from a coding agent, it does not start the TUI and leaves instructions for the human to run `npm exec -- eve dev`.
+- In human shells, the doc says `eve init` keeps the terminal open because it starts the dev server/TUI; it is best to run it in a process you can control.
 
-Para elegir template:
+To choose a template:
 
-- Slack bot minimo: `eve-slack-agent-template`.
-- Agente de contenido: `eve-content-agent-template`.
+- Minimal Slack bot: `eve-slack-agent-template`.
+- Content agent: `eve-content-agent-template`.
 - PR triage: `eve-pr-triage-agent-template`.
-- Agente personal full-stack: `personal-agent-template`.
-- Chat web persistido Next.js: `eve-chat-template`.
+- Full-stack personal agent: `personal-agent-template`.
+- Persisted Next.js web chat: `eve-chat-template`.
 
-## Comandos ejecutados para reproducir esta investigacion
+## Commands run to reproduce this research
 
 ```bash
 git clone --depth=1 https://github.com/vercel/eve.git /tmp/eve-research/eve
@@ -1745,16 +1745,16 @@ curl -s https://api.github.com/repos/vercel/eve/releases/latest
 curl -s https://api.github.com/repos/vercel/eve
 ```
 
-## Cobertura y limites de esta investigacion
+## Coverage and limits of this research
 
-Cubierto con evidencia directa:
+Covered with direct evidence:
 
-- Landing oficial, KB oficial y docs publicas `eve.dev`.
-- Repo `vercel/eve` clonado y actualizado al tag `eve@0.12.0`.
-- npm package `eve@0.12.0` y metadata de version.
+- Official landing page, official KB and public `eve.dev` docs.
+- `vercel/eve` repo cloned and updated to the `eve@0.12.0` tag.
+- npm package `eve@0.12.0` and version metadata.
 - Changelog `packages/eve/CHANGELOG.md`.
-- Docs locales bajo `docs/` incluyendo getting started, tutorial, channels, connections, sandbox, deployment, evals, frontend/client y concepts.
-- Codigo interno clave:
+- Local docs under `docs/`, including getting started, tutorial, channels, connections, sandbox, deployment, evals, frontend/client and concepts.
+- Key internal code:
   - discovery
   - compiler artifacts
   - manifest
@@ -1764,19 +1764,19 @@ Cubierto con evidencia directa:
   - routes
   - harness tool loop
   - Next.js `withEve`
-- Templates oficiales listadas por Vercel KB.
-- Scaffold real con `npx eve@latest init`.
-- `eve info --json`, `npm run typecheck` y `npm run build` sobre scaffold minimo.
-- Issues, PRs y discussions publicas relevantes.
+- Official templates listed by the Vercel KB.
+- Real scaffold with `npx eve@latest init`.
+- `eve info --json`, `npm run typecheck` and `npm run build` on the minimal scaffold.
+- Relevant public issues, PRs and discussions.
 
-No cubierto con ejecucion real por requerir cuentas/credenciales externas:
+Not covered with real execution because it requires external accounts/credentials:
 
-- Deploy real a Vercel.
-- Slack/GitHub/Linear/Twilio/Discord/Teams/Telegram webhooks reales.
-- Vercel Connect OAuth end-to-end.
-- Vercel Sandbox backend real con credential brokering.
+- Real deploy to Vercel.
+- Real Slack/GitHub/Linear/Twilio/Discord/Teams/Telegram webhooks.
+- Vercel Connect OAuth end to end.
+- Real Vercel Sandbox backend with credential brokering.
 - Vercel Workflow production routing `deploymentId: "latest"`.
-- AI Gateway model call real.
-- Evals contra un agente con credenciales reales.
+- Real AI Gateway model call.
+- Evals against an agent with real credentials.
 
-Lectura tecnica: lo no cubierto depende de infraestructura externa, no de falta de codigo/documentacion local. Para pasar de investigacion a validacion de produccion haria falta un proyecto Vercel con AI Gateway, Connect y al menos un canal real configurado.
+Technical read: what is not covered depends on external infrastructure, not on missing local code or documentation. Moving from research to production validation would need a Vercel project with AI Gateway, Connect and at least one real channel configured.
